@@ -1,1 +1,18 @@
-<p>gallery works!</p>
+<div class="gallery">
+  <div class="row" *ngFor="let imagePair of imagePairs">
+    <div class="column">
+      <img
+        src="postcard.jpg"
+        alt="Original Image"
+        (click)="openDialog(imagePair.original)"
+      />
+    </div>
+    <div class="column">
+      <img
+        src="postcard.jpg"
+        alt="Filtered Image"
+        (click)="openDialog(imagePair.filtered)"
+      />
+    </div>
+  </div>
+</div>

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { ImageService } from '../services/image.service';
 
+@Inject('ImageService')
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -78,6 +79,8 @@ export class HomeComponent {
         */
 
         this.imageService.uploadImage(file).subscribe(() => {
+          // TO DO: Implement the logic to navigate to the edit-image component
+
           console.log('Image file uploaded:', file.name);
         });
       } else {
