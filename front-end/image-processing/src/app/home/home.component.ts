@@ -78,10 +78,9 @@ export class HomeComponent {
         - Load a different component(edit-image) with the uploaded image in order to process it
         */
 
-        this.imageService.uploadImage(file).subscribe(() => {
+        this.imageService.uploadImage(file).subscribe((response: any) => {
           // TO DO: Implement the logic to navigate to the edit-image component
-
-          console.log('Image file uploaded:', file.name);
+          console.log('Image uploaded successfully:', response);
         });
       } else {
         console.error('Invalid file type. Only images are allowed.');

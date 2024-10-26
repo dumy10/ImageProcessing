@@ -5,22 +5,14 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
   providedIn: 'root',
 })
 export class ImageService {
-  baseURL = 'http://localhost:'; // will change this once the back-end is in place
-
-  readonly httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'multipart/form-data',
-    }),
-  };
+  baseURL = 'http://localhost:5000';
 
   constructor(private httpClient: HttpClient) {}
 
   uploadImage(image: File) {
     const formData = new FormData();
     formData.append('image', image);
-
     return this.httpClient.post(`${this.baseURL}/upload`, formData, {
-      headers: this.httpOptions.headers,
       responseType: 'text' as 'json',
     });
   }
@@ -34,10 +26,6 @@ export class ImageService {
   }
 
   editImage(id: string, filter: string) {
-    return this.httpClient.post(
-      `${this.baseURL}/edit/${id}`,
-      { filter },
-      this.httpOptions
-    );
+    return this.httpClient.post(`${this.baseURL}/edit/${id}`, { filter });
   }
 }
