@@ -1,16 +1,19 @@
 import { Component, Inject } from '@angular/core';
 import { ImageService } from '../services/image.service';
+import { CommonModule } from '@angular/common';
 
 @Inject('ImageService')
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   providers: [ImageService],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
 export class HomeComponent {
+  loading: boolean = false;
+
   constructor(private imageService: ImageService) {}
 
   onDragOver(event: DragEvent) {
@@ -70,6 +73,7 @@ export class HomeComponent {
 
       // Check if file is an image
       if (validImageTypes.includes(file.type)) {
+        this.loading = true;
         // Process the image file
         /*
         TODO:
@@ -78,9 +82,22 @@ export class HomeComponent {
         - Load a different component(edit-image) with the uploaded image in order to process it
         */
 
-        this.imageService.uploadImage(file).subscribe((response: any) => {
-          // TO DO: Implement the logic to navigate to the edit-image component
-          console.log('Image uploaded successfully:', response);
+        this.imageService.uploadImage(file).subscribe({
+          next: (response) => {
+            this.loading = false;
+            console.log('Image uploaded successfully:', response);
+          },
+          error: (error) => {
+            this.loading = false;
+            console.error('Error uploading image:', error);
+            alert(
+              'An error occurred while uploading the image. Please try again.'
+            );
+          },
+          complete: () => {
+            this.loading = false;
+            console.log('Upload complete');
+          },
         });
       } else {
         console.error('Invalid file type. Only images are allowed.');
