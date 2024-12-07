@@ -1,0 +1,19 @@
+<h2 mat-dialog-title class="dialogTitle">Image: {{ data.name }}</h2>
+<mat-dialog-content id="imageDialogContent" class="imageDialogContent">
+  <img [src]="data.url" alt="Image" />
+
+  <!-- Display the applied filters -->
+  <div
+    *ngIf="data.appliedFilters !== undefined && data.appliedFilters.length > 0"
+    class="filtersDiv"
+  >
+    <h3>Applied Filters:</h3>
+    <ul>
+      <li *ngFor="let filter of data.appliedFilters">{{ filter }}</li>
+    </ul>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions id="imageDialogActions" class="imageDialogActions">
+  <button mat-button class="btn btn-primary" (click)="close()">Close</button>
+</mat-dialog-actions>
