@@ -18,6 +18,7 @@ import { LoadingComponent } from '../loading/loading.component';
 export class EditImageComponent implements OnInit {
   loading: boolean = false;
   loadingMessage: string = 'Loading the image...';
+  image: ImageModel | undefined;
   imagePath: string = '';
 
   constructor(private router: Router, private imageService: ImageService) {}
@@ -41,8 +42,8 @@ export class EditImageComponent implements OnInit {
   loadImage(id: string): void {
     this.imageService.getImage(id).subscribe({
       next: (response) => {
-        const image = response as ImageModel;
-        this.imagePath = image.url;
+        this.image = response as ImageModel;
+        this.imagePath = this.image.url;
         this.loading = false;
       },
       error: (error) => {
@@ -57,7 +58,7 @@ export class EditImageComponent implements OnInit {
     });
   }
 
-  private getIdFromUrl(): string | undefined {
+  getIdFromUrl(): string | undefined {
     const url = window.location.href;
     return url.split('/').pop();
   }
