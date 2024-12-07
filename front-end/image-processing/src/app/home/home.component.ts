@@ -66,6 +66,7 @@ export class HomeComponent {
     }
 
     const file = files[0]; // Handle only the first file
+
     if (file) {
       const validImageTypes = [
         'image/jpeg',
@@ -80,23 +81,7 @@ export class HomeComponent {
       if (validImageTypes.includes(file.type)) {
         this.loading = true;
         // Process the image file
-        this.imageService.uploadImage(file).subscribe({
-          next: (response: ImageModel) => {
-            this.loading = false;
-            this.router.navigate(['/edit', response.id]);
-          },
-          error: (error) => {
-            this.loading = false;
-            console.error('Error uploading image:', error);
-            alert(
-              'An error occurred while uploading the image. Please try again.'
-            );
-          },
-          complete: () => {
-            this.loading = false;
-            console.log('Upload complete');
-          },
-        });
+        this.uploadImage(file);
       } else {
         console.error('Invalid file type. Only images are allowed.');
         alert(
@@ -104,5 +89,23 @@ export class HomeComponent {
         );
       }
     }
+  }
+
+  uploadImage(file: File) {
+    this.imageService.uploadImage(file).subscribe({
+      next: (response: ImageModel) => {
+        this.loading = false;
+        this.router.navigate(['/edit', response.id]);
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error uploading image:', error);
+        alert('An error occurred while uploading the image. Please try again.');
+      },
+      complete: () => {
+        this.loading = false;
+        console.log('Upload complete');
+      },
+    });
   }
 }
