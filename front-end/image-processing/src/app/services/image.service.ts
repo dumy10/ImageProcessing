@@ -1,31 +1,33 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ImageModel } from '../models/ImageModel';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ImageService {
-  baseURL = 'http://localhost:5000';
+  baseURL = 'https://localhost:7156/Images';
 
   constructor(private httpClient: HttpClient) {}
 
-  uploadImage(image: File) {
+  uploadImage(image: File): Observable<ImageModel> {
     const formData = new FormData();
     formData.append('image', image);
-    return this.httpClient.post(`${this.baseURL}/upload`, formData, {
-      responseType: 'text' as 'json',
+    return this.httpClient.post<ImageModel>(`${this.baseURL}/upload`, formData);
+  }
+
+  getImages(): Observable<ImageModel[]> {
+    return this.httpClient.get<ImageModel[]>(`${this.baseURL}`);
+  }
+
+  getImage(id: string): Observable<ImageModel> {
+    return this.httpClient.get<ImageModel>(`${this.baseURL}/${id}`);
+  }
+
+  editImage(id: string, filter: string): Observable<ImageModel> {
+    return this.httpClient.post<ImageModel>(`${this.baseURL}/edit/${id}`, {
+      filter,
     });
-  }
-
-  getImages() {
-    return this.httpClient.get(`${this.baseURL}/images`);
-  }
-
-  getImage(id: string) {
-    return this.httpClient.get(`${this.baseURL}/image/${id}`);
-  }
-
-  editImage(id: string, filter: string) {
-    return this.httpClient.post(`${this.baseURL}/edit/${id}`, { filter });
   }
 }
