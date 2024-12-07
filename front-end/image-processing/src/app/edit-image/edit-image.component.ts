@@ -1,49 +1,64 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { ImageService } from '../services/image.service';
+import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
+import { ImageService } from '../services/image.service';
+import { ImageModel } from '../models/ImageModel';
+import { LoadingComponent } from '../loading/loading.component';
 
 @Inject('ImageService')
 @Component({
   selector: 'app-edit-image',
   standalone: true,
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, LoadingComponent, CommonModule],
   providers: [ImageService],
   templateUrl: './edit-image.component.html',
   styleUrl: './edit-image.component.scss',
 })
 export class EditImageComponent implements OnInit {
+  loading: boolean = false;
+  loadingMessage: string = 'Loading the image...';
   imagePath: string = '';
 
   constructor(private router: Router, private imageService: ImageService) {}
 
   // TO DO: Implement the image editing functionality
-  // - Fetch the image from the server
   // - Allow the user to edit the image
   // - Save the edited image
 
   ngOnInit(): void {
-    /* 
-      TO DO:
-      - Fetch the image from the server
-      - Display the image in the editor
-      */
-    // fetch the image id from the URL
+    this.loading = true;
     const id = this.getIdFromUrl();
-    if (!id) {
+
+    if (id === undefined) {
       console.error('Invalid image ID');
       this.router.navigate(['/']);
     }
-
     // fetch the image from the server
-    this.imageService.getImage(id as string).subscribe(() => {
-      // TO DO: Implement the logic to display the image in the editor
+    this.loadImage(id as string);
+  }
+
+  loadImage(id: string): void {
+    this.imageService.getImage(id).subscribe({
+      next: (response) => {
+        const image = response as ImageModel;
+        this.imagePath = image.url;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Failed to fetch image', error);
+        alert('Failed to fetch the image');
+        this.loading = false;
+        this.router.navigate(['/']);
+      },
+      complete: () => {
+        this.loading = false;
+      },
     });
   }
 
-  private getIdFromUrl(): string | null {
+  private getIdFromUrl(): string | undefined {
     const url = window.location.href;
-    const idMatch = url.match(/\/edit\/(\d+)/);
-    return idMatch ? idMatch[1] : null;
+    return url.split('/').pop();
   }
 }
