@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using SkiaSharp;
 using ImagesAPI.Services;
 using ImagesAPI.Models;
-using static System.Net.WebRequestMethods;
 
 namespace ImagesAPI.Controllers
 {
