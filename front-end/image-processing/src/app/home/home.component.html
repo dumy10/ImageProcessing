@@ -24,8 +24,4 @@
   </div>
 </div>
 
-<!-- Loading Overlay -->
-<div class="loading-overlay" *ngIf="loading">
-  <div class="spinner"></div>
-  <p>Uploading image, please wait...</p>
-</div>
+<app-loading [loading]="loading" [message]="loadingMessage" />

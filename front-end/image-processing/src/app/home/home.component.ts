@@ -1,20 +1,24 @@
 import { Component, Inject } from '@angular/core';
-import { ImageService } from '../services/image.service';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { ImageService } from '../services/image.service';
+import { ImageModel } from '../models/ImageModel';
+import { LoadingComponent } from '../loading/loading.component';
 
 @Inject('ImageService')
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LoadingComponent],
   providers: [ImageService],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
 export class HomeComponent {
   loading: boolean = false;
+  loadingMessage: string = 'Uploading image, please wait..';
 
-  constructor(private imageService: ImageService) {}
+  constructor(private imageService: ImageService, private router: Router) {}
 
   onDragOver(event: DragEvent) {
     event.preventDefault(); // Necessary to allow drop
@@ -54,7 +58,7 @@ export class HomeComponent {
   }
 
   handleFiles(files: FileList | File[]) {
-    // The user isnt allowed to select multiple files but he can drop them, throw an error as is is not allowed
+    // The user isnt allowed to select multiple files but he can drop them, throw an error as it is not allowed
     if (files.length > 1) {
       console.error('Invalid file count. Only one file is allowed.');
       alert('Please upload only one file.');
@@ -65,6 +69,7 @@ export class HomeComponent {
     if (file) {
       const validImageTypes = [
         'image/jpeg',
+        'image/jpg',
         'image/png',
         'image/gif',
         'image/webp',
@@ -75,17 +80,10 @@ export class HomeComponent {
       if (validImageTypes.includes(file.type)) {
         this.loading = true;
         // Process the image file
-        /*
-        TODO:
-        - Send the image file to the back-end
-        - Create a route which loads the edit-image taking the image ID from the back-end
-        - Load a different component(edit-image) with the uploaded image in order to process it
-        */
-
         this.imageService.uploadImage(file).subscribe({
-          next: (response) => {
+          next: (response: ImageModel) => {
             this.loading = false;
-            console.log('Image uploaded successfully:', response);
+            this.router.navigate(['/edit', response.id]);
           },
           error: (error) => {
             this.loading = false;
@@ -101,7 +99,9 @@ export class HomeComponent {
         });
       } else {
         console.error('Invalid file type. Only images are allowed.');
-        alert('Please upload a valid image file (JPEG, PNG, GIF, WebP, SVG).');
+        alert(
+          'Please upload a valid image file (JPEG, JPG, PNG, GIF, WebP, SVG).'
+        );
       }
     }
   }
