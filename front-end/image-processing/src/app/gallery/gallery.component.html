@@ -1,18 +1,27 @@
 <div class="gallery">
-  <div class="row" *ngFor="let imagePair of imagePairs">
-    <div class="column">
+  <div class="pair" *ngFor="let imagePair of paginatedImagePairs">
+    <div class="image-container">
       <img
-        src="postcard.jpg"
+        [src]="imagePair.originalImage.url"
         alt="Original Image"
-        (click)="openDialog(imagePair.original)"
+        (click)="openDialog(imagePair.originalImage)"
       />
     </div>
-    <div class="column">
+    <div class="image-container">
       <img
-        src="postcard.jpg"
+        [src]="imagePair.filteredImage.url"
         alt="Filtered Image"
-        (click)="openDialog(imagePair.filtered)"
+        (click)="openDialog(imagePair.filteredImage)"
       />
     </div>
   </div>
 </div>
+
+<mat-paginator
+  [length]="imagePairs.length"
+  [pageSize]="itemsPerPage"
+  [pageSizeOptions]="[5, 10, 20]"
+  (page)="onPageChange($event)"
+/>
+
+<app-loading [loading]="loading" [message]="loadingMessage" *ngIf="loading" />

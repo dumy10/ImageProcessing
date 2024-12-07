@@ -1,17 +1,35 @@
 .gallery {
   display: flex;
   flex-wrap: wrap;
+  gap: 20px; /* Space between pairs of images */
 }
-.row {
+
+.pair {
   display: flex;
-  width: 100%;
-  margin-bottom: 10px;
+  flex: 1 1 calc(50% - 20px); /* Adjust to fit two pairs per row */
+  max-width: calc(50% - 20px);
+  justify-content: space-between; /* Add space between the two images */
+  border: 1px solid #ccc; /* border around each pair */
+  border-radius: 4px; /* Rounded corners for the border */
+  padding: 10px;
+  box-sizing: border-box;
 }
-.column {
+
+.image-container {
   flex: 1;
   padding: 5px;
 }
+
 img {
   width: 100%;
+  height: auto; /* Maintain aspect ratio */
   cursor: pointer;
+  border-radius: 4px; /* Matches the pair's border radius */
+}
+
+@media (max-width: 768px) {
+  .pair {
+    flex: 1 1 calc(100% - 20px); /* Stack pairs vertically on smaller screens */
+    max-width: calc(100% - 20px);
+  }
 }
