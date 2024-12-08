@@ -1,7 +1,5 @@
 #include "pch.h"
 #include "Logger.h"
-#include <iomanip>
-#include <chrono>
 
 std::ofstream Logger::m_logFile;
 std::mutex Logger::m_mutex;
