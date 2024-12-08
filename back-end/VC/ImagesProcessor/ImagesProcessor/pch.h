@@ -10,6 +10,21 @@
 // add headers that you want to pre-compile here
 #include "framework.h"
 
+// Library needed headers
+#include "libdefine.h"
+
+// C++ needed headers
+// Logger needed headers
+#include <fstream>
+#include <filesystem>
+#include <mutex>
+#include <chrono>
+#include <ctime>
+
 #include <string>
+
+// OpenCV needed headers
+#include "opencv2/opencv.hpp"
+
 
 #endif //PCH_H
