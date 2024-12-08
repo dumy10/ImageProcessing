@@ -7,9 +7,11 @@ namespace ImagesAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class ImagesController(IImagesCollectionService imagesCollectionService) : ControllerBase
+    public class ImagesController(IImagesCollectionService imagesCollectionService, IGoogleService googleService) : ControllerBase
     {
         private readonly IImagesCollectionService _imagesCollectionService = imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService));
+        private readonly IGoogleService _googleService = googleService ?? throw new ArgumentNullException(nameof(googleService));
+
         private static readonly List<string> _allowedExtensions = [".jpeg", ".jpg", ".png", ".gif", ".webp", ".svg+xml"];
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -49,23 +51,31 @@ namespace ImagesAPI.Controllers
             if (!_allowedExtensions.Contains(Path.GetExtension(image.FileName)))
                 return BadRequest("Invalid file type.");
 
+            // Upload the image to google drive
+            string imageId = await _googleService.UploadImage(image);
+
+            if (string.IsNullOrWhiteSpace(imageId))
+            {
+                return BadRequest("Error uploading the image.");
+            }
+
             using var inputStream = image.OpenReadStream();
             using var skImage = SKImage.FromEncodedData(inputStream);
 
             if (skImage == null)
                 return BadRequest("Invalid image file.");
 
-            // The image is valid, it needs to be uploaded into the drive or on imgur and the database
-            var id = Guid.NewGuid().ToString();
-
             var imageModel = new ImageModel
             {
-                Id = id,
+                Id = imageId,
                 Name = image.FileName,
                 Width = skImage.Width,
                 Height = skImage.Height,
+                ContentType = image.ContentType,
+                Url = _googleService.GetImageURL(imageId, skImage.Width, skImage.Height)
             };
 
+            // Insert the model in the DB
             await _imagesCollectionService.Create(imageModel);
 
             return Ok(imageModel);
@@ -80,7 +90,7 @@ namespace ImagesAPI.Controllers
             ImageModel newImage;
             try
             {
-                newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter);
+                newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter, googleService);
             }
             catch (ArgumentNullException error)
             {

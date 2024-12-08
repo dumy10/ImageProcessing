@@ -11,9 +11,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IImagesCollectionService, ImagesCollectionService>();
+builder.Services.AddSingleton<IGoogleService, GoogleService>();
 
 builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection(nameof(MongoDBSettings)));
 builder.Services.AddSingleton<IMongoDBSettings>(sp => sp.GetRequiredService<IOptions<MongoDBSettings>>().Value);
+
+builder.Services.Configure<GoogleAPISettings>(builder.Configuration.GetSection(nameof(GoogleAPISettings)));
+builder.Services.AddSingleton<IGoogleAPISettings>(sp => sp.GetRequiredService<IOptions<GoogleAPISettings>>().Value);
 
 builder.Services.AddCors(options =>
 {

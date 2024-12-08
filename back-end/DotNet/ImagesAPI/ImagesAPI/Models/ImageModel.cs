@@ -7,6 +7,7 @@
         public string? Url { get; set; }
         public string? ParentId { get; set; }
         public string? ParentUrl { get; set; }
+        public string? ContentType { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
         public List<string>? AppliedFilters { get; set; }

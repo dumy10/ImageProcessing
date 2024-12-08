@@ -1,6 +1,8 @@
-﻿using ImagesAPI.Models;
+﻿using ImagesAPI.External;
+using ImagesAPI.Models;
 using ImagesAPI.Settings;
 using MongoDB.Driver;
+using SkiaSharp;
 
 namespace ImagesAPI.Services
 {
@@ -62,26 +64,59 @@ namespace ImagesAPI.Services
             return true;
         }
 
-        public Task<ImageModel> ApplyFilterToImage(string id, string filter)
+        public async Task<ImageModel> ApplyFilterToImage(string id, string filter, IGoogleService googleService)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
                 throw new ArgumentNullException(nameof(id), "The id parameter cannot be null or empty.");
             }
 
-            ImageModel imageModel = Get(id).Result ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
+            ImageModel imageModel = await this.Get(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
             if (string.IsNullOrWhiteSpace(filter))
             {
                 throw new ArgumentNullException(nameof(filter), "The filter parameter cannot be null or empty.");
             }
 
-            // fetch the image from the drive using the image.Uri property
-            // apply the filter to the image using the filter parameter value (e.g. "grayscale") (will be implemented in a C++ library)
-            // save the image to the drive
-            // save the image in the database
+            // Fetch the image from the drive using the id parameter 
+            var memoryStream = await googleService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
-            throw new NotImplementedException();
+            // Convert the MemoryStream to a byte array
+            byte[] imageData = memoryStream.ToArray();
+
+            // Apply the filter to the image using the filter parameter value (e.g. "grayscale") (will be implemented in a C++ library)
+            ImageProcessor.ApplyFilter(imageData, imageData.Length, filter);
+
+            // Get the modified stream
+            var modifiedImageStream = new MemoryStream(imageData);
+
+            if (string.IsNullOrWhiteSpace(imageModel.Name))
+            {
+                imageModel.Name = "Unnamed - " + Guid.NewGuid().ToString();
+            }
+
+            if (string.IsNullOrWhiteSpace(imageModel.ContentType))
+            {
+                imageModel.ContentType = "image/jpeg";
+            }
+
+            // Upload the modified image to the drive
+            string modifiedImageId = await googleService.UploadImage(modifiedImageStream, imageModel.Name, imageModel.ContentType);
+
+            using var skImage = SKImage.FromEncodedData(modifiedImageStream);
+
+            // Modify the imageModel properties to point to the proper image
+            imageModel.Id = modifiedImageId;
+            imageModel.ParentId = id;
+            imageModel.ParentUrl = imageModel.Url;
+            imageModel.Url = googleService.GetImageURL(modifiedImageId, skImage.Width, skImage.Height);
+            imageModel.AppliedFilters ??= []; // Initialize the list if it's null
+            imageModel.AppliedFilters.Add(filter);
+
+            // Save the image in the database
+            await this.Create(imageModel);
+
+            return imageModel;
         }
     }
 }

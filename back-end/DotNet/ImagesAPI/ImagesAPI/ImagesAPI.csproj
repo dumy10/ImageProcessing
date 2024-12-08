@@ -8,6 +8,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Google.Apis" Version="1.68.0" />
+		<PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
+		<PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3608" />
 		<PackageReference Include="MongoDB.Driver" Version="3.1.0" />
 		<PackageReference Include="SkiaSharp" Version="3.116.1" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
