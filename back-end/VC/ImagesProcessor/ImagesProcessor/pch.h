@@ -14,14 +14,9 @@
 #include "libdefine.h"
 
 // C++ needed headers
-// Logger needed headers
-#include <fstream>
-#include <filesystem>
-#include <mutex>
-#include <chrono>
-#include <ctime>
 
-#include <string>
+// Include the Logger Singleton class in every component that includes the precompiled header
+#include "Logger.h"
 
 // OpenCV needed headers
 #include "opencv2/opencv.hpp"

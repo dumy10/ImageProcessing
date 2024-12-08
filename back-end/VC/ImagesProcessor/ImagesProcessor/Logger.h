@@ -1,5 +1,10 @@
 #pragma once
 #include "pch.h"
+#include <fstream>
+#include <filesystem>
+#include <mutex>
+#include <chrono>
+#include <ctime>
 
 class Logger
 {

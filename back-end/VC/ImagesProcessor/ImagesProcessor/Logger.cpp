@@ -88,7 +88,7 @@ Logger::Logger()
 	// Create a path to the log file
 	tempPath /= "ImagesProcessor.log";
 
-	// Create the log file if it does not exist
+	// Open the log file (if it does not exist, it will be created)
 	m_logFile.open(tempPath, std::ios::out | std::ios::app);
 
 	// Check if the file was opened successfully
