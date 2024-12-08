@@ -14,6 +14,7 @@
 #include "libdefine.h"
 
 // C++ needed headers
+#include <vector>
 
 // Include the Logger Singleton class in every component that includes the precompiled header
 #include "Logger.h"
