@@ -1,10 +1,5 @@
 #pragma once
 #include "pch.h"
-#include <fstream>
-#include <filesystem>
-#include <mutex>
-#include <chrono>
-#include <ctime>
 
 class Logger
 {
@@ -22,6 +17,8 @@ public:
 private:
 	Logger(); // Private constructor
 	~Logger(); // Private destructor
+
+	static std::tm GetLocalTime();
 
 	static std::ofstream m_logFile;
 	static std::mutex m_mutex;

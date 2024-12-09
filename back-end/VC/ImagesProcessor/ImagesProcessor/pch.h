@@ -15,6 +15,13 @@
 
 // C++ needed headers
 
+// Logger needed headers
+#include <fstream>
+#include <filesystem>
+#include <mutex>
+#include <chrono>
+#include <ctime>
+
 // Include the Logger Singleton class in every component that includes the precompiled header
 #include "Logger.h"
 

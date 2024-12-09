@@ -17,11 +17,7 @@ void Logger::LogMessage(const std::string& message)
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	// Get the current time
-	std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-	// Convert time to local time
-	std::tm localTime;
-	localtime_s(&localTime, &currentTime);
+	std::tm localTime = Logger::GetLocalTime();
 
 	// Write an info message to the log file
 	m_logFile << "{INFO} " << std::put_time(&localTime, "%Y-%m-%d %H:%M:%S") << " - " << message << std::endl;
@@ -39,11 +35,7 @@ void Logger::LogWarning(const std::string& message)
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	// Get the current time
-	std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-	// Convert time to local time
-	std::tm localTime;
-	localtime_s(&localTime, &currentTime);
+	std::tm localTime = Logger::GetLocalTime();
 
 	// Write a warning message to the log file
 	m_logFile << "{WARN} " << std::put_time(&localTime, "%Y-%m-%d %H:%M:%S") << " - " << message << std::endl;
@@ -61,11 +53,7 @@ void Logger::LogError(const std::string& message)
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	// Get the current time
-	std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-	// Convert time to local time
-	std::tm localTime;
-	localtime_s(&localTime, &currentTime);
+	std::tm localTime = Logger::GetLocalTime();
 
 	// Write an error message to the log file
 	m_logFile << "{ERROR} " << std::put_time(&localTime, "%Y-%m-%d %H:%M:%S") << " - " << message << std::endl;
@@ -109,4 +97,16 @@ Logger::~Logger()
 	// Delete the instance
 	delete m_instance;
 	m_instance = nullptr;
+}
+
+std::tm Logger::GetLocalTime()
+{
+	// Get the current time
+	std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+	// Convert time to local time
+	std::tm localTime;
+	localtime_s(&localTime, &currentTime);
+
+	return localTime;
 }
