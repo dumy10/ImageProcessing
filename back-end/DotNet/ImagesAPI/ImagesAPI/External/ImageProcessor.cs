@@ -6,6 +6,6 @@ namespace ImagesAPI.External
     {
         [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
-        public static partial void ApplyFilter([In, Out] byte[] imageData, int length, string filter);
+        public static partial void ApplyFilter([In] byte[] imageData, int length, string filter, [Out] byte[] outputImageData, string extension, out int outputLength);
     }
 }
