@@ -18,12 +18,6 @@
 
 	<Target Name="CopyDependencies" AfterTargets="Build">
 		<Copy SourceFiles="$(SolutionDir)..\..\Shared\Lib\x64\Debug\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
-		<ItemGroup>
-			<OpenCvDlls Include="$(SolutionDir)..\..\Shared\Lib\vc16\bin\*.dll" />
-		</ItemGroup>
-		<Copy
-			SourceFiles="@(OpenCvDlls)"
-			DestinationFolder="$(OutDir)" />
 	</Target>
 
 	<Target Name="LogResolvedPaths" BeforeTargets="Build">

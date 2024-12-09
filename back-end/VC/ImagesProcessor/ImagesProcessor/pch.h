@@ -26,8 +26,5 @@
 // Include the Logger Singleton class in every component that includes the precompiled header
 #include "Logger.h"
 
-// OpenCV needed headers
-#include "opencv2/opencv.hpp"
-
 
 #endif //PCH_H
