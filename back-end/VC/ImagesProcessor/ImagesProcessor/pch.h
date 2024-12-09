@@ -13,8 +13,13 @@
 // Library needed headers
 #include "libdefine.h"
 
+// Enum headers
+#include "EDefinedFilters.h"
+#include "EAllowedExtensions.h"
+
 // C++ needed headers
 #include <vector>
+#include <memory>
 
 // Logger needed headers
 #include <fstream>

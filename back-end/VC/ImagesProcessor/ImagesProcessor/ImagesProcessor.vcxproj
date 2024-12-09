@@ -161,14 +161,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="EAllowedExtensions.h" />
+    <ClInclude Include="EDefinedFilters.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="ImageData.h" />
     <ClInclude Include="ImagesProcessor.h" />
     <ClInclude Include="libdefine.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="stb_image_implementation.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="ImageData.cpp" />
     <ClCompile Include="ImagesProcessor.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="pch.cpp">
@@ -177,6 +182,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="stb_image_implementation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
