@@ -14,6 +14,7 @@
 #include "libdefine.h"
 
 // C++ needed headers
+#include <vector>
 
 // Logger needed headers
 #include <fstream>
