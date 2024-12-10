@@ -90,7 +90,7 @@ namespace ImagesAPI.Services
             var extension = Path.GetExtension(imageModel.Name);
 
             // Apply the filter to the image
-            ImageProcessor.GetFilteredImageData(imageData, filter, extension, out byte[] modifiedImageData);
+            ImageProcessor.GetFilteredImageData(imageData, filter.ToLower(), extension.ToLower(), out byte[] modifiedImageData);
 
             // Get the modified stream
             using var modifiedImageStream = new MemoryStream(modifiedImageData);

@@ -67,6 +67,17 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 
 	this->WriteToMemory(outputImage, &encodedData);
 
+	if (!outputImage)
+	{
+		Logger::LogError("Filtering image data failed");
+		Logger::LogError("Deleting allocated memory");
+		delete[] outputImage;
+		outputImage = nullptr;
+		*outputLength = 0;
+		*outputData = nullptr;
+		return;
+	}
+
 	*outputLength = static_cast<int>(encodedData.size());
 	*outputData = new unsigned char[*outputLength];
 
