@@ -78,34 +78,27 @@ namespace ImagesAPI.Services
                 throw new ArgumentNullException(nameof(filter), "The filter parameter cannot be null or empty.");
             }
 
-            // Fetch the image from the drive using the id parameter 
             var memoryStream = await googleService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
-            // Convert the MemoryStream to a byte array
             byte[] imageData = memoryStream.ToArray();
-            byte[] modifiedImageData = [];
 
             if (string.IsNullOrWhiteSpace(imageModel.Name))
             {
                 imageModel.Name = "Unnamed - " + Guid.NewGuid().ToString() + ".jpg";
             }
 
-            // Apply the filter to the image using the filter parameter value (e.g. "grayscale") (will be implemented in a C++ library)
-            ImageProcessor.ApplyFilter(imageData, imageData.Length, filter, modifiedImageData, Path.GetExtension(imageModel.Name), out int modifiedImageDataLength);
-
-            if (modifiedImageData.Length != modifiedImageDataLength)
-            {
-                throw new ArgumentException("The modified image data length is invalid.");
-            }
+            // Apply the filter to the image
+            ImageProcessor.GetFilteredImageData(imageData, filter, Path.GetExtension(imageModel.Name), out byte[] modifiedImageData);
 
             // Get the modified stream
-            var modifiedImageStream = new MemoryStream(modifiedImageData);
+            using var modifiedImageStream = new MemoryStream(modifiedImageData);
 
             if (string.IsNullOrWhiteSpace(imageModel.ContentType))
             {
                 imageModel.ContentType = "image/jpeg";
             }
 
+            // This ensures the MemoryStream is correct
             using var skImage = SKImage.FromEncodedData(modifiedImageStream) ?? throw new ArgumentException("The modified image stream is invalid.");
 
             imageModel.Name += $" - {filter}";

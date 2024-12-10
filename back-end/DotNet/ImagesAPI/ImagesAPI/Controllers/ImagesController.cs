@@ -100,6 +100,10 @@ namespace ImagesAPI.Controllers
             {
                 return NotFound(error.Message);
             }
+            catch (InvalidOperationException error)
+            {
+                return BadRequest(error.Message);
+            }
 
             return Ok(newImage);
         }
