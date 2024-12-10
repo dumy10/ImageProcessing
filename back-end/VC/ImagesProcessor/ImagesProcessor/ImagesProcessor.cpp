@@ -37,15 +37,16 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 void FreeMemory(unsigned char* data)
 {
 	Logger::LogMessage("FreeMemory Start");
-	if (data)
-	{
-		Logger::LogMessage("Freeing memory for received data.");
-		delete[] data;
-	}
-	else
+
+	if (!data)
 	{
 		Logger::LogWarning("FreeMemory called with null data.");
+		return;
 	}
+
+	Logger::LogMessage("Freeing memory for received data.");
+	delete[] data;
+
 	Logger::LogMessage("FreeMemory End");
 }
 
