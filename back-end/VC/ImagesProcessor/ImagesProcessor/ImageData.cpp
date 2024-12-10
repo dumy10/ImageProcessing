@@ -67,7 +67,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 
 	this->WriteToMemory(outputImage, &encodedData);
 
-	if (!outputImage)
+	if (!outputImage || encodedData.empty())
 	{
 		Logger::LogError("Filtering image data failed");
 		Logger::LogError("Deleting allocated memory");
