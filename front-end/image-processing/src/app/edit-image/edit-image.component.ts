@@ -54,7 +54,6 @@ export class EditImageComponent implements OnInit {
         console.error('Failed to fetch image', error);
         alert('Failed to fetch the image');
         this.loading = false;
-        this.router.navigate(['/']);
       },
       complete: () => {
         this.loading = false;
@@ -80,15 +79,18 @@ export class EditImageComponent implements OnInit {
       .editImage(this.image.id, filter.toString().toLowerCase())
       .subscribe({
         next: (response) => {
-          //@@@ TO DO
-          console.log('Image edited successfully');
+          this.image = response as ImageModel;
+          this.imagePath = this.image.url;
+          this.router.navigate(['/edit', response.id]);
         },
         error: (error) => {
           console.error('Failed to edit image', error);
-          console.error(error.message);
           alert('Failed to edit the image');
+          this.loading = false;
         },
-        complete: () => {},
+        complete: () => {
+          this.loading = false;
+        },
       });
   }
 }

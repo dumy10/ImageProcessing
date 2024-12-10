@@ -100,7 +100,7 @@ namespace ImagesAPI.Services
 
         public string GetImageURL(string imageId, int width, int height)
         {
-            return $"https://drive.google.com/thumbnail?id={imageId}&sz=w{width}-h{height}";
+            return $"https://lh3.googleusercontent.com/d/{imageId}=w{width}-h{height}?authuser=0";
         }
     }
 }

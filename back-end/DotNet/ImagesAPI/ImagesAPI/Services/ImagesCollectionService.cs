@@ -78,7 +78,7 @@ namespace ImagesAPI.Services
                 throw new ArgumentNullException(nameof(filter), "The filter parameter cannot be null or empty.");
             }
 
-            var memoryStream = await googleService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
+            using var memoryStream = await googleService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
             byte[] imageData = memoryStream.ToArray();
 
@@ -87,8 +87,10 @@ namespace ImagesAPI.Services
                 imageModel.Name = "Unnamed - " + Guid.NewGuid().ToString() + ".jpg";
             }
 
+            var extension = Path.GetExtension(imageModel.Name);
+
             // Apply the filter to the image
-            ImageProcessor.GetFilteredImageData(imageData, filter, Path.GetExtension(imageModel.Name), out byte[] modifiedImageData);
+            ImageProcessor.GetFilteredImageData(imageData, filter, extension, out byte[] modifiedImageData);
 
             // Get the modified stream
             using var modifiedImageStream = new MemoryStream(modifiedImageData);
@@ -101,7 +103,11 @@ namespace ImagesAPI.Services
             // This ensures the MemoryStream is correct
             using var skImage = SKImage.FromEncodedData(modifiedImageStream) ?? throw new ArgumentException("The modified image stream is invalid.");
 
-            imageModel.Name += $" - {filter}";
+            // Remove the extension
+            imageModel.Name = Path.GetFileNameWithoutExtension(imageModel.Name);
+
+            // Add the filter to the name and re-add the extension
+            imageModel.Name += $" - {filter}" + extension;
 
             // Upload the modified image to the drive
             string modifiedImageId = await googleService.UploadImage(modifiedImageStream, imageModel.Name, imageModel.ContentType);
