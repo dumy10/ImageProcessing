@@ -4,7 +4,7 @@
 
   <!-- Display the applied filters -->
   <div
-    *ngIf="data.appliedFilters !== undefined && data.appliedFilters.length > 0"
+    *ngIf="data.appliedFilters !== undefined && data.appliedFilters !== null"
     class="filtersDiv"
   >
     <h3>Applied Filters:</h3>

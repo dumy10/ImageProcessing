@@ -68,14 +68,7 @@ export class HomeComponent {
     const file = files[0]; // Handle only the first file
 
     if (file) {
-      const validImageTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'image/svg+xml',
-      ];
+      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
 
       // Check if file is an image
       if (validImageTypes.includes(file.type)) {
@@ -84,9 +77,7 @@ export class HomeComponent {
         this.uploadImage(file);
       } else {
         console.error('Invalid file type. Only images are allowed.');
-        alert(
-          'Please upload a valid image file (JPEG, JPG, PNG, GIF, WebP, SVG).'
-        );
+        alert('Please upload a valid image file (JPEG, JPG, PNG).');
       }
     }
   }

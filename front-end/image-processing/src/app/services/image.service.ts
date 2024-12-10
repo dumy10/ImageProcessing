@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ImageModel } from '../models/ImageModel';
 
@@ -26,8 +26,14 @@ export class ImageService {
   }
 
   editImage(id: string, filter: string): Observable<ImageModel> {
-    return this.httpClient.post<ImageModel>(`${this.baseURL}/edit/${id}`, {
-      filter,
-    });
+    return this.httpClient.put<ImageModel>(
+      `${this.baseURL}/edit/${id}`,
+      JSON.stringify(filter),
+      {
+        headers: new HttpHeaders({
+          'Content-Type': 'application/json',
+        }),
+      }
+    );
   }
 }

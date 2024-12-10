@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { ImageService } from '../services/image.service';
 import { ImageModel } from '../models/ImageModel';
 import { LoadingComponent } from '../loading/loading.component';
+import { Filters } from '../models/filters';
 
 @Inject('ImageService')
 @Component({
@@ -21,10 +22,10 @@ export class EditImageComponent implements OnInit {
   image: ImageModel | undefined;
   imagePath: string = '';
 
+  filters: Filters[] = [];
+
   constructor(private router: Router, private imageService: ImageService) {}
 
-  // TO DO: Implement the image editing functionality
-  // - Allow the user to edit the image
   // - Save the edited image
 
   ngOnInit(): void {
@@ -35,6 +36,9 @@ export class EditImageComponent implements OnInit {
       console.error('Invalid image ID');
       this.router.navigate(['/']);
     }
+
+    this.filters = Object.values(Filters);
+
     // fetch the image from the server
     this.loadImage(id as string);
   }
@@ -61,5 +65,30 @@ export class EditImageComponent implements OnInit {
   getIdFromUrl(): string | undefined {
     const url = window.location.href;
     return url.split('/').pop();
+  }
+
+  filterImage(filter: Filters): void {
+    if (!this.image) {
+      console.error('No image to edit');
+      return;
+    }
+
+    this.loading = true;
+    this.loadingMessage = `Applying filter: ${filter}...`;
+
+    this.imageService
+      .editImage(this.image.id, filter.toString().toLowerCase())
+      .subscribe({
+        next: (response) => {
+          //@@@ TO DO
+          console.log('Image edited successfully');
+        },
+        error: (error) => {
+          console.error('Failed to edit image', error);
+          console.error(error.message);
+          alert('Failed to edit the image');
+        },
+        complete: () => {},
+      });
   }
 }
