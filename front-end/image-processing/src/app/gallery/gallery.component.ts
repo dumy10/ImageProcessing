@@ -52,6 +52,13 @@ export class GalleryComponent implements OnInit {
             filteredImage: image,
           });
         });
+
+        if (this.imagePairs.length === 0) {
+          this.loading = false;
+          alert('No filtered images found');
+          return;
+        }
+
         this.updatePagination();
         this.loading = false;
       },
