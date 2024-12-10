@@ -12,7 +12,7 @@ namespace ImagesAPI.Controllers
         private readonly IImagesCollectionService _imagesCollectionService = imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService));
         private readonly IGoogleService _googleService = googleService ?? throw new ArgumentNullException(nameof(googleService));
 
-        private static readonly List<string> _allowedExtensions = [".jpeg", ".jpg", ".png", ".gif", ".webp", ".svg+xml"];
+        private static readonly List<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -51,6 +51,12 @@ namespace ImagesAPI.Controllers
             if (!_allowedExtensions.Contains(Path.GetExtension(image.FileName)))
                 return BadRequest("Invalid file type.");
 
+            using var inputStream = image.OpenReadStream();
+            using var skImage = SKImage.FromEncodedData(inputStream);
+
+            if (skImage == null)
+                return BadRequest("Invalid image file.");
+
             // Upload the image to google drive
             string imageId = await _googleService.UploadImage(image);
 
@@ -58,12 +64,6 @@ namespace ImagesAPI.Controllers
             {
                 return BadRequest("Error uploading the image.");
             }
-
-            using var inputStream = image.OpenReadStream();
-            using var skImage = SKImage.FromEncodedData(inputStream);
-
-            if (skImage == null)
-                return BadRequest("Invalid image file.");
 
             var imageModel = new ImageModel
             {
