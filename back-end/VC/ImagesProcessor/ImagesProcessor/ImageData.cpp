@@ -51,7 +51,14 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	}
 	default:
 	{
-		Logger::LogError("Unkown filter received: " + std::move(std::to_string(static_cast<int>(filter))));
+		Logger::LogError("Unknown filter received: " + std::move(std::to_string(static_cast<int>(filter))));
+		Logger::LogError("Filtering image data failed");
+		Logger::LogError("Deleting allocated memory");
+		delete[] outputImage;
+		outputImage = nullptr;
+		*outputLength = 0;
+		*outputData = nullptr;
+		return;
 		break;
 	}
 	}
