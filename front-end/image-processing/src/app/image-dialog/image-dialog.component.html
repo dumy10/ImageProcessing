@@ -1,7 +1,7 @@
 <h2 mat-dialog-title class="dialogTitle">
   Image: {{ data[data.length - 1].name }}
 </h2>
-<mat-dialog-content id="imageDialogContent" class="imageDialogContent">
+<mat-dialog-content class="imageDialogContent">
   <div *ngFor="let imageModel of data" class="imagesContainer">
     <div class="imageContainer">
       <div *ngIf="imageModel.appliedFilters" class="filtersContainer">
