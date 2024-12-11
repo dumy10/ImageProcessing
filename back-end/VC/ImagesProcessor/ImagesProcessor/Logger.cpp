@@ -11,6 +11,7 @@ void Logger::LogMessage(const std::string& message)
 	if (m_instance == nullptr)
 	{
 		m_instance = new Logger();
+		m_instance->LogMessage("Logger instance created");
 	}
 
 	// Lock the mutex
@@ -29,6 +30,7 @@ void Logger::LogWarning(const std::string& message)
 	if (m_instance == nullptr)
 	{
 		m_instance = new Logger();
+		m_instance->LogMessage("Logger instance created");
 	}
 
 	// Lock the mutex
@@ -47,6 +49,7 @@ void Logger::LogError(const std::string& message)
 	if (m_instance == nullptr)
 	{
 		m_instance = new Logger();
+		m_instance->LogMessage("Logger instance created");
 	}
 
 	// Lock the mutex
