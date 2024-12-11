@@ -26,8 +26,6 @@ export class EditImageComponent implements OnInit {
 
   constructor(private router: Router, private imageService: ImageService) {}
 
-  // - Save the edited image
-
   ngOnInit(): void {
     this.loading = true;
     const id = this.getIdFromUrl();

@@ -37,7 +37,7 @@ export class GalleryComponent implements OnInit {
     this.loadImages();
   }
 
-  loadImages() {
+  loadImages(): void {
     this.imageService.getImages().subscribe({
       next: (response: ImageModel[]) => {
         response.forEach((image) => {
@@ -79,24 +79,46 @@ export class GalleryComponent implements OnInit {
     });
   }
 
-  updatePagination() {
+  updatePagination(): void {
     this.totalPages = Math.ceil(this.imagePairs.length / this.itemsPerPage);
     const startIndex = this.currentPage * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     this.paginatedImagePairs = this.imagePairs.slice(startIndex, endIndex);
   }
 
-  onPageChange(event: any) {
+  onPageChange(event: any): void {
     this.currentPage = event.pageIndex;
     this.itemsPerPage = event.pageSize;
     this.updatePagination();
   }
 
-  openDialog(image: ImageModel) {
-    const dialogRef = this.dialog.open(ImageDialogComponent, { data: image });
+  openDialog(image: ImageModel): void {
+    const dialogRef = this.dialog.open(ImageDialogComponent, {
+      data: this.getImageHierarchy(image),
+    });
 
     dialogRef.afterClosed().subscribe((result) => {
       console.log('The dialog was closed');
     });
+  }
+
+  getImageHierarchy(image: ImageModel): ImageModel[] {
+    const imageHierarchy: ImageModel[] = [];
+
+    let currentImage = image;
+    imageHierarchy.unshift(currentImage);
+    while (currentImage.parentId) {
+      const parentImage = this.imagePairs.find(
+        (imgPair) => imgPair.originalImage.id === currentImage.parentId
+      )?.originalImage;
+
+      if (!parentImage) {
+        break;
+      }
+
+      imageHierarchy.unshift(parentImage);
+      currentImage = parentImage;
+    }
+    return imageHierarchy;
   }
 }

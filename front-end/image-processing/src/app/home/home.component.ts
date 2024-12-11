@@ -20,18 +20,18 @@ export class HomeComponent {
 
   constructor(private imageService: ImageService, private router: Router) {}
 
-  onDragOver(event: DragEvent) {
+  onDragOver(event: DragEvent): void {
     event.preventDefault(); // Necessary to allow drop
     const dropzone = event.target as HTMLElement;
     dropzone.classList.add('dragging');
   }
 
-  onDragLeave(event: DragEvent) {
+  onDragLeave(event: DragEvent): void {
     const dropzone = event.target as HTMLElement;
     dropzone.classList.remove('dragging');
   }
 
-  onDrop(event: DragEvent) {
+  onDrop(event: DragEvent): void {
     event.preventDefault();
     const dropzone = event.target as HTMLElement;
     dropzone.classList.remove('dragging');
@@ -43,21 +43,21 @@ export class HomeComponent {
     }
   }
 
-  onUploadClick() {
+  onUploadClick(): void {
     const uploadInput = document.getElementById(
       'imageUpload'
     ) as HTMLInputElement;
     uploadInput.click();
   }
 
-  onImageSelected(event: any) {
+  onImageSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
       this.handleFiles([file]);
     }
   }
 
-  handleFiles(files: FileList | File[]) {
+  handleFiles(files: FileList | File[]): void {
     // The user isnt allowed to select multiple files but he can drop them, throw an error as it is not allowed
     if (files.length > 1) {
       console.error('Invalid file count. Only one file is allowed.');
@@ -82,7 +82,7 @@ export class HomeComponent {
     }
   }
 
-  uploadImage(file: File) {
+  uploadImage(file: File): void {
     this.imageService.uploadImage(file).subscribe({
       next: (response: ImageModel) => {
         this.loading = false;

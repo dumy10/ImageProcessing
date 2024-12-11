@@ -33,7 +33,7 @@ import { ImageModel } from '../models/ImageModel';
 export class ImageDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<ImageDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: ImageModel
+    @Inject(MAT_DIALOG_DATA) public data: ImageModel[]
   ) {}
 
   close(): void {
