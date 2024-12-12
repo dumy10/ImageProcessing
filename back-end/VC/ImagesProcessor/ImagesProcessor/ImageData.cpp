@@ -84,6 +84,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	std::memcpy(*outputData, encodedData.data(), *outputLength);
 
 	delete[] outputImage;
+	outputImage = nullptr;
 
 	Logger::LogMessage("Image data filtered successfully");
 }
@@ -119,20 +120,93 @@ void ImageData::ApplyInvertFilter(unsigned char* outputImage) const
 	Logger::LogMessage("Invert filter applied successfully");
 }
 
-// This function is a placeholder for the blur filter
-// It just copies the image data to the output image
 void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 {
 	Logger::LogMessage("Applying blur filter");
-	for (int i = 0; i < m_imageSize; i += m_channels)
+
+	int kernelSize = 7; // The kernel defines how much blur the image will have. Do we want to take this from the front-end?
+	int halfKernel = kernelSize / 2;
+
+	unsigned char* tempImage = new unsigned char[m_imageSize];
+
+	// Parallel horizontal pass
+#pragma warning(push)
+#pragma warning(disable : 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
+								// At least as it looks like, the pragma is working as expected and the code should still run in parallel
+#pragma omp parallel for
+	for (int y = 0; y < m_height; y++)
 	{
-		unsigned char r = m_imageData[i];
-		unsigned char g = m_imageData[i + 1];
-		unsigned char b = m_imageData[i + 2];
-		outputImage[i] = r;
-		if (m_channels > 1 && i + 1 < m_imageSize) outputImage[i + 1] = g; // Ensure buffer overflow does not happen
-		if (m_channels > 2 && i + 2 < m_imageSize) outputImage[i + 2] = b;
+		for (int x = 0; x < m_width; x++)
+		{
+			float sum[4] = { 0 };
+			int count = 0;
+
+			for (int k = -halfKernel; k <= halfKernel; ++k)
+			{
+				int sampleX = x + k;
+
+				if (sampleX >= 0 && sampleX < m_width)
+				{
+					int sampleIndex = (y * m_width + sampleX) * m_channels;
+
+					for (int c = 0; c < m_channels; c++)
+					{
+						sum[c] += m_imageData[sampleIndex + c];
+					}
+					count++;
+				}
+			}
+
+			int index = (y * m_width + x) * m_channels;
+			for (int c = 0; c < m_channels; c++)
+			{
+				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
+				{
+					tempImage[index + c] = static_cast<unsigned char>(sum[c] / count);
+				}
+			}
+		}
 	}
+
+	// Parallel vertical pass
+#pragma omp parallel for
+	for (int y = 0; y < m_height; y++)
+	{
+		for (int x = 0; x < m_width; x++)
+		{
+			float sum[4] = { 0 };
+			int count = 0;
+
+			for (int k = -halfKernel; k <= halfKernel; k++)
+			{
+				int sampleY = y + k;
+
+				if (sampleY >= 0 && sampleY < m_height)
+				{
+					int sampleIndex = (sampleY * m_width + x) * m_channels;
+
+					for (int c = 0; c < m_channels; c++)
+					{
+						sum[c] += tempImage[sampleIndex + c];
+					}
+					count++;
+				}
+			}
+
+			int index = (y * m_width + x) * m_channels;
+			for (int c = 0; c < m_channels; c++)
+			{
+				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
+				{
+					outputImage[index + c] = static_cast<unsigned char>(sum[c] / count);
+				}
+			}
+		}
+	}
+#pragma warning(pop) // Restore warning settings
+	delete[] tempImage;
+	tempImage = nullptr;
+
 	Logger::LogMessage("Blur filter applied successfully");
 }
 

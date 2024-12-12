@@ -2,6 +2,21 @@
 #include "pch.h"
 #include <stb_image.h>
 #include <stb_image_write.h>
+#include <omp.h>
+
+static const std::map<std::string, EAllowedExtensions> kAllowedExtensions =
+{
+	{".png", EAllowedExtensions::PNG},
+	{".jpg", EAllowedExtensions::JPG},
+	{".jpeg", EAllowedExtensions::JPEG},
+};
+
+static const std::map<std::string, EDefinedFilters> kDefinedFilters =
+{
+	{"grayscale", EDefinedFilters::GRAYSCALE},
+	{"invert", EDefinedFilters::INVERT},
+	{"blur", EDefinedFilters::BLUR},
+};
 
 static stbi_write_func* kWriteCallback = [](void* context, void* data, int size) {
 	std::vector<unsigned char>* buffer = reinterpret_cast<std::vector<unsigned char>*>(context);

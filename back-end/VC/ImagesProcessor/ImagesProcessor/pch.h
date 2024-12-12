@@ -19,6 +19,7 @@
 
 // C++ needed headers
 #include <vector>
+#include <map>
 #include <memory>
 
 // Logger needed headers

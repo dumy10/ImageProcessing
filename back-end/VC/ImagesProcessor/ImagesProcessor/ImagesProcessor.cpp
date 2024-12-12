@@ -8,7 +8,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	Logger::LogMessage("Output data will be stored in: " + std::move(std::string{ extension }) + " format");
 
 	// Check if the extension received is allowed
-	if (!CheckExtension(extension))
+	if (kAllowedExtensions.find(extension) == kAllowedExtensions.end())
 	{
 		Logger::LogWarning("Extension not allowed: " + std::move(std::string{ extension }));
 		*outputLength = 0;
@@ -17,7 +17,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	}
 
 	// Check if the filter received is allowed
-	if (!CheckFilter(filter))
+	if (kDefinedFilters.find(filter) == kDefinedFilters.end())
 	{
 		Logger::LogWarning("Filter not allowed: " + std::move(std::string{ filter }));
 		*outputLength = 0;
@@ -29,7 +29,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	std::unique_ptr<ImageData> image = std::make_unique<ImageData>(reinterpret_cast<const unsigned char*>(imageData), length, extension);
 
 	// Filter the image data
-	image->FilterImage(FilterFromString(std::move(std::string{ filter })), outputData, outputLength);
+	image->FilterImage(kDefinedFilters.at(filter), outputData, outputLength);
 
 	Logger::LogMessage("ApplyFilter End");
 }
@@ -46,48 +46,7 @@ void FreeMemory(unsigned char* data)
 
 	Logger::LogMessage("Freeing memory for received data.");
 	delete[] data;
+	data = nullptr;
 
 	Logger::LogMessage("FreeMemory End");
-}
-
-bool CheckExtension(const std::string& extension)
-{
-	Logger::LogMessage("CheckExtension Start");
-	EAllowedExtensions ext = EAllowedExtensions::UNDEFINED;
-	if (extension == ".png")
-	{
-		ext = EAllowedExtensions::PNG;
-	}
-	else if (extension == ".jpg")
-	{
-		ext = EAllowedExtensions::JPG;
-	}
-	else if (extension == ".jpeg")
-	{
-		ext = EAllowedExtensions::JPEG;
-	}
-	Logger::LogMessage("CheckExtension End");
-
-	return ext != EAllowedExtensions::UNDEFINED;
-}
-
-bool CheckFilter(const std::string& filter)
-{
-	Logger::LogMessage("CheckFilter Start");
-	EDefinedFilters f = EDefinedFilters::UNDEFINED;
-	if (filter == "grayscale")
-	{
-		f = EDefinedFilters::GRAYSCALE;
-	}
-	else if (filter == "invert")
-	{
-		f = EDefinedFilters::INVERT;
-	}
-	else if (filter == "blur")
-	{
-		f = EDefinedFilters::BLUR;
-	}
-	Logger::LogMessage("CheckFilter End");
-
-	return f != EDefinedFilters::UNDEFINED;
 }
