@@ -6,6 +6,11 @@
         alt="Original Image"
         (click)="openDialog(imagePair.originalImage)"
       />
+      <div class="button">
+        <button alt="Edit" (click)="editImage(imagePair.originalImage)">
+          <mat-icon class="button">edit</mat-icon>
+        </button>
+      </div>
     </div>
     <div class="image-container">
       <img
@@ -13,6 +18,11 @@
         alt="Filtered Image"
         (click)="openDialog(imagePair.filteredImage)"
       />
+      <div class="button">
+        <button alt="Edit" (click)="editImage(imagePair.originalImage)">
+          <mat-icon class="button">edit</mat-icon>
+        </button>
+      </div>
     </div>
   </div>
 </div>

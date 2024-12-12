@@ -1,19 +1,15 @@
 <h2 mat-dialog-title class="dialogTitle">
-  Image: {{ data[data.length - 1].name }}
+  Tree of Image: {{ data.tree.root?.value?.name }}
 </h2>
 <mat-dialog-content class="imageDialogContent">
-  <div *ngFor="let imageModel of data" class="imagesContainer">
-    <div class="imageContainer">
-      <div *ngIf="imageModel.appliedFilters" class="filtersContainer">
-        <div class="imageDetails">
-          {{ imageModel.appliedFilters[imageModel.appliedFilters.length - 1] }}
-        </div>
-      </div>
-      <img [src]="imageModel.url" alt="Image" />
-    </div>
+  <div class="imageTreeContainer">
+    <app-image-tree
+      [node]="data.tree.root"
+      [imagePairs]="data.imagePairs"
+      class="imageTree"
+    ></app-image-tree>
   </div>
 </mat-dialog-content>
-
 <mat-dialog-actions id="imageDialogActions" class="imageDialogActions">
   <button mat-button class="btn btn-primary" (click)="close()">Close</button>
 </mat-dialog-actions>

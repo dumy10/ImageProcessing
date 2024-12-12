@@ -1,17 +1,20 @@
-import { Component, Inject, OnInit, ViewChild } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { ImageService } from '../services/image.service';
 import { ImageModel } from '../models/ImageModel';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { Tree, TreeNode } from '../models/tree';
+import { MatIconModule } from '@angular/material/icon';
+import { Router } from '@angular/router';
 
 @Inject('ImageService')
 @Component({
   selector: 'app-gallery',
   standalone: true,
-  imports: [CommonModule, LoadingComponent, MatPaginatorModule],
+  imports: [CommonModule, LoadingComponent, MatPaginatorModule, MatIconModule],
   providers: [ImageService],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss',
@@ -30,7 +33,11 @@ export class GalleryComponent implements OnInit {
   itemsPerPage: number = 5;
   totalPages: number = 1;
 
-  constructor(private dialog: MatDialog, private imageService: ImageService) {}
+  constructor(
+    private dialog: MatDialog,
+    private imageService: ImageService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loading = true;
@@ -92,9 +99,16 @@ export class GalleryComponent implements OnInit {
     this.updatePagination();
   }
 
+  editImage(image: ImageModel): void {
+    this.router.navigate(['/edit', image.id]);
+  }
+
   openDialog(image: ImageModel): void {
     const dialogRef = this.dialog.open(ImageDialogComponent, {
-      data: this.getImageHierarchy(image),
+      data: {
+        tree: this.getImageTree(image),
+        imagePairs: this.imagePairs,
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -120,5 +134,54 @@ export class GalleryComponent implements OnInit {
       currentImage = parentImage;
     }
     return imageHierarchy;
+  }
+
+  getImageTree(image: ImageModel): Tree<ImageModel> {
+    const imageTree: Tree<ImageModel> = new Tree<ImageModel>();
+    const nodeMap: Map<string, TreeNode<ImageModel>> = new Map();
+
+    // Create nodes for all images and store them in the map
+    this.imagePairs.forEach((imgPair) => {
+      const originalNode = new TreeNode<ImageModel>(imgPair.originalImage);
+      const filteredNode = new TreeNode<ImageModel>(imgPair.filteredImage);
+      nodeMap.set(imgPair.originalImage.id, originalNode);
+      nodeMap.set(imgPair.filteredImage.id, filteredNode);
+    });
+
+    // Set the root node as the original image
+    const originalImage = this.getOriginalImage(image);
+    const rootNode = nodeMap.get(originalImage.id);
+    if (rootNode) {
+      imageTree.setRoot(rootNode);
+    }
+
+    // Traverse the images and build the tree
+    nodeMap.forEach((node, id) => {
+      const parentId = node.value.parentId;
+      if (parentId) {
+        const parentNode = nodeMap.get(parentId);
+        if (parentNode) {
+          parentNode.addChild(node);
+        }
+      }
+    });
+
+    return imageTree;
+  }
+
+  getOriginalImage(image: ImageModel): ImageModel {
+    let currentImage = image;
+    while (currentImage.parentId) {
+      const parentImage = this.imagePairs.find(
+        (imgPair) => imgPair.originalImage.id === currentImage.parentId
+      )?.originalImage;
+
+      if (!parentImage) {
+        break;
+      }
+
+      currentImage = parentImage;
+    }
+    return currentImage as ImageModel;
   }
 }
