@@ -30,7 +30,7 @@ export class GalleryComponent implements OnInit {
   }> = [];
 
   currentPage: number = 0;
-  itemsPerPage: number = 5;
+  itemsPerPage: number = 6;
   totalPages: number = 1;
 
   constructor(

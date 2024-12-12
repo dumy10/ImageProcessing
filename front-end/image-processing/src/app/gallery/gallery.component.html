@@ -19,7 +19,7 @@
         (click)="openDialog(imagePair.filteredImage)"
       />
       <div class="button">
-        <button alt="Edit" (click)="editImage(imagePair.originalImage)">
+        <button alt="Edit" (click)="editImage(imagePair.filteredImage)">
           <mat-icon class="button">edit</mat-icon>
         </button>
       </div>
@@ -30,7 +30,7 @@
 <mat-paginator
   [length]="imagePairs.length"
   [pageSize]="itemsPerPage"
-  [pageSizeOptions]="[5, 10, 20]"
+  [pageSizeOptions]="[6, 12, 26]"
   (page)="onPageChange($event)"
 />
 

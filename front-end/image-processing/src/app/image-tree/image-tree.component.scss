@@ -37,6 +37,11 @@
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.filtersContainer:hover {
+  background-color: #495057;
+  color: #ffffff;
+}
+
 .treeNodeChildren {
   display: flex;
   flex-wrap: wrap;
