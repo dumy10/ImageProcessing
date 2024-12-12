@@ -1,4 +1,5 @@
 import { Component, Inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,9 +10,8 @@ import {
   MatDialogRef,
   MatDialogTitle,
 } from '@angular/material/dialog';
-import { CommonModule } from '@angular/common';
-import { ImageModel } from '../models/ImageModel';
 import { MatButtonModule } from '@angular/material/button';
+import { ImageModel } from '../models/ImageModel';
 
 @Component({
   selector: 'app-image-hierarchy',

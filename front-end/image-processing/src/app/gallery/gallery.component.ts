@@ -1,20 +1,21 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { ImageService } from '../services/image.service';
 import { ImageModel } from '../models/ImageModel';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { Tree, TreeNode } from '../models/tree';
-import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
 
 @Inject('ImageService')
 @Component({
   selector: 'app-gallery',
   standalone: true,
-  imports: [CommonModule, LoadingComponent, MatPaginatorModule, MatIconModule],
+  imports: [CommonModule, LoadingComponent, MatPaginatorModule, MatIconModule, MatButtonModule],
   providers: [ImageService],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss',
@@ -114,26 +115,6 @@ export class GalleryComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       console.log('The dialog was closed');
     });
-  }
-
-  getImageHierarchy(image: ImageModel): ImageModel[] {
-    const imageHierarchy: ImageModel[] = [];
-
-    let currentImage = image;
-    imageHierarchy.unshift(currentImage);
-    while (currentImage.parentId) {
-      const parentImage = this.imagePairs.find(
-        (imgPair) => imgPair.originalImage.id === currentImage.parentId
-      )?.originalImage;
-
-      if (!parentImage) {
-        break;
-      }
-
-      imageHierarchy.unshift(parentImage);
-      currentImage = parentImage;
-    }
-    return imageHierarchy;
   }
 
   getImageTree(image: ImageModel): Tree<ImageModel> {

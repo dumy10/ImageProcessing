@@ -1,14 +1,16 @@
-<!-- WIP -->
-<div style="display: flex">
-  <div style="flex: 1; padding: 10px">
-    <button mat-button *ngFor="let filter of filters" (click)="filterImage(filter)" >{{ filter }}</button>
+<div class="image-container">
+  <div class="filter-buttons">
+    <button
+      mat-button
+      *ngFor="let filter of filters"
+      (click)="filterImage(filter)"
+    >
+      {{ filter }}
+    </button>
   </div>
-  <div style="flex: 3; padding: 10px">
-    <img
-      [src]="imagePath"
-      alt="Image to be processed"
-      style="max-width: 100%"
-    />
+
+  <div class="image-display">
+    <img [src]="imagePath" alt="Image to be processed" class="image" />
   </div>
 </div>
 

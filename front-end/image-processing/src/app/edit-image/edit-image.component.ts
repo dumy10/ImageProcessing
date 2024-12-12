@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
 import { ImageService } from '../services/image.service';
 import { ImageModel } from '../models/ImageModel';
 import { LoadingComponent } from '../loading/loading.component';

@@ -1,17 +1,16 @@
-import { Component, Inject, Input, OnInit } from '@angular/core';
-import { TreeNode } from '../models/tree';
-import { ImageModel } from '../models/ImageModel';
+import { Component, Inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
+import { TreeNode } from '../models/tree';
+import { ImageModel } from '../models/ImageModel';
 import { ImageService } from '../services/image.service';
 import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
-import { HttpClientModule } from '@angular/common/http';
 
 @Inject('ImageService')
 @Component({
   selector: 'app-image-tree',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule],
   providers: [ImageService],
   templateUrl: './image-tree.component.html',
   styleUrl: './image-tree.component.scss',

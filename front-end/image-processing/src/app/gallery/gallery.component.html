@@ -32,6 +32,7 @@
   [pageSize]="itemsPerPage"
   [pageSizeOptions]="[6, 12, 26]"
   (page)="onPageChange($event)"
+  [showFirstLastButtons]="true"
 />
 
 <app-loading [loading]="loading" [message]="loadingMessage" *ngIf="loading" />
