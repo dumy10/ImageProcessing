@@ -6,5 +6,7 @@ enum class EDefinedFilters : uint8_t
 	UNDEFINED,
 	GRAYSCALE,
 	INVERT,
-	BLUR
+	BLUR,
+	SOBEL,
+	CANNY
 };

@@ -49,6 +49,16 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 		this->ApplyBlurFilter(outputImage);
 		break;
 	}
+	case EDefinedFilters::SOBEL:
+	{
+		this->ApplySobelFilter(outputImage);
+		break;
+	}
+	case EDefinedFilters::CANNY:
+	{
+		this->ApplyCannyFilter(outputImage);
+		break;
+	}
 	default:
 	{
 		Logger::LogError("Unknown filter received: " + std::move(std::to_string(static_cast<int>(filter))));
@@ -130,9 +140,10 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 	unsigned char* tempImage = new unsigned char[m_imageSize];
 
 	// Parallel horizontal pass
+	Logger::LogMessage("Parallel horizontal pass");
 #pragma warning(push)
 #pragma warning(disable : 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
-								// At least as it looks like, the pragma is working as expected and the code should still run in parallel
+	// At least as it looks like, the pragma is working as expected and the code should still run in parallel
 #pragma omp parallel for
 	for (int y = 0; y < m_height; y++)
 	{
@@ -167,7 +178,7 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 			}
 		}
 	}
-
+	Logger::LogMessage("Parallel vertical pass");
 	// Parallel vertical pass
 #pragma omp parallel for
 	for (int y = 0; y < m_height; y++)
@@ -208,6 +219,120 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 	tempImage = nullptr;
 
 	Logger::LogMessage("Blur filter applied successfully");
+}
+
+void ImageData::ApplySobelFilter(unsigned char* outputImage) const
+{
+	// Sobel filter is a combination of two 3x3 convolution filters
+	// The first filter is used to calculate the gradient in the x-direction
+	// The second filter is used to calculate the gradient in the y-direction
+	// The final gradient is calculated as the square root of the sum of the squares of the gradients in the x and y directions
+	// The final gradient is then thresholded to get the final image
+
+	// The Sobel filter is a very expensive operation and should be parallelized
+	// The filter is also very sensitive to noise and should be used with caution
+
+	Logger::LogMessage("Applying Sobel filter");
+
+	// Sobel filter kernels
+	int kernelX[3][3] = { { -1, 0, 1 },{ -2, 0, 2 },{ -1, 0, 1 } };
+	int kernelY[3][3] = { { -1, -2, -1 },{ 0, 0, 0 },{ 1, 2, 1 } };
+
+	unsigned char* tempImage = new unsigned char[m_imageSize];
+
+	// Parallel horizontal pass
+#pragma warning(push)
+#pragma warning(disable : 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
+							// At least as it looks like, the pragma is working as expected and the code should still run in parallel
+#pragma omp parallel for
+	for (int y = 0; y < m_height; y++)
+	{
+		for (int x = 0; x < m_width; x++)
+		{
+			float sumX[4] = { 0 };
+			float sumY[4] = { 0 };
+			for (int i = -1; i <= 1; i++)
+			{
+				for (int j = -1; j <= 1; j++)
+				{
+					int sampleX = x + j;
+					int sampleY = y + i;
+					if (sampleX >= 0 && sampleX < m_width && sampleY >= 0 && sampleY < m_height)
+					{
+						int sampleIndex = (sampleY * m_width + sampleX) * m_channels;
+						for (int c = 0; c < m_channels; c++)
+						{
+							sumX[c] += m_imageData[sampleIndex + c] * kernelX[i + 1][j + 1];
+							sumY[c] += m_imageData[sampleIndex + c] * kernelY[i + 1][j + 1];
+						}
+					}
+				}
+			}
+			int index = (y * m_width + x) * m_channels;
+			for (int c = 0; c < m_channels; c++)
+			{
+				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
+				{
+					tempImage[index + c] = static_cast<unsigned char>(std::sqrt(sumX[c] * sumX[c] + sumY[c] * sumY[c]));
+				}
+			}
+		}
+	}
+	// Parallel vertical pass
+#pragma omp parallel for
+	for (int y = 0; y < m_height; y++)
+	{
+		for (int x = 0; x < m_width; x++)
+		{
+			float sumX[4] = { 0 };
+			float sumY[4] = { 0 };
+			for (int i = -1; i <= 1; i++)
+			{
+				for (int j = -1; j <= 1; j++)
+				{
+					int sampleX = x + j;
+					int sampleY = y + i;
+					if (sampleX >= 0 && sampleX < m_width && sampleY >= 0 && sampleY < m_height)
+					{
+						int sampleIndex = (sampleY * m_width + sampleX) * m_channels;
+						for (int c = 0; c < m_channels; c++)
+						{
+							sumX[c] += tempImage[sampleIndex + c] * kernelX[i + 1][j + 1];
+							sumY[c] += tempImage[sampleIndex + c] * kernelY[i + 1][j + 1];
+						}
+					}
+				}
+			}
+			int index = (y * m_width + x) * m_channels;
+			for (int c = 0; c < m_channels; c++)
+			{
+				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
+				{
+					outputImage[index + c] = static_cast<unsigned char>(std::sqrt(sumX[c] * sumX[c] + sumY[c] * sumY[c]));
+				}
+			}
+		}
+	}
+#pragma warning(pop) // Restore warning settings
+	delete[] tempImage;
+	tempImage = nullptr;
+	Logger::LogMessage("Sobel filter applied successfully");
+}
+
+// This is a placeholder for the Canny filter
+void ImageData::ApplyCannyFilter(unsigned char* outputImage) const
+{
+	Logger::LogMessage("Applying Canny filter");
+	for (int i = 0; i < m_imageSize; i += m_channels)
+	{
+		unsigned char r = m_imageData[i];
+		unsigned char g = m_imageData[i + 1];
+		unsigned char b = m_imageData[i + 2];
+		outputImage[i] = r;
+		if (m_channels > 1 && i + 1 < m_imageSize) outputImage[i + 1] = g; // Ensure buffer overflow does not happen
+		if (m_channels > 2 && i + 2 < m_imageSize) outputImage[i + 2] = b;
+	}
+	Logger::LogMessage("Canny filter applied successfully");
 }
 
 void ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData) const

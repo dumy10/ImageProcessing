@@ -16,6 +16,8 @@ static const std::map<std::string, EDefinedFilters> kDefinedFilters =
 	{"grayscale", EDefinedFilters::GRAYSCALE},
 	{"invert", EDefinedFilters::INVERT},
 	{"blur", EDefinedFilters::BLUR},
+	{"sobel", EDefinedFilters::SOBEL},
+	{"canny", EDefinedFilters::CANNY}
 };
 
 static stbi_write_func* kWriteCallback = [](void* context, void* data, int size) {
@@ -37,6 +39,8 @@ private:
 	void ApplyGrayscaleFilter(unsigned char* outputImage) const;
 	void ApplyInvertFilter(unsigned char* outputImage) const;
 	void ApplyBlurFilter(unsigned char* outputImage) const;
+	void ApplySobelFilter(unsigned char* outputImage) const;
+	void ApplyCannyFilter(unsigned char* outputImage) const;
 	void WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData) const;
 
 private:
