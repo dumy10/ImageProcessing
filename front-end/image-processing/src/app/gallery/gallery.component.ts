@@ -11,39 +11,101 @@ import { LoadingComponent } from '../loading/loading.component';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { Tree, TreeNode } from '../models/tree';
 
+/**
+ * GalleryComponent is a component that displays a gallery of images with pagination.
+ * It allows users to view and interact with a collection of original and filtered images.
+ *
+ * @component
+ * @selector app-gallery
+ * @imports CommonModule, LoadingComponent, MatPaginatorModule, MatIconModule, MatButtonModule
+ * @providers ImageService
+ * @templateUrl ./gallery.component.html
+ * @styleUrl ./gallery.component.scss
+ */
 @Inject('ImageService')
 @Component({
-    selector: 'app-gallery',
-    imports: [CommonModule, LoadingComponent, MatPaginatorModule, MatIconModule, MatButtonModule],
-    providers: [ImageService],
-    templateUrl: './gallery.component.html',
-    styleUrl: './gallery.component.scss'
+  selector: 'app-gallery',
+  imports: [
+    CommonModule,
+    LoadingComponent,
+    MatPaginatorModule,
+    MatIconModule,
+    MatButtonModule,
+  ],
+  providers: [ImageService],
+  templateUrl: './gallery.component.html',
+  styleUrl: './gallery.component.scss',
 })
 export class GalleryComponent implements OnInit {
+  /**
+   * Indicates whether the application is currently loading.
+   * @type {boolean}
+   */
   loading: boolean = false;
+
+  /**
+   * Message displayed while loading images.
+   * @type {string}
+   */
   loadingMessage: string = 'Loading images...';
+
+  /**
+   * Array of image pairs, each containing an original image and its filtered version.
+   * @type {Array<{ originalImage: ImageModel; filteredImage: ImageModel }>}
+   */
   imagePairs: Array<{ originalImage: ImageModel; filteredImage: ImageModel }> =
     [];
+
+  /**
+   * Array of paginated image pairs for the current page.
+   * @type {Array<{ originalImage: ImageModel; filteredImage: ImageModel }>}
+   */
   paginatedImagePairs: Array<{
     originalImage: ImageModel;
     filteredImage: ImageModel;
   }> = [];
 
+  /**
+   * Current page number in the pagination.
+   * @type {number}
+   */
   currentPage: number = 0;
+
+  /**
+   * Number of items to display per page.
+   * @type {number}
+   */
   itemsPerPage: number = 6;
+
+  /**
+   * Total number of pages in the pagination.
+   * @type {number}
+   */
   totalPages: number = 1;
 
+  /**
+   * Constructor for GalleryComponent.
+   * @param {MatDialog} dialog - The dialog service for opening dialogs.
+   * @param {ImageService} imageService - Service for handling image operations.
+   * @param {Router} router - Router for navigating between pages.
+   */
   constructor(
     private dialog: MatDialog,
     private imageService: ImageService,
-    @Inject(Router) private router: Router
+    private router: Router
   ) {}
 
+  /**
+   * Initializes the component and loads the images.
+   */
   ngOnInit(): void {
     this.loading = true;
     this.loadImages();
   }
 
+  /**
+   * Loads the images from the server and sets up pagination.
+   */
   loadImages(): void {
     this.imageService.getImages().subscribe({
       next: (response: ImageModel[]) => {
@@ -86,6 +148,9 @@ export class GalleryComponent implements OnInit {
     });
   }
 
+  /**
+   * Paginates the images based on the current page and items per page.
+   */
   updatePagination(): void {
     this.totalPages = Math.ceil(this.imagePairs.length / this.itemsPerPage);
     const startIndex = this.currentPage * this.itemsPerPage;
@@ -93,16 +158,28 @@ export class GalleryComponent implements OnInit {
     this.paginatedImagePairs = this.imagePairs.slice(startIndex, endIndex);
   }
 
+  /**
+   * Handles page change event from the paginator.
+   * @param {number} page - The new page number.
+   */
   onPageChange(event: any): void {
     this.currentPage = event.pageIndex;
     this.itemsPerPage = event.pageSize;
     this.updatePagination();
   }
 
+  /**
+   * Navigates to the edit image page for the given image.
+   * @param {ImageModel} image - The image to edit.
+   */
   editImage(image: ImageModel): void {
     this.router.navigate(['/edit', image.id]);
   }
 
+  /**
+   * Opens a dialog to display the details of the given image.
+   * @param {ImageModel} image - The image for which to display the details.
+   */
   openDialog(image: ImageModel): void {
     const dialogRef = this.dialog.open(ImageDialogComponent, {
       data: {
@@ -115,7 +192,10 @@ export class GalleryComponent implements OnInit {
       console.log('The dialog was closed');
     });
   }
-
+  /**
+   * Builds a tree structure of images based on their parent-child relationships.
+   * @returns {Tree<ImageModel>} - The tree structure of images.
+   */
   getImageTree(image: ImageModel): Tree<ImageModel> {
     const imageTree: Tree<ImageModel> = new Tree<ImageModel>();
     const nodeMap: Map<string, TreeNode<ImageModel>> = new Map();
@@ -149,6 +229,11 @@ export class GalleryComponent implements OnInit {
     return imageTree;
   }
 
+  /**
+   * Retrieves the original image by traversing up the hierarchy.
+   * @param {ImageModel} image - The image for which to retrieve the original.
+   * @returns {ImageModel} - The original image.
+   */
   getOriginalImage(image: ImageModel): ImageModel {
     let currentImage = image;
     while (currentImage.parentId) {
