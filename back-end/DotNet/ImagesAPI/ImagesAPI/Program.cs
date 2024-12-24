@@ -13,15 +13,18 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add services to the container.
 builder.Services.AddSingleton<IImagesCollectionService, ImagesCollectionService>();
 builder.Services.AddSingleton<IGoogleService, GoogleService>();
 
+// Configure settings
 builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection(nameof(MongoDBSettings)));
 builder.Services.AddSingleton<IMongoDBSettings>(sp => sp.GetRequiredService<IOptions<MongoDBSettings>>().Value);
 
 builder.Services.Configure<GoogleAPISettings>(builder.Configuration.GetSection(nameof(GoogleAPISettings)));
 builder.Services.AddSingleton<IGoogleAPISettings>(sp => sp.GetRequiredService<IOptions<GoogleAPISettings>>().Value);
 
+// Add CORS policy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: "CorsPolicy",

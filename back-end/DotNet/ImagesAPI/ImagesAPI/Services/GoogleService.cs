@@ -6,10 +6,18 @@ using ImagesAPI.Settings;
 
 namespace ImagesAPI.Services
 {
+    /// <summary>
+    /// Service for interacting with Google Drive to perform image-related operations.
+    /// </summary>
     public class GoogleService : IGoogleService
     {
         private readonly DriveService _driveService;
         private readonly string _directoryId;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GoogleService"/> class.
+        /// </summary>
+        /// <param name="settings">The Google API settings.</param>
         public GoogleService(IGoogleAPISettings settings)
         {
             // Get the executing assembly path
@@ -19,6 +27,12 @@ namespace ImagesAPI.Services
 
             // Get the path to the key file
             var keyFilePath = Path.Combine(projectDir, "Credentials", settings.KeyFileName);
+
+            // Check if the key file exists
+            if (!File.Exists(keyFilePath))
+            {
+                throw new FileNotFoundException("The key file was not found.", keyFilePath);
+            }
 
             // Create the credential object using the key file
             var credentials = GoogleCredential.FromFile(keyFilePath)
@@ -34,6 +48,11 @@ namespace ImagesAPI.Services
             _directoryId = settings.DirectoryId;
         }
 
+        /// <summary>
+        /// Uploads an image to Google Drive.
+        /// </summary>
+        /// <param name="image">The image file to upload.</param>
+        /// <returns>The ID of the uploaded image file.</returns>
         public async Task<string> UploadImage(IFormFile image)
         {
             var fileMetadata = new Google.Apis.Drive.v3.Data.File()
@@ -58,6 +77,14 @@ namespace ImagesAPI.Services
 
             return request.ResponseBody.Id;
         }
+
+        /// <summary>
+        /// Uploads an image to Google Drive from a memory stream.
+        /// </summary>
+        /// <param name="stream">The memory stream containing the image data.</param>
+        /// <param name="fileName">The name of the image file.</param>
+        /// <param name="contentType">The content type of the image.</param>
+        /// <returns>The ID of the uploaded image file.</returns>
         public async Task<string> UploadImage(MemoryStream stream, string fileName, string contentType)
         {
             var fileMetadata = new Google.Apis.Drive.v3.Data.File()
@@ -80,6 +107,21 @@ namespace ImagesAPI.Services
             return request.ResponseBody.Id;
         }
 
+        /// <summary>
+        /// Deletes an image from Google Drive.
+        /// </summary>
+        /// <param name="imageId">The ID of the image to delete.</param>
+        /// <returns>The result of the delete operation.</returns>
+        public async Task<string> DeleteImage(string imageId)
+        {
+            return await _driveService.Files.Delete(imageId).ExecuteAsync();
+        }
+
+        /// <summary>
+        /// Retrieves a file's metadata from Google Drive.
+        /// </summary>
+        /// <param name="imageId">The ID of the image file.</param>
+        /// <returns>The file metadata.</returns>
         public async Task<Google.Apis.Drive.v3.Data.File> GetFile(string imageId)
         {
             var request = _driveService.Files.Get(imageId);
@@ -88,6 +130,11 @@ namespace ImagesAPI.Services
             return await request.ExecuteAsync();
         }
 
+        /// <summary>
+        /// Retrieves the image data as a memory stream from Google Drive.
+        /// </summary>
+        /// <param name="imageId">The ID of the image file.</param>
+        /// <returns>A memory stream containing the image data.</returns>
         public async Task<MemoryStream> GetStreamForImage(string imageId)
         {
             var request = _driveService.Files.Get(imageId);
@@ -98,6 +145,13 @@ namespace ImagesAPI.Services
             return memoryStream;
         }
 
+        /// <summary>
+        /// Generates a public URL for the image stored on Google Drive.
+        /// </summary>
+        /// <param name="imageId">The ID of the image file.</param>
+        /// <param name="width">The desired width of the image.</param>
+        /// <param name="height">The desired height of the image.</param>
+        /// <returns>The public URL of the image.</returns>
         public string GetImageURL(string imageId, int width, int height)
         {
             return $"https://lh3.googleusercontent.com/d/{imageId}=w{width}-h{height}?authuser=0";

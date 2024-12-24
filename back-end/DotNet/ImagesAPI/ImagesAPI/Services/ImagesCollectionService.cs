@@ -6,10 +6,17 @@ using SkiaSharp;
 
 namespace ImagesAPI.Services
 {
+    /// <summary>
+    /// Provides methods to manage image models in the MongoDB collection.
+    /// </summary>
     public class ImagesCollectionService : IImagesCollectionService
     {
         private readonly IMongoCollection<ImageModel> _images;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ImagesCollectionService"/> class.
+        /// </summary>
+        /// <param name="settings">The MongoDB settings.</param>
         public ImagesCollectionService(IMongoDBSettings settings)
         {
             var client = new MongoClient(settings.ConnectionString);
@@ -18,6 +25,11 @@ namespace ImagesAPI.Services
             _images = database.GetCollection<ImageModel>(settings.ImagesCollectionName);
         }
 
+        /// <summary>
+        /// Inserts a new image model into the collection.
+        /// </summary>
+        /// <param name="model">The image model to insert.</param>
+        /// <returns>A task representing the asynchronous operation, containing a boolean indicating success.</returns>
         public async Task<bool> Create(ImageModel model)
         {
             if (string.IsNullOrWhiteSpace(model.Id))
@@ -29,6 +41,11 @@ namespace ImagesAPI.Services
             return true;
         }
 
+        /// <summary>
+        /// Deletes an image model from the collection by its identifier.
+        /// </summary>
+        /// <param name="id">The identifier of the image model to delete.</param>
+        /// <returns>A task representing the asynchronous operation, containing a boolean indicating success.</returns>
         public async Task<bool> Delete(string id)
         {
             var result = await _images.DeleteOneAsync(image => image.Id == id);
@@ -41,17 +58,32 @@ namespace ImagesAPI.Services
             return true;
         }
 
+        /// <summary>
+        /// Retrieves an image model from the collection by its identifier.
+        /// </summary>
+        /// <param name="id">The identifier of the image model to retrieve.</param>
+        /// <returns>A task representing the asynchronous operation, containing the image model.</returns>
         public async Task<ImageModel> Get(string id)
         {
             return await _images.Find<ImageModel>(image => image.Id == id).FirstOrDefaultAsync();
         }
 
+        /// <summary>
+        /// Retrieves all image models from the collection.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation, containing a list of image models.</returns>
         public async Task<List<ImageModel>> GetAll()
         {
             var images = await _images.FindAsync(image => true);
             return await images.ToListAsync();
         }
 
+        /// <summary>
+        /// Updates an existing image model in the collection.
+        /// </summary>
+        /// <param name="id">The identifier of the image model to update.</param>
+        /// <param name="model">The updated image model.</param>
+        /// <returns>A task representing the asynchronous operation, containing a boolean indicating success.</returns>
         public async Task<bool> Update(string id, ImageModel model)
         {
             model.Id = id;
@@ -64,6 +96,15 @@ namespace ImagesAPI.Services
             return true;
         }
 
+        /// <summary>
+        /// Applies a filter to an image and uploads the modified image.
+        /// </summary>
+        /// <param name="id">The identifier of the image to modify.</param>
+        /// <param name="filter">The name of the filter to apply.</param>
+        /// <param name="googleService">The Google service for image operations.</param>
+        /// <returns>A task representing the asynchronous operation, containing the modified image model.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the id or filter is null or empty.</exception>
+        /// <exception cref="ArgumentException">Thrown when the image does not exist or the modified image is invalid.</exception>
         public async Task<ImageModel> ApplyFilterToImage(string id, string filter, IGoogleService googleService)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -100,7 +141,7 @@ namespace ImagesAPI.Services
                 imageModel.ContentType = "image/jpeg";
             }
 
-            // This ensures the MemoryStream is correct
+            // Ensure the modified image stream is valid
             using var skImage = SKImage.FromEncodedData(modifiedImageStream) ?? throw new ArgumentException("The modified image stream is invalid.");
 
             // Remove the extension
@@ -112,12 +153,12 @@ namespace ImagesAPI.Services
             // Upload the modified image to the drive
             string modifiedImageId = await googleService.UploadImage(modifiedImageStream, imageModel.Name, imageModel.ContentType);
 
-            // Modify the imageModel properties to point to the proper image
+            // Update image model properties
             imageModel.Id = modifiedImageId;
             imageModel.ParentId = id;
             imageModel.ParentUrl = imageModel.Url;
             imageModel.Url = googleService.GetImageURL(modifiedImageId, skImage.Width, skImage.Height);
-            imageModel.AppliedFilters ??= []; // Initialize the list if it's null
+            imageModel.AppliedFilters ??= []; // Ensure the applied filters list is initialized
             imageModel.AppliedFilters.Add(filter);
 
             // Save the image in the database
