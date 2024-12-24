@@ -37,7 +37,7 @@ export class GalleryComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private imageService: ImageService,
-    private router: Router
+    @Inject(Router) private router: Router
   ) {}
 
   ngOnInit(): void {
