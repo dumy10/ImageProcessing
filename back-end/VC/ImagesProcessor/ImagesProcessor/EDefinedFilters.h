@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <string>
 
 /**
  * @brief Enum class for defined image filters.
