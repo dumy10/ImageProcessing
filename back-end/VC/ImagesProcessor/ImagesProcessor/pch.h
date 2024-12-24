@@ -19,8 +19,9 @@
 
 // C++ needed headers
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <memory>
+#include <functional>
 
 // Logger needed headers
 #include <fstream>

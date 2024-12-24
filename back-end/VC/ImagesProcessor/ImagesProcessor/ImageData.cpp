@@ -12,7 +12,7 @@ ImageData::ImageData(const unsigned char* imageData, int length, const std::stri
 		throw std::runtime_error("Failed to load image data");
 	}
 
-	m_imageSize = m_width * m_height * m_channels;
+	m_imageSize = static_cast<size_t>(m_width) * static_cast<size_t>(m_height) * static_cast<size_t>(m_channels);
 
 	Logger::LogMessage("Image data loaded successfully to memory.");
 }
@@ -23,45 +23,32 @@ ImageData::~ImageData()
 	{
 		Logger::LogMessage("Freeing image data");
 		stbi_image_free(m_imageData);
+		m_imageData = nullptr;
 	}
 }
 
 void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength) const
 {
-	Logger::LogMessage("Filtering image data with filter: " + std::move(std::to_string(static_cast<int>(filter))));
+	Logger::LogMessage("Filtering image data with filter: " + std::to_string(static_cast<int>(filter)));
 
 	unsigned char* outputImage = new unsigned char[m_imageSize];
 
-	switch (filter)
+	static const std::unordered_map<EDefinedFilters, std::function<void(unsigned char*)>> filterMap = {
+		{ EDefinedFilters::GRAYSCALE, [this](unsigned char* img) { this->ApplyGrayscaleFilter(img); } },
+		{ EDefinedFilters::INVERT, [this](unsigned char* img) { this->ApplyInvertFilter(img); } },
+		{ EDefinedFilters::BLUR, [this](unsigned char* img) { this->ApplyBlurFilter(img); } },
+		{ EDefinedFilters::SOBEL, [this](unsigned char* img) { this->ApplySobelFilter(img); } },
+		{ EDefinedFilters::CANNY, [this](unsigned char* img) { this->ApplyCannyFilter(img); } }
+	};
+
+	auto it = filterMap.find(filter);
+	if (it != filterMap.end())
 	{
-	case EDefinedFilters::GRAYSCALE:
-	{
-		this->ApplyGrayscaleFilter(outputImage);
-		break;
+		it->second(outputImage);
 	}
-	case EDefinedFilters::INVERT:
+	else
 	{
-		this->ApplyInvertFilter(outputImage);
-		break;
-	}
-	case EDefinedFilters::BLUR:
-	{
-		this->ApplyBlurFilter(outputImage);
-		break;
-	}
-	case EDefinedFilters::SOBEL:
-	{
-		this->ApplySobelFilter(outputImage);
-		break;
-	}
-	case EDefinedFilters::CANNY:
-	{
-		this->ApplyCannyFilter(outputImage);
-		break;
-	}
-	default:
-	{
-		Logger::LogError("Unknown filter received: " + std::move(std::to_string(static_cast<int>(filter))));
+		Logger::LogError("Unknown filter received: " + std::to_string(static_cast<int>(filter)));
 		Logger::LogError("Filtering image data failed");
 		Logger::LogError("Deleting allocated memory");
 		delete[] outputImage;
@@ -69,20 +56,15 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
-		break;
-	}
 	}
 
 	std::vector<unsigned char> encodedData;
-
 	this->WriteToMemory(outputImage, &encodedData);
 
 	if (!outputImage || encodedData.empty())
 	{
 		Logger::LogError("Filtering image data failed");
 		Logger::LogError("Deleting allocated memory");
-		delete[] outputImage;
-		outputImage = nullptr;
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
@@ -102,7 +84,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 void ImageData::ApplyGrayscaleFilter(unsigned char* outputImage) const
 {
 	Logger::LogMessage("Applying grayscale filter");
-	for (int i = 0; i < m_imageSize; i += m_channels)
+	for (size_t i = 0; i < m_imageSize; i += m_channels)
 	{
 		unsigned char r = m_imageData[i];
 		unsigned char g = m_imageData[i + 1];
@@ -118,7 +100,7 @@ void ImageData::ApplyGrayscaleFilter(unsigned char* outputImage) const
 void ImageData::ApplyInvertFilter(unsigned char* outputImage) const
 {
 	Logger::LogMessage("Applying invert filter");
-	for (int i = 0; i < m_imageSize; i += m_channels)
+	for (size_t i = 0; i < m_imageSize; i += m_channels)
 	{
 		unsigned char r = m_imageData[i];
 		unsigned char g = m_imageData[i + 1];
@@ -140,10 +122,9 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 	unsigned char* tempImage = new unsigned char[m_imageSize];
 
 	// Parallel horizontal pass
-	Logger::LogMessage("Parallel horizontal pass");
 #pragma warning(push)
 #pragma warning(disable : 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
-	// At least as it looks like, the pragma is working as expected and the code should still run in parallel
+								// At least as it looks like, the pragma is working as expected and the code should still run in parallel
 #pragma omp parallel for
 	for (int y = 0; y < m_height; y++)
 	{
@@ -168,7 +149,7 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 				}
 			}
 
-			int index = (y * m_width + x) * m_channels;
+			size_t index = (static_cast<size_t>(y) * m_width + x) * m_channels;
 			for (int c = 0; c < m_channels; c++)
 			{
 				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
@@ -178,7 +159,6 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 			}
 		}
 	}
-	Logger::LogMessage("Parallel vertical pass");
 	// Parallel vertical pass
 #pragma omp parallel for
 	for (int y = 0; y < m_height; y++)
@@ -204,7 +184,7 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 				}
 			}
 
-			int index = (y * m_width + x) * m_channels;
+			size_t index = (static_cast<size_t>(y) * m_width + x) * m_channels;
 			for (int c = 0; c < m_channels; c++)
 			{
 				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
@@ -265,7 +245,7 @@ void ImageData::ApplySobelFilter(unsigned char* outputImage) const
 					}
 				}
 			}
-			int index = (y * m_width + x) * m_channels;
+			size_t index = (static_cast<size_t>(y) * m_width + x) * m_channels;
 			for (int c = 0; c < m_channels; c++)
 			{
 				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
@@ -300,7 +280,7 @@ void ImageData::ApplySobelFilter(unsigned char* outputImage) const
 					}
 				}
 			}
-			int index = (y * m_width + x) * m_channels;
+			size_t index = (static_cast<size_t>(y) * m_width + x) * m_channels;
 			for (int c = 0; c < m_channels; c++)
 			{
 				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
@@ -320,7 +300,7 @@ void ImageData::ApplySobelFilter(unsigned char* outputImage) const
 void ImageData::ApplyCannyFilter(unsigned char* outputImage) const
 {
 	Logger::LogMessage("Applying Canny filter");
-	for (int i = 0; i < m_imageSize; i += m_channels)
+	for (size_t i = 0; i < m_imageSize; i += m_channels)
 	{
 		unsigned char r = m_imageData[i];
 		unsigned char g = m_imageData[i + 1];
@@ -335,29 +315,31 @@ void ImageData::ApplyCannyFilter(unsigned char* outputImage) const
 void ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData) const
 {
 	Logger::LogMessage("Writing image data to memory");
+
+	encodedData->reserve(m_imageSize);
+
+	bool success = false;
+
 	if (m_extension == ".png")
 	{
-		if (!stbi_write_png_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, m_width * m_channels))
-		{
-			Logger::LogError("Failed to encode image data as " + std::move(m_extension));
-			delete[] outputImage;
-			outputImage = nullptr;
-		}
+		success = stbi_write_png_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, m_width * m_channels);
 	}
 	else if (m_extension == ".jpg" || m_extension == ".jpeg")
 	{
-		if (!stbi_write_jpg_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, m_width * m_channels))
-		{
-			Logger::LogError("Failed to encode image data as " + std::move(m_extension));
-			delete[] outputImage;
-			outputImage = nullptr;
-		}
+		success = stbi_write_jpg_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, m_width * m_channels);
 	}
 	else
 	{
-		Logger::LogError("Extension not supported: " + std::move(m_extension));
+		Logger::LogError("Extension not supported: " + m_extension);
+	}
+
+	if (!success)
+	{
+		Logger::LogError("Failed to write image data to memory");
+		encodedData->clear();
 		delete[] outputImage;
 		outputImage = nullptr;
+		return;
 	}
 	Logger::LogMessage("Image data written to memory successfully");
 }

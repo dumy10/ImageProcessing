@@ -4,14 +4,14 @@
 #include <stb_image_write.h>
 #include <omp.h>
 
-static const std::map<std::string, EAllowedExtensions> kAllowedExtensions =
+static const std::unordered_map<std::string, EAllowedExtensions> kAllowedExtensions =
 {
 	{".png", EAllowedExtensions::PNG},
 	{".jpg", EAllowedExtensions::JPG},
 	{".jpeg", EAllowedExtensions::JPEG},
 };
 
-static const std::map<std::string, EDefinedFilters> kDefinedFilters =
+static const std::unordered_map<std::string, EDefinedFilters> kDefinedFilters =
 {
 	{"grayscale", EDefinedFilters::GRAYSCALE},
 	{"invert", EDefinedFilters::INVERT},
@@ -51,5 +51,5 @@ private:
 	int m_width;
 	int m_height;
 	int m_channels;
-	int m_imageSize;
+	size_t m_imageSize;
 };
