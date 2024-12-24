@@ -134,7 +134,7 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 {
 	Logger::LogMessage("Applying blur filter");
 
-	int kernelSize = 7; // The kernel defines how much blur the image will have. Do we want to take this from the front-end?
+	int kernelSize = 7; // The kernel defines how much blur the image will have.
 	int halfKernel = kernelSize / 2;
 
 	unsigned char* tempImage = new unsigned char[m_imageSize];
@@ -229,9 +229,6 @@ void ImageData::ApplySobelFilter(unsigned char* outputImage) const
 	// The final gradient is calculated as the square root of the sum of the squares of the gradients in the x and y directions
 	// The final gradient is then thresholded to get the final image
 
-	// The Sobel filter is a very expensive operation and should be parallelized
-	// The filter is also very sensitive to noise and should be used with caution
-
 	Logger::LogMessage("Applying Sobel filter");
 
 	// Sobel filter kernels
@@ -243,7 +240,7 @@ void ImageData::ApplySobelFilter(unsigned char* outputImage) const
 	// Parallel horizontal pass
 #pragma warning(push)
 #pragma warning(disable : 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
-							// At least as it looks like, the pragma is working as expected and the code should still run in parallel
+								// At least as it looks like, the pragma is working as expected and the code should still run in parallel
 #pragma omp parallel for
 	for (int y = 0; y < m_height; y++)
 	{
