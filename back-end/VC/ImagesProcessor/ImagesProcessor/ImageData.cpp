@@ -12,7 +12,7 @@ ImageData::ImageData(const unsigned char* imageData, int length, const std::stri
 		throw std::runtime_error("Failed to load image data");
 	}
 
-	m_imageSize = static_cast<size_t>(m_width) * static_cast<size_t>(m_height) * static_cast<size_t>(m_channels);
+	m_imageSize = m_width * m_height * m_channels;
 
 	Logger::LogMessage("Image data loaded successfully to memory.");
 }
@@ -33,20 +33,34 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 
 	unsigned char* outputImage = new unsigned char[m_imageSize];
 
-	static const std::unordered_map<EDefinedFilters, std::function<void(unsigned char*)>> filterMap = {
-		{ EDefinedFilters::GRAYSCALE, [this](unsigned char* img) { this->ApplyGrayscaleFilter(img); } },
-		{ EDefinedFilters::INVERT, [this](unsigned char* img) { this->ApplyInvertFilter(img); } },
-		{ EDefinedFilters::BLUR, [this](unsigned char* img) { this->ApplyBlurFilter(img); } },
-		{ EDefinedFilters::SOBEL, [this](unsigned char* img) { this->ApplySobelFilter(img); } },
-		{ EDefinedFilters::CANNY, [this](unsigned char* img) { this->ApplyCannyFilter(img); } }
-	};
-
-	auto it = filterMap.find(filter);
-	if (it != filterMap.end())
+	switch (filter)
 	{
-		it->second(outputImage);
+	case EDefinedFilters::GRAYSCALE:
+	{
+		this->ApplyGrayscaleFilter(outputImage);
+		break;
 	}
-	else
+	case EDefinedFilters::INVERT:
+	{
+		this->ApplyInvertFilter(outputImage);
+		break;
+	}
+	case EDefinedFilters::BLUR:
+	{
+		this->ApplyBlurFilter(outputImage);
+		break;
+	}
+	case EDefinedFilters::SOBEL:
+	{
+		this->ApplySobelFilter(outputImage);
+		break;
+	}
+	case EDefinedFilters::CANNY:
+	{
+		this->ApplyCannyFilter(outputImage);
+		break;
+	}
+	default:
 	{
 		Logger::LogError("Unknown filter received: " + std::to_string(static_cast<int>(filter)));
 		Logger::LogError("Filtering image data failed");
@@ -56,6 +70,8 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
+		break;
+	}
 	}
 
 	std::vector<unsigned char> encodedData;
@@ -84,7 +100,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 void ImageData::ApplyGrayscaleFilter(unsigned char* outputImage) const
 {
 	Logger::LogMessage("Applying grayscale filter");
-	for (size_t i = 0; i < m_imageSize; i += m_channels)
+	for (int i = 0; i < m_imageSize; i += m_channels)
 	{
 		unsigned char r = m_imageData[i];
 		unsigned char g = m_imageData[i + 1];
@@ -100,7 +116,7 @@ void ImageData::ApplyGrayscaleFilter(unsigned char* outputImage) const
 void ImageData::ApplyInvertFilter(unsigned char* outputImage) const
 {
 	Logger::LogMessage("Applying invert filter");
-	for (size_t i = 0; i < m_imageSize; i += m_channels)
+	for (int i = 0; i < m_imageSize; i += m_channels)
 	{
 		unsigned char r = m_imageData[i];
 		unsigned char g = m_imageData[i + 1];
@@ -149,7 +165,7 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 				}
 			}
 
-			size_t index = (static_cast<size_t>(y) * m_width + x) * m_channels;
+			int index = (y * m_width + x) * m_channels;
 			for (int c = 0; c < m_channels; c++)
 			{
 				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
@@ -184,7 +200,7 @@ void ImageData::ApplyBlurFilter(unsigned char* outputImage) const
 				}
 			}
 
-			size_t index = (static_cast<size_t>(y) * m_width + x) * m_channels;
+			int index = (y * m_width + x) * m_channels;
 			for (int c = 0; c < m_channels; c++)
 			{
 				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
@@ -245,7 +261,7 @@ void ImageData::ApplySobelFilter(unsigned char* outputImage) const
 					}
 				}
 			}
-			size_t index = (static_cast<size_t>(y) * m_width + x) * m_channels;
+			int index = (y * m_width + x) * m_channels;
 			for (int c = 0; c < m_channels; c++)
 			{
 				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
@@ -280,7 +296,7 @@ void ImageData::ApplySobelFilter(unsigned char* outputImage) const
 					}
 				}
 			}
-			size_t index = (static_cast<size_t>(y) * m_width + x) * m_channels;
+			int index = (y * m_width + x) * m_channels;
 			for (int c = 0; c < m_channels; c++)
 			{
 				if (index + c < m_imageSize) // Ensure buffer overflow does not happen
@@ -300,7 +316,7 @@ void ImageData::ApplySobelFilter(unsigned char* outputImage) const
 void ImageData::ApplyCannyFilter(unsigned char* outputImage) const
 {
 	Logger::LogMessage("Applying Canny filter");
-	for (size_t i = 0; i < m_imageSize; i += m_channels)
+	for (int i = 0; i < m_imageSize; i += m_channels)
 	{
 		unsigned char r = m_imageData[i];
 		unsigned char g = m_imageData[i + 1];

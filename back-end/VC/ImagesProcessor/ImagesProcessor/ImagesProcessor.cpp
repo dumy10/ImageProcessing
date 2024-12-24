@@ -46,11 +46,21 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	Logger::LogMessage("Applying filter: " + std::string{ lowerFilter } + " to image data of length: " + std::to_string(length));
 	Logger::LogMessage("Output data will be stored in: " + std::string{ lowerExtension } + " format");
 
-	// Create an ImageData object with the received data
-	std::unique_ptr<ImageData> image = std::make_unique<ImageData>(reinterpret_cast<const unsigned char*>(imageData), length, lowerExtension);
+	try
+	{
+		// Create an ImageData object with the received data
+		std::unique_ptr<ImageData> image = std::make_unique<ImageData>(reinterpret_cast<const unsigned char*>(imageData), length, lowerExtension);
 
-	// Filter the image data
-	image->FilterImage(kDefinedFilters.at(lowerFilter), outputData, outputLength);
+		// Filter the image data
+		image->FilterImage(kDefinedFilters.at(lowerFilter), outputData, outputLength);
+	}
+	catch (const std::exception& e)
+	{
+		Logger::LogError("Exception caught: " + std::string{ e.what() });
+		*outputLength = 0;
+		*outputData = nullptr;
+	}
+
 
 	Logger::LogMessage("ApplyFilter End");
 }

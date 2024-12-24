@@ -51,5 +51,5 @@ private:
 	int m_width;
 	int m_height;
 	int m_channels;
-	size_t m_imageSize;
+	int m_imageSize;
 };
