@@ -7,12 +7,11 @@ import { LoadingComponent } from '../loading/loading.component';
 
 @Inject('ImageService')
 @Component({
-  selector: 'app-home',
-  standalone: true,
-  imports: [CommonModule, LoadingComponent],
-  providers: [ImageService],
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.scss',
+    selector: 'app-home',
+    imports: [CommonModule, LoadingComponent],
+    providers: [ImageService],
+    templateUrl: './home.component.html',
+    styleUrl: './home.component.scss'
 })
 export class HomeComponent {
   loading: boolean = false;

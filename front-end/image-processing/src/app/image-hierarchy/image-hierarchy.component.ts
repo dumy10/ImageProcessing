@@ -14,20 +14,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { ImageModel } from '../models/ImageModel';
 
 @Component({
-  selector: 'app-image-hierarchy',
-  standalone: true,
-  imports: [
-    FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDialogTitle,
-    MatDialogContent,
-    MatDialogActions,
-    MatButtonModule,
-    CommonModule,
-  ],
-  templateUrl: './image-hierarchy.component.html',
-  styleUrl: './image-hierarchy.component.scss',
+    selector: 'app-image-hierarchy',
+    imports: [
+        FormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatDialogTitle,
+        MatDialogContent,
+        MatDialogActions,
+        MatButtonModule,
+        CommonModule,
+    ],
+    templateUrl: './image-hierarchy.component.html',
+    styleUrl: './image-hierarchy.component.scss'
 })
 export class ImageHierarchyComponent {
   constructor(

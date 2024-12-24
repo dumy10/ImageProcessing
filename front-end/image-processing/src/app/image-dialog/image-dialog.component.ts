@@ -16,21 +16,20 @@ import { Tree } from '../models/tree';
 import { ImageTreeComponent } from '../image-tree/image-tree.component';
 
 @Component({
-  selector: 'app-image-dialog',
-  standalone: true,
-  imports: [
-    FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatDialogTitle,
-    MatDialogContent,
-    MatDialogActions,
-    CommonModule,
-    ImageTreeComponent,
-  ],
-  templateUrl: './image-dialog.component.html',
-  styleUrl: './image-dialog.component.scss',
+    selector: 'app-image-dialog',
+    imports: [
+        FormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatDialogTitle,
+        MatDialogContent,
+        MatDialogActions,
+        CommonModule,
+        ImageTreeComponent,
+    ],
+    templateUrl: './image-dialog.component.html',
+    styleUrl: './image-dialog.component.scss'
 })
 export class ImageDialogComponent {
   imagePairs: Array<{

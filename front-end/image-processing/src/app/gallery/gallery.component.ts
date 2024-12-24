@@ -13,12 +13,11 @@ import { Tree, TreeNode } from '../models/tree';
 
 @Inject('ImageService')
 @Component({
-  selector: 'app-gallery',
-  standalone: true,
-  imports: [CommonModule, LoadingComponent, MatPaginatorModule, MatIconModule, MatButtonModule],
-  providers: [ImageService],
-  templateUrl: './gallery.component.html',
-  styleUrl: './gallery.component.scss',
+    selector: 'app-gallery',
+    imports: [CommonModule, LoadingComponent, MatPaginatorModule, MatIconModule, MatButtonModule],
+    providers: [ImageService],
+    templateUrl: './gallery.component.html',
+    styleUrl: './gallery.component.scss'
 })
 export class GalleryComponent implements OnInit {
   loading: boolean = false;

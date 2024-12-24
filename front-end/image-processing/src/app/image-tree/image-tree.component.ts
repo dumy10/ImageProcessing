@@ -8,12 +8,11 @@ import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.comp
 
 @Inject('ImageService')
 @Component({
-  selector: 'app-image-tree',
-  standalone: true,
-  imports: [CommonModule],
-  providers: [ImageService],
-  templateUrl: './image-tree.component.html',
-  styleUrl: './image-tree.component.scss',
+    selector: 'app-image-tree',
+    imports: [CommonModule],
+    providers: [ImageService],
+    templateUrl: './image-tree.component.html',
+    styleUrl: './image-tree.component.scss'
 })
 export class ImageTreeComponent {
   @Input() node: TreeNode<ImageModel> | null = null;

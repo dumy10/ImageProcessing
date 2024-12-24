@@ -9,12 +9,11 @@ import { Filters } from '../models/filters';
 
 @Inject('ImageService')
 @Component({
-  selector: 'app-edit-image',
-  standalone: true,
-  imports: [MatButtonModule, LoadingComponent, CommonModule],
-  providers: [ImageService],
-  templateUrl: './edit-image.component.html',
-  styleUrl: './edit-image.component.scss',
+    selector: 'app-edit-image',
+    imports: [MatButtonModule, LoadingComponent, CommonModule],
+    providers: [ImageService],
+    templateUrl: './edit-image.component.html',
+    styleUrl: './edit-image.component.scss'
 })
 export class EditImageComponent implements OnInit {
   loading: boolean = false;
