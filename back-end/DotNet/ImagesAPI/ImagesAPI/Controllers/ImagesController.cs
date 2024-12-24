@@ -15,7 +15,8 @@ namespace ImagesAPI.Controllers
         private readonly ImagesCollectionService _imagesCollectionService = (ImagesCollectionService)(imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService)));
         private readonly GoogleService _googleService = (GoogleService)(googleService ?? throw new ArgumentNullException(nameof(googleService)));
 
-        private static readonly List<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
+        private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
+        private static readonly HashSet<string> _allowedFilters = ["grayscale", "invert", "blur", "sobel", "canny"];
 
         /// <summary>
         /// Retrieves all images.
@@ -111,6 +112,9 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> EditImage(string id, [FromBody] string filter)
         {
+            if (string.IsNullOrWhiteSpace(filter) || !_allowedFilters.Contains(filter.ToLower()))
+                return BadRequest("Invalid filter.");
+
             ImageModel newImage;
             try
             {

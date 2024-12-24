@@ -107,17 +107,7 @@ namespace ImagesAPI.Services
         /// <exception cref="ArgumentException">Thrown when the image does not exist or the modified image is invalid.</exception>
         public async Task<ImageModel> ApplyFilterToImage(string id, string filter, IGoogleService googleService)
         {
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                throw new ArgumentNullException(nameof(id), "The id parameter cannot be null or empty.");
-            }
-
             ImageModel imageModel = await this.Get(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
-
-            if (string.IsNullOrWhiteSpace(filter))
-            {
-                throw new ArgumentNullException(nameof(filter), "The filter parameter cannot be null or empty.");
-            }
 
             using var memoryStream = await googleService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
