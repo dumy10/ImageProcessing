@@ -44,6 +44,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	}
 
 	Logger::LogMessage("Applying filter: " + std::string{ lowerFilter } + " to image data of length: " + std::to_string(length));
+	Logger::LogMessage("Image data size: " + std::to_string((static_cast<double>(length) / 2048.0)) + " MB");
 	Logger::LogMessage("Output data will be stored in: " + std::string{ lowerExtension } + " format");
 
 	try
@@ -61,6 +62,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 		*outputData = nullptr;
 	}
 
+	Logger::LogMessage("Output data size: " + std::to_string((static_cast<double>(*outputLength) / 2048.0)) + " MB");
 
 	Logger::LogMessage("ApplyFilter End");
 }
@@ -84,7 +86,7 @@ void FreeMemory(unsigned char* data)
 
 std::string ToLowerCase(const std::string& input)
 {
-	std::string result = input;
+	std::string result{ input };
 	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
 	return result;
 }

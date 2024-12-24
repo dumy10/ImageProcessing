@@ -1,12 +1,16 @@
 #pragma once
 #include <cstdint>
 #include <string>
+
+/**
+ * @brief Enum class for defined image filters.
+ */
 enum class EDefinedFilters : uint8_t
 {
-	UNDEFINED,
-	GRAYSCALE,
-	INVERT,
-	BLUR,
-	SOBEL,
-	CANNY
+    UNDEFINED,  ///< Undefined filter.
+    GRAYSCALE,  ///< Grayscale filter.
+    INVERT,     ///< Invert filter.
+    BLUR,       ///< Blur filter.
+    SOBEL,      ///< Sobel filter.
+    CANNY       ///< Canny filter.
 };
