@@ -25,7 +25,7 @@
         {
             get
             {
-                return "mongodb://localhost:27017";
+                return "mongodb://hd-nosql-db:X8rmHFhXq1T2kGAAQeQn50xL2oKiH04fqcqBWc79HhHlYALLUObLaxTvrsuISOYteiI8D9JgjMcuACDbiAqfuA==@hd-nosql-db.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@hd-nosql-db@";
             }
             set
             { }

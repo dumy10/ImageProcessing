@@ -3,6 +3,7 @@ using ImagesAPI.Models;
 using ImagesAPI.Settings;
 using MongoDB.Driver;
 using SkiaSharp;
+using System.Security.Authentication;
 
 namespace ImagesAPI.Services
 {
@@ -19,7 +20,9 @@ namespace ImagesAPI.Services
         /// <param name="settings">The MongoDB settings.</param>
         public ImagesCollectionService(IMongoDBSettings settings)
         {
-            var client = new MongoClient(settings.ConnectionString);
+            MongoClientSettings clientSettings = MongoClientSettings.FromUrl(new MongoUrl(settings.ConnectionString));
+            clientSettings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+            var client = new MongoClient(clientSettings);
             var database = client.GetDatabase(settings.DatabaseName);
 
             _images = database.GetCollection<ImageModel>(settings.ImagesCollectionName);
