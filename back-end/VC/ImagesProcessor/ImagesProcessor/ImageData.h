@@ -3,6 +3,8 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 #include <omp.h>
+#include "IFilter.h"
+#include "FilterFactory.h"
 
 /**
  * @brief Allowed image file extensions.
@@ -78,41 +80,6 @@ public:
 
 private:
 	/**
-	 * @brief Applies a grayscale filter to the image data.
-	 *
-	 * @param outputImage Pointer to the output image data.
-	 */
-	void ApplyGrayscaleFilter(unsigned char* outputImage) const;
-
-	/**
-	 * @brief Applies an invert filter to the image data.
-	 *
-	 * @param outputImage Pointer to the output image data.
-	 */
-	void ApplyInvertFilter(unsigned char* outputImage) const;
-
-	/**
-	 * @brief Applies a blur filter to the image data.
-	 *
-	 * @param outputImage Pointer to the output image data.
-	 */
-	void ApplyBlurFilter(unsigned char* outputImage) const;
-
-	/**
-	 * @brief Applies a Sobel filter to the image data.
-	 *
-	 * @param outputImage Pointer to the output image data.
-	 */
-	void ApplySobelFilter(unsigned char* outputImage) const;
-
-	/**
-	 * @brief Applies a Canny filter to the image data.
-	 *
-	 * @param outputImage Pointer to the output image data.
-	 */
-	void ApplyCannyFilter(unsigned char* outputImage) const;
-
-	/**
 	 * @brief Writes the image data to memory.
 	 *
 	 * @param outputImage Pointer to the output image data.
@@ -128,7 +95,7 @@ private:
 	 * @param outputImage Pointer to the output image data.
 	 * @return True if the filter was applied successfully, false otherwise.
 	 */
-	[[nodiscard]] bool ApplyFilter(EDefinedFilters filter, unsigned char* outputImage) const;
+	[[nodiscard]] bool ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage) const;
 private:
 	std::string m_extension; ///< File extension of the image.
 	unsigned char* m_imageData; ///< Pointer to the image data.

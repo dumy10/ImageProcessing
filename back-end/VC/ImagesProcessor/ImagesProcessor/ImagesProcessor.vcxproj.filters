@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Filters">
+      <UniqueIdentifier>{8f4fc18f-a5c2-4d89-90dd-1e4ccef70c0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -39,8 +42,29 @@
     <ClInclude Include="EAllowedExtensions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SobelFilter.h">
+      <Filter>Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="InvertFilter.h">
+      <Filter>Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="IFilter.h">
+      <Filter>Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="GrayscaleFilter.h">
+      <Filter>Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterFactory.h">
+      <Filter>Filters</Filter>
+    </ClInclude>
     <ClInclude Include="EDefinedFilters.h">
-      <Filter>Header Files</Filter>
+      <Filter>Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="CannyFilter.h">
+      <Filter>Filters</Filter>
+    </ClInclude>
+    <ClInclude Include="BlurFilter.h">
+      <Filter>Filters</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

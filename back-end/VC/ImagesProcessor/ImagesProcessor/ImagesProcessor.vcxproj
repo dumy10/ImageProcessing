@@ -163,14 +163,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BlurFilter.h" />
+    <ClInclude Include="CannyFilter.h" />
     <ClInclude Include="EAllowedExtensions.h" />
     <ClInclude Include="EDefinedFilters.h" />
+    <ClInclude Include="FilterFactory.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="GrayscaleFilter.h" />
+    <ClInclude Include="IFilter.h" />
     <ClInclude Include="ImageData.h" />
     <ClInclude Include="ImagesProcessor.h" />
+    <ClInclude Include="InvertFilter.h" />
     <ClInclude Include="libdefine.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="SobelFilter.h" />
     <ClInclude Include="stb_image_implementation.h" />
   </ItemGroup>
   <ItemGroup>
