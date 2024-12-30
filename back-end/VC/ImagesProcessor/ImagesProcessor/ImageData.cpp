@@ -33,58 +33,30 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 
 	unsigned char* outputImage = new unsigned char[m_imageSize];
 
-	switch (filter)
+	if (!this->ApplyFilter(filter, outputImage))
 	{
-	case EDefinedFilters::GRAYSCALE:
-	{
-		this->ApplyGrayscaleFilter(outputImage);
-		break;
-	}
-	case EDefinedFilters::INVERT:
-	{
-		this->ApplyInvertFilter(outputImage);
-		break;
-	}
-	case EDefinedFilters::BLUR:
-	{
-		this->ApplyBlurFilter(outputImage);
-		break;
-	}
-	case EDefinedFilters::SOBEL:
-	{
-		this->ApplySobelFilter(outputImage);
-		break;
-	}
-	case EDefinedFilters::CANNY:
-	{
-		this->ApplyCannyFilter(outputImage);
-		break;
-	}
-	default:
-	{
-		Logger::LogError("Unknown filter received: " + std::to_string(static_cast<int>(filter)));
-		Logger::LogError("Filtering image data failed");
-		Logger::LogError("Deleting allocated memory");
 		delete[] outputImage;
 		outputImage = nullptr;
 		*outputLength = 0;
 		*outputData = nullptr;
-		return;
-		break;
-	}
 	}
 
 	std::vector<unsigned char> encodedData;
-	this->WriteToMemory(outputImage, &encodedData);
 
-	if (!outputImage || encodedData.empty())
+	if (!this->WriteToMemory(outputImage, &encodedData))
 	{
+		Logger::LogError("Failed to write image data to memory");
+		encodedData.clear();
+		delete[] outputImage;
+		outputImage = nullptr;
+
 		Logger::LogError("Filtering image data failed");
 		Logger::LogError("Deleting allocated memory");
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
 	}
+	Logger::LogMessage("Image data written to memory successfully");
 
 	*outputLength = static_cast<int>(encodedData.size());
 	*outputData = new unsigned char[*outputLength];
@@ -328,7 +300,52 @@ void ImageData::ApplyCannyFilter(unsigned char* outputImage) const
 	Logger::LogMessage("Canny filter applied successfully");
 }
 
-void ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData) const
+[[nodiscard]] bool ImageData::ApplyFilter(EDefinedFilters filter, unsigned char* outputImage) const
+{
+	switch (filter)
+	{
+	case EDefinedFilters::GRAYSCALE:
+	{
+		this->ApplyGrayscaleFilter(outputImage);
+		return true;
+		break;
+	}
+	case EDefinedFilters::INVERT:
+	{
+		this->ApplyInvertFilter(outputImage);
+		return true;
+		break;
+	}
+	case EDefinedFilters::BLUR:
+	{
+		this->ApplyBlurFilter(outputImage);
+		return true;
+		break;
+	}
+	case EDefinedFilters::SOBEL:
+	{
+		this->ApplySobelFilter(outputImage);
+		return true;
+		break;
+	}
+	case EDefinedFilters::CANNY:
+	{
+		this->ApplyCannyFilter(outputImage);
+		return true;
+		break;
+	}
+	default:
+	{
+		Logger::LogError("Unknown filter received: " + std::to_string(static_cast<int>(filter)));
+		Logger::LogError("Filtering image data failed");
+		Logger::LogError("Deleting allocated memory");
+		return false;
+		break;
+	}
+	}
+}
+
+[[nodiscard]] bool ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData) const
 {
 	Logger::LogMessage("Writing image data to memory");
 
@@ -349,13 +366,5 @@ void ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned c
 		Logger::LogError("Extension not supported: " + m_extension);
 	}
 
-	if (!success)
-	{
-		Logger::LogError("Failed to write image data to memory");
-		encodedData->clear();
-		delete[] outputImage;
-		outputImage = nullptr;
-		return;
-	}
-	Logger::LogMessage("Image data written to memory successfully");
+	return success;
 }
