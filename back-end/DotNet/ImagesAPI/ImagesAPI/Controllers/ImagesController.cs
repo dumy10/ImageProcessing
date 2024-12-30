@@ -25,14 +25,22 @@ namespace ImagesAPI.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetImages()
         {
-            List<ImageModel> images = await _imagesCollectionService.GetAll();
+            try
+            {
+                List<ImageModel> images = await _imagesCollectionService.GetAll();
 
-            if (images == null || images.Count == 0)
-                return NotFound();
+                if (images == null || images.Count == 0)
+                    return NotFound();
 
-            return Ok(images);
+                return Ok(images);
+            }
+            catch (Exception error)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+            }
         }
 
         /// <summary>
@@ -43,14 +51,20 @@ namespace ImagesAPI.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetImage(string id)
         {
-            var image = await _imagesCollectionService.Get(id);
-
-            if (image == null)
-                return NotFound();
-
-            return Ok(image);
+            try
+            {
+                var image = await _imagesCollectionService.Get(id);
+                if (image == null)
+                    return NotFound();
+                return Ok(image);
+            }
+            catch (Exception error)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+            }
         }
 
         /// <summary>
@@ -62,6 +76,7 @@ namespace ImagesAPI.Controllers
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UploadImage(IFormFile image)
         {
             if (image == null || image.Length == 0)
@@ -76,28 +91,35 @@ namespace ImagesAPI.Controllers
             if (skImage == null)
                 return BadRequest("Invalid image file.");
 
-            // Upload the image to Google Drive
-            string imageId = await _googleService.UploadImage(image);
-
-            if (string.IsNullOrWhiteSpace(imageId))
+            try
             {
-                return BadRequest("Error uploading the image.");
+                // Upload the image to Google Drive
+                string imageId = await _googleService.UploadImage(image);
+
+                if (string.IsNullOrWhiteSpace(imageId))
+                {
+                    return BadRequest("Error uploading the image.");
+                }
+
+                var imageModel = new ImageModel
+                {
+                    Id = imageId,
+                    Name = image.FileName,
+                    Width = skImage.Width,
+                    Height = skImage.Height,
+                    ContentType = image.ContentType,
+                    Url = _googleService.GetImageURL(imageId, skImage.Width, skImage.Height)
+                };
+
+                // Insert the model into the database
+                await _imagesCollectionService.Create(imageModel);
+
+                return Ok(imageModel);
             }
-
-            var imageModel = new ImageModel
+            catch (Exception error)
             {
-                Id = imageId,
-                Name = image.FileName,
-                Width = skImage.Width,
-                Height = skImage.Height,
-                ContentType = image.ContentType,
-                Url = _googleService.GetImageURL(imageId, skImage.Width, skImage.Height)
-            };
-
-            // Insert the model into the database
-            await _imagesCollectionService.Create(imageModel);
-
-            return Ok(imageModel);
+                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+            }
         }
 
         /// <summary>
@@ -110,6 +132,7 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> EditImage(string id, [FromBody] string filter)
         {
             if (string.IsNullOrWhiteSpace(filter) || !_allowedFilters.Contains(filter.ToLower()))
@@ -132,6 +155,10 @@ namespace ImagesAPI.Controllers
             {
                 return BadRequest(error.Message);
             }
+            catch (Exception error)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+            }
 
             return Ok(newImage);
         }
@@ -144,22 +171,30 @@ namespace ImagesAPI.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteImage(string id)
         {
-            var image = await _imagesCollectionService.Get(id);
+            try
+            {
+                var image = await _imagesCollectionService.Get(id);
 
-            if (image == null)
-                return NotFound();
+                if (image == null)
+                    return NotFound();
 
-            var deleteFromGoogleDrive = await _googleService.DeleteImage(id);
+                var deleteFromGoogleDrive = await _googleService.DeleteImage(id);
 
-            if (deleteFromGoogleDrive == null)
-                return BadRequest("Error deleting the image.");
+                if (deleteFromGoogleDrive == null)
+                    return BadRequest("Error deleting the image.");
 
-            if (!(await _imagesCollectionService.Delete(id)))
-                return BadRequest("Error deleting the image.");
+                if (!(await _imagesCollectionService.Delete(id)))
+                    return BadRequest("Error deleting the image.");
 
-            return Ok();
+                return Ok();
+            }
+            catch (Exception error)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+            }
         }
     }
 }
