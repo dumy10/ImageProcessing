@@ -5,6 +5,7 @@
       alt="Image"
       class="treeNodeImage"
       (click)="openDialog(node.value)"
+      loading="lazy"
     />
     <span *ngIf="node.value.appliedFilters" class="filtersContainer">
       {{ node.value.appliedFilters[node.value.appliedFilters.length - 1] }}

@@ -5,6 +5,7 @@
         [src]="imagePair.originalImage.url"
         alt="Original Image"
         (click)="openDialog(imagePair.originalImage)"
+        loading="lazy"
       />
       <div class="button">
         <button alt="Edit" (click)="editImage(imagePair.originalImage)">
@@ -17,6 +18,7 @@
         [src]="imagePair.filteredImage.url"
         alt="Filtered Image"
         (click)="openDialog(imagePair.filteredImage)"
+        loading="lazy"
       />
       <div class="button">
         <button alt="Edit" (click)="editImage(imagePair.filteredImage)">

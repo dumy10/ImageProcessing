@@ -6,6 +6,7 @@ import { ImageService } from '../services/image.service';
 import { ImageModel } from '../models/ImageModel';
 import { LoadingComponent } from '../loading/loading.component';
 import { Filters } from '../models/filters';
+import { MatIconModule } from '@angular/material/icon';
 
 /**
  * EditImageComponent is a component that allows users to edit an image by applying various filters.
@@ -13,14 +14,14 @@ import { Filters } from '../models/filters';
  *
  * @component
  * @selector app-edit-image
- * @imports CommonModule, MatButtonModule, LoadingComponent
+ * @imports CommonModule, MatButtonModule, LoadingComponent, MatIconModule
  * @templateUrl ./edit-image.component.html
  * @styleUrl ./edit-image.component.scss
  */
 @Component({
   selector: 'app-edit-image',
   providers: [ImageService],
-  imports: [MatButtonModule, LoadingComponent, CommonModule],
+  imports: [MatButtonModule, LoadingComponent, CommonModule, MatIconModule],
   templateUrl: './edit-image.component.html',
   styleUrl: './edit-image.component.scss',
 })
@@ -141,5 +142,20 @@ export class EditImageComponent implements OnInit {
           this.loading = false;
         },
       });
+  }
+
+  /**
+   * Downloads the given image.
+   */
+  downloadImage(): void {
+    if (!this.image) {
+      console.error('No image to download');
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = `https://drive.google.com/uc?export=download&id=${this.image.id}`;
+    link.download = this.image.name;
+    link.click();
   }
 }
