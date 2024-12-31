@@ -2,20 +2,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 3.75rem);
   width: 100%;
   box-sizing: border-box;
 }
 
 .dropzone {
   border: 2px dashed #8e44ad;
-  border-radius: 10px;
+  border-radius: 0.625rem;
   width: 90%;
   height: 80%;
-  max-width: 1200px;
-  max-height: 600px;
+  max-width: 75rem;
+  max-height: 37.5rem;
   background-color: #fafafa;
-  padding: 20px;
+  padding: 1.25rem;
   transition: background-color 0.3s ease;
   text-align: center;
   display: flex;
@@ -28,9 +28,9 @@
 }
 
 .dropzone p {
-  font-size: 16px;
+  font-size: 1rem;
   color: #666;
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
 }
 
 .dropzone.dragging {
@@ -44,12 +44,12 @@
 .upload-button {
   background-color: #6b46bd;
   color: #fff;
-  padding: 10px 20px;
-  font-size: 13px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 0.3125rem;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 0.625rem;
   display: inline-block;
   transition: background-color 0.3s ease;
 }

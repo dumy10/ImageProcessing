@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 20px 0;
+  margin: 1.25rem 0;
 }
 
 .treeNode {
@@ -10,16 +10,16 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
 }
 
 .treeNodeImage {
   max-width: 100%;
-  max-height: 150px;
+  max-height: 9.375rem;
   object-fit: contain;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-bottom: 5px;
+  border: 0.0625rem solid #ccc;
+  border-radius: 0.3125rem;
+  margin-bottom: 0.3125rem;
   cursor: pointer;
   transition: transform 0.2s ease-in-out;
 }
@@ -31,10 +31,10 @@
 .filtersContainer {
   background-color: #f8f9fa;
   color: #333;
-  font-size: 14px;
-  padding: 4px 8px;
-  border-radius: 5px;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.3125rem;
+  box-shadow: 0rem 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
 }
 
 .filtersContainer:hover {
@@ -46,6 +46,6 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 15px;
-  margin-top: 10px;
+  gap: 0.9375rem;
+  margin-top: 0.625rem;
 }
