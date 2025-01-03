@@ -42,9 +42,8 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 		*outputData = nullptr;
 		return;
 	}
-
 	Logger::LogMessage("Applying filter: " + std::string{ lowerFilter } + " to image data of length: " + std::to_string(length));
-	Logger::LogMessage("Image data size: " + std::to_string((static_cast<double>(length) / 2048.0)) + " MB");
+	Logger::LogMessage("Image data size: " + std::to_string(((static_cast<double>(length) / 1024.0) / 1024.0)) + " MB");
 	Logger::LogMessage("Output data will be stored in: " + std::string{ lowerExtension } + " format");
 
 	try
@@ -62,7 +61,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 		*outputData = nullptr;
 	}
 
-	Logger::LogMessage("Output data size: " + std::to_string((static_cast<double>(*outputLength) / 2048.0)) + " MB");
+	Logger::LogMessage("Output data size: " + std::to_string(((static_cast<double>(*outputLength) / 1024.0) / 1024.0)) + " MB");
 
 	Logger::LogMessage("ApplyFilter End");
 }
