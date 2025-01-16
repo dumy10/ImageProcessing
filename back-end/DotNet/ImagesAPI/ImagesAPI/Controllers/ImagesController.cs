@@ -10,10 +10,11 @@ namespace ImagesAPI.Controllers
     /// </summary>
     [ApiController]
     [Route("[controller]")]
-    public class ImagesController(IImagesCollectionService imagesCollectionService, IGoogleService googleService) : ControllerBase
+    public class ImagesController(IImagesCollectionService imagesCollectionService, IGoogleService googleService, IDropboxService dropboxService) : ControllerBase
     {
         private readonly ImagesCollectionService _imagesCollectionService = (ImagesCollectionService)(imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService)));
         private readonly GoogleService _googleService = (GoogleService)(googleService ?? throw new ArgumentNullException(nameof(googleService)));
+        private readonly DropboxService _dropboxService = (DropboxService)(dropboxService ?? throw new ArgumentNullException(nameof(dropboxService)));
 
         private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
         private static readonly HashSet<string> _allowedFilters = ["grayscale", "invert", "blur", "sobel", "canny"];
@@ -94,7 +95,8 @@ namespace ImagesAPI.Controllers
             try
             {
                 // Upload the image to Google Drive
-                string imageId = await _googleService.UploadImage(image);
+                //string imageId = await _googleService.UploadImage(image);
+                string imageId = await _dropboxService.UploadImage(image);
 
                 if (string.IsNullOrWhiteSpace(imageId))
                 {
@@ -108,7 +110,7 @@ namespace ImagesAPI.Controllers
                     Width = skImage.Width,
                     Height = skImage.Height,
                     ContentType = image.ContentType,
-                    Url = _googleService.GetImageURL(imageId, skImage.Width, skImage.Height)
+                    Url = await _dropboxService.GetImageURL(imageId)
                 };
 
                 // Insert the model into the database
@@ -141,7 +143,7 @@ namespace ImagesAPI.Controllers
             ImageModel newImage;
             try
             {
-                newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter, _googleService);
+                newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter, _dropboxService);
             }
             catch (ArgumentNullException error)
             {
@@ -181,9 +183,11 @@ namespace ImagesAPI.Controllers
                 if (image == null)
                     return NotFound();
 
-                var deleteFromGoogleDrive = await _googleService.DeleteImage(id);
+                //var deleteFromGoogleDrive = await _googleService.DeleteImage(id);
 
-                if (deleteFromGoogleDrive == null)
+                var deleteFromDropbox = await _dropboxService.DeleteImage(id);
+
+                if (deleteFromDropbox)
                     return BadRequest("Error deleting the image.");
 
                 if (!(await _imagesCollectionService.Delete(id)))

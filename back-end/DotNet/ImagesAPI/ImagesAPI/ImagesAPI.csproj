@@ -25,6 +25,7 @@
 	</Target>
 
 	<ItemGroup>
+		<PackageReference Include="Dropbox.Api" Version="7.0.0" />
 		<PackageReference Include="Google.Apis" Version="1.68.0" />
 		<PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
 		<PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3608" />

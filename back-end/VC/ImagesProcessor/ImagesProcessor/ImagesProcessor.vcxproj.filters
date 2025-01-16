@@ -16,6 +16,12 @@
     <Filter Include="Filters">
       <UniqueIdentifier>{8f4fc18f-a5c2-4d89-90dd-1e4ccef70c0a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Filters\Sources">
+      <UniqueIdentifier>{94805cb4-9150-4bdb-815f-bdd7ac4def1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Filters\Headers">
+      <UniqueIdentifier>{1e697a23-0be6-4594-b9b4-d99af51db589}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -42,29 +48,29 @@
     <ClInclude Include="EAllowedExtensions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SobelFilter.h">
-      <Filter>Filters</Filter>
-    </ClInclude>
-    <ClInclude Include="InvertFilter.h">
-      <Filter>Filters</Filter>
-    </ClInclude>
-    <ClInclude Include="IFilter.h">
-      <Filter>Filters</Filter>
-    </ClInclude>
-    <ClInclude Include="GrayscaleFilter.h">
-      <Filter>Filters</Filter>
-    </ClInclude>
-    <ClInclude Include="FilterFactory.h">
-      <Filter>Filters</Filter>
-    </ClInclude>
-    <ClInclude Include="EDefinedFilters.h">
-      <Filter>Filters</Filter>
+    <ClInclude Include="BlurFilter.h">
+      <Filter>Filters\Headers</Filter>
     </ClInclude>
     <ClInclude Include="CannyFilter.h">
-      <Filter>Filters</Filter>
+      <Filter>Filters\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="BlurFilter.h">
-      <Filter>Filters</Filter>
+    <ClInclude Include="EDefinedFilters.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterFactory.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GrayscaleFilter.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="IFilter.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="InvertFilter.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SobelFilter.h">
+      <Filter>Filters\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -86,23 +92,23 @@
     <ClCompile Include="stb_image_implementation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FilterFactory.cpp">
-      <Filter>Filters</Filter>
-    </ClCompile>
     <ClCompile Include="BlurFilter.cpp">
-      <Filter>Filters</Filter>
-    </ClCompile>
-    <ClCompile Include="GrayscaleFilter.cpp">
-      <Filter>Filters</Filter>
-    </ClCompile>
-    <ClCompile Include="InvertFilter.cpp">
-      <Filter>Filters</Filter>
-    </ClCompile>
-    <ClCompile Include="SobelFilter.cpp">
-      <Filter>Filters</Filter>
+      <Filter>Filters\Sources</Filter>
     </ClCompile>
     <ClCompile Include="CannyFilter.cpp">
-      <Filter>Filters</Filter>
+      <Filter>Filters\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="FilterFactory.cpp">
+      <Filter>Filters\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="GrayscaleFilter.cpp">
+      <Filter>Filters\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="InvertFilter.cpp">
+      <Filter>Filters\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="SobelFilter.cpp">
+      <Filter>Filters\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

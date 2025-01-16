@@ -108,11 +108,12 @@ namespace ImagesAPI.Services
         /// <returns>A task representing the asynchronous operation, containing the modified image model.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the id or filter is null or empty.</exception>
         /// <exception cref="ArgumentException">Thrown when the image does not exist or the modified image is invalid.</exception>
-        public async Task<ImageModel> ApplyFilterToImage(string id, string filter, IGoogleService googleService)
+        public async Task<ImageModel> ApplyFilterToImage(string id, string filter, IDriveService driveService)
         {
             ImageModel imageModel = await this.Get(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
-            using var memoryStream = await googleService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
+            //using var memoryStream = await googleService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
+            using var memoryStream = await driveService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
             byte[] imageData = memoryStream.ToArray();
 
@@ -144,13 +145,13 @@ namespace ImagesAPI.Services
             imageModel.Name += $" - {filter}" + extension;
 
             // Upload the modified image to the drive
-            string modifiedImageId = await googleService.UploadImage(modifiedImageStream, imageModel.Name, imageModel.ContentType);
+            string modifiedImageId = await driveService.UploadImage(modifiedImageStream, imageModel.Name, imageModel.ContentType);
 
             // Update image model properties
             imageModel.Id = modifiedImageId;
             imageModel.ParentId = id;
             imageModel.ParentUrl = imageModel.Url;
-            imageModel.Url = googleService.GetImageURL(modifiedImageId, skImage.Width, skImage.Height);
+            imageModel.Url = await driveService.GetImageURL(modifiedImageId);
             imageModel.AppliedFilters ??= []; // Ensure the applied filters list is initialized
             imageModel.AppliedFilters.Add(filter);
 

@@ -112,9 +112,10 @@ namespace ImagesAPI.Services
         /// </summary>
         /// <param name="imageId">The ID of the image to delete.</param>
         /// <returns>The result of the delete operation.</returns>
-        public async Task<string> DeleteImage(string imageId)
+        public async Task<bool> DeleteImage(string imageId)
         {
-            return await _driveService.Files.Delete(imageId).ExecuteAsync();
+            var result = await _driveService.Files.Delete(imageId).ExecuteAsync();
+            return result != null;
         }
 
         /// <summary>
@@ -149,12 +150,10 @@ namespace ImagesAPI.Services
         /// Generates a public URL for the image stored on Google Drive.
         /// </summary>
         /// <param name="imageId">The ID of the image file.</param>
-        /// <param name="width">The desired width of the image.</param>
-        /// <param name="height">The desired height of the image.</param>
         /// <returns>The public URL of the image.</returns>
-        public string GetImageURL(string imageId, int width, int height)
+        public async Task<string> GetImageURL(string imageId)
         {
-            return $"https://lh3.googleusercontent.com/d/{imageId}=w{width}-h{height}?authuser=0";
+            return await Task.FromResult($"https://lh3.googleusercontent.com/d/{imageId}?authuser=0");
         }
     }
 }
