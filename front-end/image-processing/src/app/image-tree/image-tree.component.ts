@@ -86,6 +86,7 @@ export class ImageTreeComponent {
    * Handles the image error event.
    */
   onImageError(): void {
+    //TODO: Add a default image
     throw new Error('Method not implemented.');
   }
 }
