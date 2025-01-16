@@ -1,7 +1,13 @@
 ﻿namespace ImagesAPI.Settings
 {
+    /// <summary>
+    /// Provides settings for accessing the Dropbox API.
+    /// </summary>
     public class DropboxAPISettings : IDropboxAPISettings
     {
+        /// <summary>
+        /// Gets or sets the access token used for authenticating with the Dropbox API.
+        /// </summary>
         public string AccessToken
         {
             get
