@@ -10,7 +10,7 @@
   </div>
 
   <div class="image-display">
-    <img [src]="imagePath" alt="Image to be processed" class="image" />
+    <img [src]="imagePath" alt="Image to be processed" class="image" (error)="onImageError()" />
   </div>
 </div>
 

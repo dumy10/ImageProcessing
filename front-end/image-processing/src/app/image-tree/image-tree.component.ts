@@ -81,4 +81,11 @@ export class ImageTreeComponent {
     }
     return imageHierarchy;
   }
+
+  /**
+   * Handles the image error event.
+   */
+  onImageError(): void {
+    throw new Error('Method not implemented.');
+  }
 }

@@ -259,4 +259,10 @@ export class GalleryComponent implements OnInit {
     link.download = image.name;
     link.click();
   }
+  /**
+   * Handles the image error event.
+   */
+  onImageError(image: ImageModel): void {
+    throw new Error('Method not implemented.');
+  }
 }

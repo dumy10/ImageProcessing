@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { ImageService } from '../services/image.service';
 import { ImageModel } from '../models/ImageModel';
 import { LoadingComponent } from '../loading/loading.component';
 import { Filters } from '../models/filters';
 import { MatIconModule } from '@angular/material/icon';
+import { filter } from 'rxjs/operators';
 
 /**
  * EditImageComponent is a component that allows users to edit an image by applying various filters.
@@ -79,6 +80,21 @@ export class EditImageComponent implements OnInit {
 
     // fetch the image from the server
     this.loadImage(id as string);
+
+    // listen for navigation events to load the new image when going back
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        const newId = this.getIdFromUrl();
+
+        if (newId === undefined) {
+          return;
+        }
+
+        if (newId !== this.image?.id) {
+          this.loadImage(newId as string);
+        }
+      });
   }
 
   /**
@@ -87,7 +103,13 @@ export class EditImageComponent implements OnInit {
    */
   getIdFromUrl(): string | undefined {
     const url = window.location.href;
-    return url.split('/').pop();
+    const editIndex = url.indexOf('/edit/');
+
+    if (editIndex === -1) {
+      return undefined;
+    }
+
+    return url.substring(editIndex + '/edit/'.length);
   }
 
   /**
@@ -157,5 +179,11 @@ export class EditImageComponent implements OnInit {
     link.href = `https://drive.google.com/uc?export=download&id=${this.image.id}`;
     link.download = this.image.name;
     link.click();
+  }
+  /**
+   * Handles the image error event.
+   */
+  onImageError(): void {
+    throw new Error('Method not implemented.');
   }
 }

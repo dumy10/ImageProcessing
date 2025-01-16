@@ -49,4 +49,10 @@ export class ImageHierarchyComponent {
   closeDialog(): void {
     this.dialogRef.close();
   }
+  /**
+   * Handles the image error event.
+   */
+  onImageError(): void {
+    throw new Error('Method not implemented.');
+  }
 }

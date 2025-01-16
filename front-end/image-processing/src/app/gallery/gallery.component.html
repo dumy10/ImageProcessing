@@ -6,6 +6,7 @@
         alt="Original Image"
         (click)="openDialog(imagePair.originalImage)"
         loading="lazy"
+        (error)="onImageError(imagePair.originalImage)"
       />
       <div class="button">
         <button alt="Edit" (click)="editImage(imagePair.originalImage)">
@@ -19,6 +20,7 @@
         alt="Filtered Image"
         (click)="openDialog(imagePair.filteredImage)"
         loading="lazy"
+        (error)="onImageError(imagePair.filteredImage)"
       />
       <div class="button">
         <button alt="Edit" (click)="editImage(imagePair.filteredImage)">
