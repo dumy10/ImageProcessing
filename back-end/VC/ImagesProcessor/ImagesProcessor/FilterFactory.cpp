@@ -1,0 +1,21 @@
+#include "pch.h"
+#include "FilterFactory.h"
+
+const std::unordered_map<EDefinedFilters, FilterFactory::FilterCreator> FilterFactory::filterMap =
+{
+	{EDefinedFilters::GRAYSCALE, []() { return std::make_unique<GrayscaleFilter>(); }},
+	{EDefinedFilters::INVERT, []() { return std::make_unique<InvertFilter>(); }},
+	{EDefinedFilters::BLUR, []() { return std::make_unique<BlurFilter>(); }},
+	{EDefinedFilters::SOBEL, []() { return std::make_unique<SobelFilter>(); }},
+	{EDefinedFilters::CANNY, []() { return std::make_unique<CannyFilter>(); }}
+};
+
+std::unique_ptr<IFilter> FilterFactory::CreateFilter(EDefinedFilters filterType)
+{
+	const auto it = filterMap.find(filterType);
+	if (it != filterMap.end())
+	{
+		return it->second();
+	}
+	throw std::invalid_argument("Unknown filter type");
+}
