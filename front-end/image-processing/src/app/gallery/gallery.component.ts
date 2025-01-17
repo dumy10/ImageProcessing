@@ -261,7 +261,6 @@ export class GalleryComponent implements OnInit {
    * Handles the image error event.
    */
   onImageError(image: ImageModel): void {
-    //TODO: Add a default image
-    throw new Error('Method not implemented.');
+    image.url = 'assets/images/notfound.jpg';
   }
 }

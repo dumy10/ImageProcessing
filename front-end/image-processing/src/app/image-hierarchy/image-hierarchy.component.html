@@ -9,7 +9,7 @@
           {{ imageModel.appliedFilters[imageModel.appliedFilters.length - 1] }}
         </span>
       </div>
-      <img [src]="imageModel.url" alt="Image" class="image" loading="lazy" (error)="onImageError()"/>
+      <img [src]="imageModel.url" alt="Image" class="image" loading="lazy" (error)="onImageError(imageModel)"/>
     </div>
   </div>
 </mat-dialog-content>
