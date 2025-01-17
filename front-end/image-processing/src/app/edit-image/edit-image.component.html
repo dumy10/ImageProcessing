@@ -11,6 +11,12 @@
 
   <div class="image-display">
     <img [src]="imagePath" alt="Image to be processed" class="image" (error)="onImageError()" />
+
+    <div class="save-button">
+      <button mat-button (click)="downloadImage()">
+        <mat-icon class="button">save</mat-icon>
+      </button>
+
   </div>
 </div>
 
