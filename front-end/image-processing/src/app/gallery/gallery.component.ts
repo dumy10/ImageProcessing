@@ -254,10 +254,8 @@ export class GalleryComponent implements OnInit {
    * @param {ImageModel} image - The image to download.
    */
   downloadImage(image: ImageModel): void {
-    const link = document.createElement('a');
-    link.href = `https://drive.google.com/uc?export=download&id=${image.id}`;
-    link.download = image.name;
-    link.click();
+    //TODO: Implement image download
+    throw new Error('Method not implemented.');
   }
   /**
    * Handles the image error event.

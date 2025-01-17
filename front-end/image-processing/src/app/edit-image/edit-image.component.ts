@@ -174,11 +174,8 @@ export class EditImageComponent implements OnInit {
       console.error('No image to download');
       return;
     }
-
-    const link = document.createElement('a');
-    link.href = `https://drive.google.com/uc?export=download&id=${this.image.id}`;
-    link.download = this.image.name;
-    link.click();
+    //TODO: Implement image download
+    throw new Error('Method not implemented.');
   }
   /**
    * Handles the image error event.
