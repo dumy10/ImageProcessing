@@ -254,8 +254,35 @@ export class GalleryComponent implements OnInit {
    * @param {ImageModel} image - The image to download.
    */
   downloadImage(image: ImageModel): void {
-    //TODO: Implement image download
-    throw new Error('Method not implemented.');
+    if (!image) {
+      console.error('No image to download');
+      return;
+    }
+
+    this.loading = true;
+    this.loadingMessage = 'Downloading the image...';
+
+    this.imageService.downloadImage(image.id).subscribe({
+      next: (response) => {
+        const url = window.URL.createObjectURL(response);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = image?.name || 'image';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Failed to download image', error);
+        alert('Failed to download the image');
+        this.loading = false;
+      },
+      complete: () => {
+        this.loading = false;
+      },
+    });
   }
   /**
    * Handles the image error event.

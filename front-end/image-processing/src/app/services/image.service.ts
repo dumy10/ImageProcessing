@@ -67,4 +67,14 @@ export class ImageService {
       }
     );
   }
+  /**
+   * Downloads an image from the server.
+   * @param {string} id - The ID of the image to download.
+   * @returns {Observable<Blob>} - An observable containing the image data.
+   */
+  downloadImage(id: string): Observable<Blob> {
+    return this.httpClient.get(`${this.baseURL}/download/${id}`, {
+      responseType: 'blob',
+    });
+  }
 }

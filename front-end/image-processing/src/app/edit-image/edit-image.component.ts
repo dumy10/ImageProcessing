@@ -174,8 +174,31 @@ export class EditImageComponent implements OnInit {
       console.error('No image to download');
       return;
     }
-    //TODO: Implement image download
-    throw new Error('Method not implemented.');
+
+    this.loading = true;
+    this.loadingMessage = 'Downloading the image...';
+
+    this.imageService.downloadImage(this.image.id).subscribe({
+      next: (response) => {
+        const url = window.URL.createObjectURL(response);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = this.image?.name || 'image';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Failed to download image', error);
+        alert('Failed to download the image');
+        this.loading = false;
+      },
+      complete: () => {
+        this.loading = false;
+      },
+    });
   }
   /**
    * Handles the image error event.

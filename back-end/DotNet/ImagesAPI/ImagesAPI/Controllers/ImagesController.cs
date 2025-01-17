@@ -247,5 +247,53 @@ namespace ImagesAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
             }
         }
+
+        /// <summary>
+        /// Downloads an image by its identifier.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>An IActionResult indicating the outcome of the operation.</returns>
+        [HttpGet("download/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DownloadImage(string id)
+        {
+            try
+            {
+                var memoryStream = await _dropboxService.GetStreamForImage(id);
+
+                if (memoryStream == null)
+                {
+                    Logging.Instance.LogWarning($"Image with ID {id} not found.");
+                    return NotFound();
+                }
+
+                using var skImage = SKImage.FromEncodedData(memoryStream);
+                if (skImage == null)
+                {
+                    Logging.Instance.LogWarning("Invalid image file.");
+                    return BadRequest("Invalid image file.");
+                }
+
+                var imageModel = await _imagesCollectionService.Get(id);
+
+                if (imageModel == null)
+                {
+                    Logging.Instance.LogWarning($"Image with ID {id} not found.");
+                    return NotFound();
+                }
+
+                memoryStream.Position = 0;
+
+                return File(memoryStream, "application/octet-stream", imageModel.Name);
+            }
+            catch (Exception error)
+            {
+                Logging.Instance.LogError(error.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+            }
+        }
     }
 }
