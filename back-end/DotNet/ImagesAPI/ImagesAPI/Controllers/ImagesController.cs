@@ -183,7 +183,7 @@ namespace ImagesAPI.Controllers
 
                 var deleteFromDropbox = await _dropboxService.DeleteImage(id);
 
-                if (deleteFromDropbox)
+                if (!deleteFromDropbox)
                     return BadRequest("Error deleting the image.");
 
                 if (!(await _imagesCollectionService.Delete(id)))
