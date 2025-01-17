@@ -2,6 +2,7 @@
 using SkiaSharp;
 using ImagesAPI.Services;
 using ImagesAPI.Models;
+using ImagesAPI.Logger;
 
 namespace ImagesAPI.Controllers
 {
@@ -28,17 +29,23 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetImages()
         {
+            Logging.Instance.LogMessage("Retrieving all images...");
             try
             {
                 List<ImageModel> images = await _imagesCollectionService.GetAll();
 
                 if (images == null || images.Count == 0)
+                {
+                    Logging.Instance.LogWarning("No images found.");
                     return NotFound();
+                }
 
+                Logging.Instance.LogMessage("Images retrieved successfully.");
                 return Ok(images);
             }
             catch (Exception error)
             {
+                Logging.Instance.LogError(error.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
             }
         }
@@ -54,15 +61,23 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetImage(string id)
         {
+            Logging.Instance.LogMessage($"Retrieving image with ID {id}...");
             try
             {
                 var image = await _imagesCollectionService.Get(id);
                 if (image == null)
+                {
+                    Logging.Instance.LogWarning($"Image with ID {id} not found.");
                     return NotFound();
+                }
+
+                Logging.Instance.LogMessage($"Image with ID {id} retrieved successfully.");
+
                 return Ok(image);
             }
             catch (Exception error)
             {
+                Logging.Instance.LogError(error.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
             }
         }
@@ -79,17 +94,27 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UploadImage(IFormFile image)
         {
+            Logging.Instance.LogMessage("Uploading image...");
             if (image == null || image.Length == 0)
+            {
+                Logging.Instance.LogWarning("No file uploaded.");
                 return BadRequest("No file uploaded.");
+            }
 
             if (!_allowedExtensions.Contains(Path.GetExtension(image.FileName)))
+            {
+                Logging.Instance.LogWarning("Invalid file type.");
                 return BadRequest("Invalid file type.");
+            }
 
             using var inputStream = image.OpenReadStream();
             using var skImage = SKImage.FromEncodedData(inputStream);
 
             if (skImage == null)
+            {
+                Logging.Instance.LogWarning("Invalid image file.");
                 return BadRequest("Invalid image file.");
+            }
 
             try
             {
@@ -98,6 +123,7 @@ namespace ImagesAPI.Controllers
 
                 if (string.IsNullOrWhiteSpace(imageId))
                 {
+                    Logging.Instance.LogError("Error uploading the image.");
                     return BadRequest("Error uploading the image.");
                 }
 
@@ -114,10 +140,13 @@ namespace ImagesAPI.Controllers
                 // Insert the model into the database
                 await _imagesCollectionService.Create(imageModel);
 
+                Logging.Instance.LogMessage("Image uploaded successfully.");
+
                 return Ok(imageModel);
             }
             catch (Exception error)
             {
+                Logging.Instance.LogError(error.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
             }
         }
@@ -135,28 +164,37 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> EditImage(string id, [FromBody] string filter)
         {
+            Logging.Instance.LogMessage($"Applying filter {filter} to image with ID {id}...");
             if (string.IsNullOrWhiteSpace(filter) || !_allowedFilters.Contains(filter.ToLower()))
+            {
+                Logging.Instance.LogWarning("Invalid filter.");
                 return BadRequest("Invalid filter.");
+            }
 
             ImageModel newImage;
             try
             {
                 newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter, _dropboxService);
+                Logging.Instance.LogMessage($"Filter {filter} applied successfully to image with ID {id}.");
             }
             catch (ArgumentNullException error)
             {
+                Logging.Instance.LogError(error.Message);
                 return BadRequest(error.Message);
             }
             catch (ArgumentException error)
             {
+                Logging.Instance.LogWarning(error.Message);
                 return NotFound(error.Message);
             }
             catch (InvalidOperationException error)
             {
+                Logging.Instance.LogError(error.Message);
                 return BadRequest(error.Message);
             }
             catch (Exception error)
             {
+                Logging.Instance.LogError(error.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
             }
 
@@ -164,7 +202,7 @@ namespace ImagesAPI.Controllers
         }
 
         /// <summary>
-        /// Deletes an image by its identifier, removing it from both the database and Google Drive.
+        /// Deletes an image by its identifier, removing it from both the database and the drive.
         /// </summary>
         /// <param name="id">The identifier of the image to delete.</param>
         /// <returns>An IActionResult indicating the outcome of the operation.</returns>
@@ -174,25 +212,38 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteImage(string id)
         {
+            Logging.Instance.LogMessage($"Deleting image with ID {id}...");
             try
             {
                 var image = await _imagesCollectionService.Get(id);
 
                 if (image == null)
+                {
+                    Logging.Instance.LogWarning($"Image with ID {id} not found.");
                     return NotFound();
+                }
 
                 var deleteFromDropbox = await _dropboxService.DeleteImage(id);
 
                 if (!deleteFromDropbox)
+                {
+                    Logging.Instance.LogError("Error deleting the image from drive.");
                     return BadRequest("Error deleting the image.");
+                }
 
                 if (!(await _imagesCollectionService.Delete(id)))
+                {
+                    Logging.Instance.LogError("Error deleting the image from the database.");
                     return BadRequest("Error deleting the image.");
+                }
+
+                Logging.Instance.LogMessage($"Image with ID {id} deleted successfully.");
 
                 return Ok();
             }
             catch (Exception error)
             {
+                Logging.Instance.LogError(error.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
             }
         }

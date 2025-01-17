@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using ImagesAPI.Logger;
+using System.Runtime.InteropServices;
 
 namespace ImagesAPI.External
 {
@@ -24,6 +25,7 @@ namespace ImagesAPI.External
             if (outputImageData.Length != outputLength)
             {
                 FreeMemory(outputImageDataPtr);
+                Logging.Instance.LogError("The output image data length does not match the expected length.");
                 throw new InvalidOperationException("The output image data length does not match the expected length.");
             }
 
