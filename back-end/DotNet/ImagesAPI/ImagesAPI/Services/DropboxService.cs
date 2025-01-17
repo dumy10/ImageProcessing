@@ -9,7 +9,7 @@ namespace ImagesAPI.Services
     /// </summary>
     public class DropboxService(IDropboxAPISettings dropboxAPISettings) : IDropboxService
     {
-        private readonly DropboxClient _dropboxClient = new(dropboxAPISettings.AccessToken);
+        private readonly DropboxClient _dropboxClient = new(dropboxAPISettings.RefreshToken, dropboxAPISettings.AppKey, dropboxAPISettings.AppSecret);
 
         /// <summary>
         /// Uploads an image to Dropbox.

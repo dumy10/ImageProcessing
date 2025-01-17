@@ -9,6 +9,7 @@ namespace ImagesAPI.Services
     /// <summary>
     /// Service for interacting with Google Drive to perform image-related operations.
     /// </summary>
+    [Obsolete("This class is not used anymore because the Google Drive Embeded images are not working correctly.")]
     public class GoogleService : IGoogleService
     {
         private readonly DriveService _driveService;
