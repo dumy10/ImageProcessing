@@ -260,6 +260,7 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DownloadImage(string id)
         {
+            Logging.Instance.LogMessage($"Downloading image with ID {id}...");
             try
             {
                 var memoryStream = await _dropboxService.GetStreamForImage(id);

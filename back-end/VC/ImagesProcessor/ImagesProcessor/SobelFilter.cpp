@@ -3,7 +3,7 @@
 
 void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
-	Logger::GetInstance()->LogMessage("Applying Sobel filter");
+	Logger::GetInstance().LogMessage("Applying Sobel filter");
 
 	int size = width * height * channels;
 
@@ -86,5 +86,5 @@ void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	}
 #pragma warning(pop) // Restore warning settings
 
-	Logger::GetInstance()->LogMessage("Sobel filter applied successfully");
+	Logger::GetInstance().LogMessage("Sobel filter applied successfully");
 }

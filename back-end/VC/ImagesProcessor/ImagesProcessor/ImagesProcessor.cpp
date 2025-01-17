@@ -3,12 +3,12 @@
 
 void ApplyFilter(const char* imageData, int length, const char* filter, unsigned char** outputData, const char* extension, int* outputLength)
 {
-	Logger::GetInstance()->LogMessage("ApplyFilter Start");
+	Logger::GetInstance().LogMessage("ApplyFilter Start");
 
 	// Check if the parameters received are valid
 	if (!imageData || length <= 0 || !filter || !extension)
 	{
-		Logger::Logger::GetInstance()->LogError("Invalid parameters received.");
+		Logger::Logger::GetInstance().LogError("Invalid parameters received.");
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
@@ -17,8 +17,8 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	// Check if the image data received is too large
 	if (length > kMaxImageLength)
 	{
-		Logger::Logger::GetInstance()->LogWarning("Image data too large: " + std::to_string(length));
-		Logger::Logger::GetInstance()->LogWarning("Filtering will take longer than expected...");
+		Logger::Logger::GetInstance().LogWarning("Image data too large: " + std::to_string(length));
+		Logger::Logger::GetInstance().LogWarning("Filtering will take longer than expected...");
 	}
 
 	std::string lowerExtension{ ToLowerCase(extension) };
@@ -26,7 +26,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	// Check if the extension received is allowed
 	if (kAllowedExtensions.find(lowerExtension) == kAllowedExtensions.end())
 	{
-		Logger::Logger::GetInstance()->LogError("Extension not allowed: " + std::string{ lowerExtension });
+		Logger::Logger::GetInstance().LogError("Extension not allowed: " + std::string{ lowerExtension });
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
@@ -37,14 +37,14 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	// Check if the filter received is allowed
 	if (kDefinedFilters.find(lowerFilter) == kDefinedFilters.end())
 	{
-		Logger::Logger::GetInstance()->LogError("Filter not allowed: " + std::string{ filter });
+		Logger::Logger::GetInstance().LogError("Filter not allowed: " + std::string{ filter });
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
 	}
-	Logger::GetInstance()->LogMessage("Applying filter: " + std::string{ lowerFilter } + " to image data of length: " + std::to_string(length));
-	Logger::GetInstance()->LogMessage("Image data size: " + std::to_string(((static_cast<double>(length) / 1024.0) / 1024.0)) + " MB");
-	Logger::GetInstance()->LogMessage("Output data will be stored in: " + std::string{ lowerExtension } + " format");
+	Logger::GetInstance().LogMessage("Applying filter: " + std::string{ lowerFilter } + " to image data of length: " + std::to_string(length));
+	Logger::GetInstance().LogMessage("Image data size: " + std::to_string(((static_cast<double>(length) / 1024.0) / 1024.0)) + " MB");
+	Logger::GetInstance().LogMessage("Output data will be stored in: " + std::string{ lowerExtension } + " format");
 
 	try
 	{
@@ -56,31 +56,31 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	}
 	catch (const std::exception& e)
 	{
-		Logger::Logger::GetInstance()->LogError("Exception caught: " + std::string{ e.what() });
+		Logger::Logger::GetInstance().LogError("Exception caught: " + std::string{ e.what() });
 		*outputLength = 0;
 		*outputData = nullptr;
 	}
 
-	Logger::GetInstance()->LogMessage("Output data size: " + std::to_string(((static_cast<double>(*outputLength) / 1024.0) / 1024.0)) + " MB");
+	Logger::GetInstance().LogMessage("Output data size: " + std::to_string(((static_cast<double>(*outputLength) / 1024.0) / 1024.0)) + " MB");
 
-	Logger::GetInstance()->LogMessage("ApplyFilter End");
+	Logger::GetInstance().LogMessage("ApplyFilter End");
 }
 
 void FreeMemory(unsigned char* data)
 {
-	Logger::GetInstance()->LogMessage("FreeMemory Start");
+	Logger::GetInstance().LogMessage("FreeMemory Start");
 
 	if (!data)
 	{
-		Logger::Logger::GetInstance()->LogWarning("FreeMemory called with null data.");
+		Logger::Logger::GetInstance().LogWarning("FreeMemory called with null data.");
 		return;
 	}
 
-	Logger::GetInstance()->LogMessage("Freeing memory for received data.");
+	Logger::GetInstance().LogMessage("Freeing memory for received data.");
 	delete[] data;
 	data = nullptr;
 
-	Logger::GetInstance()->LogMessage("FreeMemory End");
+	Logger::GetInstance().LogMessage("FreeMemory End");
 }
 
 std::string ToLowerCase(const std::string& input)

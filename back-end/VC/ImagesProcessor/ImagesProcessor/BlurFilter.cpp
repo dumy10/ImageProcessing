@@ -3,7 +3,7 @@
 
 void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
-	Logger::GetInstance()->LogMessage("Applying blur filter");
+	Logger::GetInstance().LogMessage("Applying blur filter");
 	int kernelSize = 7; // The kernel defines how much blur the image will have.
 	int halfKernel = kernelSize / 2;
 
@@ -85,5 +85,5 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
 	}
 #pragma warning(pop) // Restore warning settings
 
-	Logger::GetInstance()->LogMessage("Blur filter applied successfully");
+	Logger::GetInstance().LogMessage("Blur filter applied successfully");
 }

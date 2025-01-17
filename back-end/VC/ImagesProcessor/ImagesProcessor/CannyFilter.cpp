@@ -3,7 +3,7 @@
 
 void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
-	Logger::GetInstance()->LogMessage("Applying Canny filter");
+	Logger::GetInstance().LogMessage("Applying Canny filter");
 
 	// Step 1: Convert to grayscale
 	std::vector<unsigned char> grayImage(width * height);
@@ -35,7 +35,7 @@ void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 		std::fill(outputImage + i * channels, outputImage + (i + 1) * channels, edges[i]);
 	}
 
-	Logger::GetInstance()->LogMessage("Canny filter applied successfully");
+	Logger::GetInstance().LogMessage("Canny filter applied successfully");
 }
 
 [[nodiscard]] std::vector<unsigned char> CannyFilter::ApplyGaussianBlur(const unsigned char* inputImage, int width, int height) const
@@ -66,7 +66,7 @@ void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 		}
 	}
 
-	Logger::GetInstance()->LogMessage("Gaussian blur applied successfully");
+	Logger::GetInstance().LogMessage("Gaussian blur applied successfully");
 
 	return outputImage;
 }
@@ -97,7 +97,7 @@ void CannyFilter::CalculateGradients(const unsigned char* inputImage, float* gra
 		}
 	}
 
-	Logger::GetInstance()->LogMessage("Gradients calculated successfully");
+	Logger::GetInstance().LogMessage("Gradients calculated successfully");
 }
 
 [[nodiscard]] std::vector<unsigned char> CannyFilter::NonMaximumSuppression(const float* gradientMagnitude, const float* gradientDirection, int width, int height) const
@@ -142,7 +142,7 @@ void CannyFilter::CalculateGradients(const unsigned char* inputImage, float* gra
 		}
 	}
 
-	Logger::GetInstance()->LogMessage("Non-maximum suppression applied successfully");
+	Logger::GetInstance().LogMessage("Non-maximum suppression applied successfully");
 
 	return outputImage;
 }
@@ -185,7 +185,7 @@ void CannyFilter::CalculateGradients(const unsigned char* inputImage, float* gra
 		}
 	}
 
-	Logger::GetInstance()->LogMessage("Edge tracking by hysteresis applied successfully");
+	Logger::GetInstance().LogMessage("Edge tracking by hysteresis applied successfully");
 
 	return outputImage;
 }

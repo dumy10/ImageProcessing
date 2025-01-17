@@ -3,7 +3,7 @@
 
 void GrayscaleFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
-	Logger::GetInstance()->LogMessage("Applying grayscale filter");
+	Logger::GetInstance().LogMessage("Applying grayscale filter");
 	int size = width * height * channels;
 	for (int i = 0; i < size; i += channels)
 	{
@@ -15,5 +15,5 @@ void GrayscaleFilter::Apply(const unsigned char* inputImage, unsigned char* outp
 		if (channels > 1 && i + 1 < size) outputImage[i + 1] = gray;
 		if (channels > 2 && i + 2 < size) outputImage[i + 2] = gray;
 	}
-	Logger::GetInstance()->LogMessage("Grayscale filter applied successfully");
+	Logger::GetInstance().LogMessage("Grayscale filter applied successfully");
 }

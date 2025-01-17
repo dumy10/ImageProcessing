@@ -12,7 +12,7 @@ public:
 	 *
 	 * @return The singleton instance of the Logger.
 	 */
-	static Logger* GetInstance();
+	static Logger& GetInstance();
 
 	/**
 	 * @brief Logs a message.
@@ -41,16 +41,16 @@ public:
 	Logger& operator=(Logger&&) = delete; // Move assignment operator
 	Logger(Logger&&) = delete; // Move constructor
 
+	/**
+	* @brief Public destructor required for unique_ptr.
+	*/
+	~Logger();
+
 private:
 	/**
 	 * @brief Private constructor to prevent instantiation.
 	 */
 	Logger();
-
-	/**
-	 * @brief Private destructor to prevent deletion.
-	 */
-	~Logger();
 
 	/**
 	 * @brief Gets the local time.
@@ -59,7 +59,16 @@ private:
 	 */
 	static std::tm GetLocalTime();
 
+	/**
+	 * @brief Writes a log message to the log file.
+	 *
+	 * @param level The log level (INFO, WARN, ERROR).
+	 * @param message The message to log.
+	 */
+	void WriteLog(const std::string& level, const std::string& message);
+
 	static std::ofstream m_logFile; ///< Log file stream.
 	static std::mutex m_mutex; ///< Mutex for thread-safe logging.
-	static Logger* m_instance; ///< Singleton instance of the Logger.
+	static std::unique_ptr<Logger> m_instance; ///< Singleton instance of the Logger.
+	static std::once_flag m_onceFlag; ///< Flag for creating the singleton instance.
 };

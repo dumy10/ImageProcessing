@@ -1,24 +1,21 @@
-﻿namespace ImagesAPI.Logger
+﻿using System;
+using System.IO;
+
+namespace ImagesAPI.Logger
 {
     /// <summary>
     /// Singleton class for logging messages to a file.
     /// </summary>
     public class Logging
     {
+        private static readonly object _lock = new();
         private static Logging? _instance = null;
         private static string _logFile = string.Empty;
 
         /// <summary>
         /// Gets the singleton instance of the Logger class.
         /// </summary>
-        public static Logging Instance
-        {
-            get
-            {
-                _instance ??= new Logging();
-                return _instance;
-            }
-        }
+        public static Logging Instance => _instance ??= new Logging();
 
         /// <summary>
         /// Initializes a new instance of the Logger class.
@@ -26,66 +23,52 @@
         private Logging()
         {
             string tempPath = Path.GetTempPath();
-            string logDirectory = tempPath + "ImagesAPI";
+            string logDirectory = Path.Combine(tempPath, "ImagesAPI");
+            _logFile = Path.Combine(logDirectory, "ImagesAPI.log");
 
             if (!Directory.Exists(logDirectory))
             {
                 Directory.CreateDirectory(logDirectory);
             }
 
-            string logFile = logDirectory + "/ImagesAPI.log";
-
-            if (!File.Exists(logFile))
+            if (!File.Exists(_logFile))
             {
-                using (File.Create(logFile)) { }
+                File.Create(_logFile).Dispose();
             }
-
-            _logFile = logFile;
 
             LogMessage("Logger initialized.");
         }
 
         /// <summary>
-        /// Logs an informational message to the log file.
+        /// Logs an informational message.
         /// </summary>
-        /// <param name="message">The message to log.</param>
-        public void LogMessage(string message)
-        {
-            if (string.IsNullOrWhiteSpace(_logFile))
-            {
-                throw new InvalidOperationException("Log file path is not set.");
-            }
-
-            using StreamWriter writer = new(_logFile, true);
-            writer.WriteLine("{INFO} " + $"{DateTime.Now} - {message}");
-        }
+        public void LogMessage(string message) => WriteLog("INFO", message);
 
         /// <summary>
-        /// Logs a warning message to the log file.
+        /// Logs a warning message.
         /// </summary>
-        /// <param name="message">The message to log.</param>
-        public void LogWarning(string message)
-        {
-            if (string.IsNullOrWhiteSpace(_logFile))
-            {
-                throw new InvalidOperationException("Log file path is not set.");
-            }
-            using StreamWriter writer = new(_logFile, true);
-            writer.WriteLine("{WARN} " + $"{DateTime.Now} - {message}");
-        }
+        public void LogWarning(string message) => WriteLog("WARN", message);
 
         /// <summary>
-        /// Logs an error message to the log file.
+        /// Logs an error message.
         /// </summary>
-        /// <param name="message">The message to log.</param>
-        public void LogError(string message)
+        public void LogError(string message) => WriteLog("ERROR", message);
+
+        /// <summary>
+        /// Generic method to write logs.
+        /// </summary>
+        private static void WriteLog(string level, string message)
         {
             if (string.IsNullOrWhiteSpace(_logFile))
             {
                 throw new InvalidOperationException("Log file path is not set.");
             }
-            using StreamWriter writer = new(_logFile, true);
-            writer.WriteLine("{ERROR} " + $"{DateTime.Now} - {message}");
+
+            lock (_lock)
+            {
+                using StreamWriter writer = new(_logFile, true) { AutoFlush = true };
+                writer.WriteLine($"{{{level}}} {DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}");
+            }
         }
     }
 }
