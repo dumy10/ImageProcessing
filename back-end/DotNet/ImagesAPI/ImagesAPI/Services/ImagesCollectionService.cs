@@ -104,7 +104,7 @@ namespace ImagesAPI.Services
         /// </summary>
         /// <param name="id">The identifier of the image to modify.</param>
         /// <param name="filter">The name of the filter to apply.</param>
-        /// <param name="googleService">The Google service for image operations.</param>
+        /// <param name="driveService">The drive service for image operations.</param>
         /// <returns>A task representing the asynchronous operation, containing the modified image model.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the id or filter is null or empty.</exception>
         /// <exception cref="ArgumentException">Thrown when the image does not exist or the modified image is invalid.</exception>
@@ -112,7 +112,6 @@ namespace ImagesAPI.Services
         {
             ImageModel imageModel = await this.Get(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
-            //using var memoryStream = await googleService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
             using var memoryStream = await driveService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
             byte[] imageData = memoryStream.ToArray();

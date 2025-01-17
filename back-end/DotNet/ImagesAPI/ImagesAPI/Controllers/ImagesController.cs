@@ -10,10 +10,9 @@ namespace ImagesAPI.Controllers
     /// </summary>
     [ApiController]
     [Route("[controller]")]
-    public class ImagesController(IImagesCollectionService imagesCollectionService, IGoogleService googleService, IDropboxService dropboxService) : ControllerBase
+    public class ImagesController(IImagesCollectionService imagesCollectionService, IDropboxService dropboxService) : ControllerBase
     {
         private readonly ImagesCollectionService _imagesCollectionService = (ImagesCollectionService)(imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService)));
-        private readonly GoogleService _googleService = (GoogleService)(googleService ?? throw new ArgumentNullException(nameof(googleService)));
         private readonly DropboxService _dropboxService = (DropboxService)(dropboxService ?? throw new ArgumentNullException(nameof(dropboxService)));
 
         private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
@@ -94,8 +93,7 @@ namespace ImagesAPI.Controllers
 
             try
             {
-                // Upload the image to Google Drive
-                //string imageId = await _googleService.UploadImage(image);
+                // Upload the image to the drive 
                 string imageId = await _dropboxService.UploadImage(image);
 
                 if (string.IsNullOrWhiteSpace(imageId))
@@ -182,8 +180,6 @@ namespace ImagesAPI.Controllers
 
                 if (image == null)
                     return NotFound();
-
-                //var deleteFromGoogleDrive = await _googleService.DeleteImage(id);
 
                 var deleteFromDropbox = await _dropboxService.DeleteImage(id);
 
