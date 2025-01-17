@@ -6,7 +6,7 @@ constexpr size_t kMaxImageLength = 1024 * 1024 * 50; /// < Maximum image length 
 
 /**
  * @brief Applies a specified filter to the given image data.
- * 
+ *
  * @param imageData Pointer to the image data.
  * @param length Length of the image data.
  * @param filter Name of the filter to apply.
@@ -18,14 +18,14 @@ extern "C" IMAGESPROCESSOR_API void ApplyFilter(const char* imageData, int lengt
 
 /**
  * @brief Frees the allocated memory for the image data.
- * 
+ *
  * @param data Pointer to the data to be freed.
  */
 extern "C" IMAGESPROCESSOR_API void FreeMemory(unsigned char* data);
 
 /**
  * @brief Converts a given string to lowercase.
- * 
+ *
  * @param input The input string to convert.
  * @return The converted lowercase string.
  */

@@ -6,10 +6,10 @@
  */
 enum class EDefinedFilters : uint8_t
 {
-    UNDEFINED,  ///< Undefined filter.
-    GRAYSCALE,  ///< Grayscale filter.
-    INVERT,     ///< Invert filter.
-    BLUR,       ///< Blur filter.
-    SOBEL,      ///< Sobel filter.
-    CANNY       ///< Canny filter.
+	UNDEFINED,  ///< Undefined filter.
+	GRAYSCALE,  ///< Grayscale filter.
+	INVERT,     ///< Invert filter.
+	BLUR,       ///< Blur filter.
+	SOBEL,      ///< Sobel filter.
+	CANNY       ///< Canny filter.
 };

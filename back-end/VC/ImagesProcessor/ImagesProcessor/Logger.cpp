@@ -5,15 +5,18 @@ std::ofstream Logger::m_logFile;
 std::mutex Logger::m_mutex;
 Logger* Logger::m_instance = nullptr;
 
-void Logger::LogMessage(const std::string& message)
+Logger* Logger::GetInstance()
 {
-	// If the instance does not exist, create it
 	if (m_instance == nullptr)
 	{
 		m_instance = new Logger();
 		m_instance->LogMessage("Logger instance created");
 	}
+	return m_instance;
+}
 
+void Logger::LogMessage(const std::string& message)
+{
 	// Lock the mutex
 	std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -26,13 +29,6 @@ void Logger::LogMessage(const std::string& message)
 
 void Logger::LogWarning(const std::string& message)
 {
-	// If the instance does not exist, create it
-	if (m_instance == nullptr)
-	{
-		m_instance = new Logger();
-		m_instance->LogMessage("Logger instance created");
-	}
-
 	// Lock the mutex
 	std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -45,13 +41,6 @@ void Logger::LogWarning(const std::string& message)
 
 void Logger::LogError(const std::string& message)
 {
-	// If the instance does not exist, create it
-	if (m_instance == nullptr)
-	{
-		m_instance = new Logger();
-		m_instance->LogMessage("Logger instance created");
-	}
-
 	// Lock the mutex
 	std::lock_guard<std::mutex> lock(m_mutex);
 
