@@ -8,7 +8,7 @@ ImageData::ImageData(const unsigned char* imageData, int length, const std::stri
 
 	if (!m_imageData)
 	{
-		Logger::Logger::GetInstance().LogError("Failed to load image data");
+		Logger::GetInstance().LogError("Failed to load image data");
 		throw std::runtime_error("Failed to load image data");
 	}
 
@@ -43,7 +43,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 
 	if (!this->WriteToMemory(outputImage.get(), &encodedData))
 	{
-		Logger::Logger::GetInstance().LogError("Failed to write image data to memory");
+		Logger::GetInstance().LogError("Failed to write image data to memory");
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
@@ -68,7 +68,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	}
 	catch (const std::exception& e)
 	{
-		Logger::Logger::GetInstance().LogError(e.what());
+		Logger::GetInstance().LogError(e.what());
 		return false;
 	}
 }
@@ -91,7 +91,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	}
 	else
 	{
-		Logger::Logger::GetInstance().LogError("Extension not supported: " + m_extension);
+		Logger::GetInstance().LogError("Extension not supported: " + m_extension);
 	}
 
 	return success;

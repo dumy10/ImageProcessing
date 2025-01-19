@@ -8,7 +8,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	// Check if the parameters received are valid
 	if (!imageData || length <= 0 || !filter || !extension)
 	{
-		Logger::Logger::GetInstance().LogError("Invalid parameters received.");
+		Logger::GetInstance().LogError("Invalid parameters received.");
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
@@ -17,8 +17,8 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	// Check if the image data received is too large
 	if (length > kMaxImageLength)
 	{
-		Logger::Logger::GetInstance().LogWarning("Image data too large: " + std::to_string(length));
-		Logger::Logger::GetInstance().LogWarning("Filtering will take longer than expected...");
+		Logger::GetInstance().LogWarning("Image data too large: " + std::to_string(length));
+		Logger::GetInstance().LogWarning("Filtering will take longer than expected...");
 	}
 
 	std::string lowerExtension{ ToLowerCase(extension) };
@@ -26,7 +26,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	// Check if the extension received is allowed
 	if (kAllowedExtensions.find(lowerExtension) == kAllowedExtensions.end())
 	{
-		Logger::Logger::GetInstance().LogError("Extension not allowed: " + std::string{ lowerExtension });
+		Logger::GetInstance().LogError("Extension not allowed: " + std::string{ lowerExtension });
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
@@ -37,7 +37,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	// Check if the filter received is allowed
 	if (kDefinedFilters.find(lowerFilter) == kDefinedFilters.end())
 	{
-		Logger::Logger::GetInstance().LogError("Filter not allowed: " + std::string{ filter });
+		Logger::GetInstance().LogError("Filter not allowed: " + std::string{ filter });
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
@@ -56,7 +56,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	}
 	catch (const std::exception& e)
 	{
-		Logger::Logger::GetInstance().LogError("Exception caught: " + std::string{ e.what() });
+		Logger::GetInstance().LogError("Exception caught: " + std::string{ e.what() });
 		*outputLength = 0;
 		*outputData = nullptr;
 	}
@@ -72,7 +72,7 @@ void FreeMemory(unsigned char* data)
 
 	if (!data)
 	{
-		Logger::Logger::GetInstance().LogWarning("FreeMemory called with null data.");
+		Logger::GetInstance().LogWarning("FreeMemory called with null data.");
 		return;
 	}
 
