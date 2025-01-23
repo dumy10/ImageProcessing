@@ -23,7 +23,7 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj --configuration Release
+        run: dotnet build DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj --configuration Release --runtime win-x64
 
       - name: dotnet publish
         run: dotnet publish DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
