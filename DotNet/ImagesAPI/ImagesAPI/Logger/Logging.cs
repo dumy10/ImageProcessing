@@ -24,8 +24,14 @@ namespace ImagesAPI.Logger
         private Logging()
         {
             string executingAssemblyPath = Assembly.GetExecutingAssembly().Location;
-            string logDirectory = Path.Combine(executingAssemblyPath, "ImagesAPI");
+
+            // Get the directory where the executable is located
+            executingAssemblyPath = Path.GetDirectoryName(executingAssemblyPath) ?? string.Empty;
+
+            string logDirectory = Path.Combine(executingAssemblyPath, "ImagesProcessorLogs");
             _logFile = Path.Combine(logDirectory, "ImagesAPI.log");
+
+            Console.WriteLine(_logFile);
 
             if (!Directory.Exists(logDirectory))
             {
