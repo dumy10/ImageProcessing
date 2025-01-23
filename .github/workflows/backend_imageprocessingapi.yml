@@ -24,10 +24,10 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -55,6 +55,13 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_AC197241F2C94975BD87854E6A7D8C4C }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F5E1EF9F9C93406D821E53C7183338AF }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BB472F25547E42F3A2D3C614736441E8 }}
+          
+      - name: Debug OIDC Token
+        run: |
+          echo "Verifying OIDC Token"
+          echo ${{ steps.azure_oidc_token.outputs.token }}
+        env:
+          GITHUB_ACTIONS: true
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
