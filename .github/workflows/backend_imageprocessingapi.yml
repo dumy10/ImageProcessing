@@ -28,6 +28,9 @@ jobs:
       - name: dotnet publish
         run: dotnet publish DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
+      - name: Copy dll dependency
+        run: cp DotNet/ImagesAPI/ImagesAPI/Lib/Release/ImagesProcessor.dll "${{env.DOTNET_ROOT}}/myapp"
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
