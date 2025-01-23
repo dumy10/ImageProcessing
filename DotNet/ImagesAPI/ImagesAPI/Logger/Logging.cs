@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 
 namespace ImagesAPI.Logger
 {
@@ -22,8 +23,8 @@ namespace ImagesAPI.Logger
         /// </summary>
         private Logging()
         {
-            string tempPath = Path.GetTempPath();
-            string logDirectory = Path.Combine(tempPath, "ImagesAPI");
+            string executingAssemblyPath = Assembly.GetExecutingAssembly().Location;
+            string logDirectory = Path.Combine(executingAssemblyPath, "ImagesAPI");
             _logFile = Path.Combine(logDirectory, "ImagesAPI.log");
 
             if (!Directory.Exists(logDirectory))
