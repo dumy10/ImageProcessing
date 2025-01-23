@@ -8,20 +8,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Reference Include="ImagesProcessor">
-			<HintPath>$(SolutionDir)..\..\Shared\Lib\x64\$(Configuration)\ImagesProcessor.dll</HintPath>
-		</Reference>
-		<None Include="$(SolutionDir)..\..\Shared\Lib\x64\$(Configuration)\ImagesProcessor.dll">
+		<None Include="Lib\$(Configuration)\ImagesProcessor.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
 	<Target Name="CopyDependencies" AfterTargets="Build">
-		<Copy SourceFiles="$(SolutionDir)..\..\Shared\Lib\x64\Debug\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
+		<Copy SourceFiles="Lib\$(Configuration)\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
 	</Target>
 
 	<Target Name="LogResolvedPaths" BeforeTargets="Build">
-		<Message Text="Resolved DLL Path: $(SolutionDir)..\..\Shared\Lib\x64\$(Configuration)\ImagesProcessor.dll" Importance="High" />
+		<Message Text="Resolved DLL Path: Lib\$(Configuration)\ImagesProcessor.dll" Importance="High" />
 	</Target>
 
 	<ItemGroup>

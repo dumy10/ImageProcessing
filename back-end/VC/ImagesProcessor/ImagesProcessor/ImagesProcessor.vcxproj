@@ -71,12 +71,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)..\..\Shared\Lib\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\DotNet\ImagesAPI\ImagesAPI\Lib\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)BUILD\$(SolutionName)\Obj\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)external\stb-master\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)..\..\Shared\Lib\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\DotNet\ImagesAPI\ImagesAPI\Lib\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)BUILD\$(SolutionName)\Obj\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)external\stb-master\;$(IncludePath)</IncludePath>
   </PropertyGroup>
