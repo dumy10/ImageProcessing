@@ -19,6 +19,13 @@ namespace ImagesAPI.External
         public static void GetFilteredImageData(byte[] imageData, string filter, string extension, out byte[] outputImageData)
         {
             ApplyFilter(imageData, imageData.Length, filter, out IntPtr outputImageDataPtr, extension, out int outputLength);
+
+            if (outputLength <= 0)
+            {
+                Logging.Instance.LogError("The output image data length is invalid.");
+                throw new InvalidOperationException("The output image data length is invalid.");
+            }
+
             outputImageData = new byte[outputLength];
 
             if (outputImageDataPtr == IntPtr.Zero)
