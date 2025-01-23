@@ -114,6 +114,8 @@ namespace ImagesAPI.Services
 
             using var memoryStream = await driveService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
+            using var initialSkImage = SKImage.FromEncodedData(memoryStream) ?? throw new ArgumentException($"The image stream for the image with the id: {id} is invalid.");
+
             byte[] imageData = memoryStream.ToArray();
 
             if (string.IsNullOrWhiteSpace(imageModel.Name))
