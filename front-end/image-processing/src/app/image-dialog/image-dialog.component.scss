@@ -29,3 +29,15 @@
   justify-content: center;
   padding: 0.625rem 0;
 }
+
+@media (max-width: 768px) {
+  .dialogTitle {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dialogTitle {
+    font-size: 1rem;
+  }
+}
