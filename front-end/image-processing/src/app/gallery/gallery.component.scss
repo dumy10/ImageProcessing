@@ -1,0 +1,80 @@
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.pair {
+  display: flex;
+  flex: 1 1 calc(50% - 1.25rem);
+  max-width: calc(50% - 1.25rem);
+  justify-content: space-between;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem; 
+  padding: 0.625rem; 
+  box-sizing: border-box;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pair:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0.25rem 0.625rem rgba(0, 0, 0, 0.15);
+}
+
+.image-container {
+  flex: 1;
+  padding: 5px;
+  position: relative;
+}
+
+.image-container img {
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.image-container img:hover {
+  transform: scale(1.05);
+  filter: brightness(0.9);
+}
+
+.button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+  z-index: 1;
+}
+
+.image-container:hover .button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-container button {
+  background: #007bff;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.image-container button:hover {
+  background: #0056b3;
+}
+
+.mat-icon.button {
+  font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  .pair {
+    flex: 1 1 calc(100% - 1.25rem);
+    max-width: calc(100% - 1.25rem);
+  }
+}

@@ -1,0 +1,42 @@
+<div class="gallery">
+  <div class="pair" *ngFor="let imagePair of paginatedImagePairs">
+    <div class="image-container">
+      <img
+        [src]="imagePair.originalImage.url"
+        alt="Original Image"
+        (click)="openDialog(imagePair.originalImage)"
+        loading="lazy"
+        (error)="onImageError(imagePair.originalImage)"
+      />
+      <div class="button">
+        <button alt="Edit" (click)="editImage(imagePair.originalImage)">
+          <mat-icon class="button">edit</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="image-container">
+      <img
+        [src]="imagePair.filteredImage.url"
+        alt="Filtered Image"
+        (click)="openDialog(imagePair.filteredImage)"
+        loading="lazy"
+        (error)="onImageError(imagePair.filteredImage)"
+      />
+      <div class="button">
+        <button alt="Edit" (click)="editImage(imagePair.filteredImage)">
+          <mat-icon class="button">edit</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<mat-paginator
+  [length]="imagePairs.length"
+  [pageSize]="itemsPerPage"
+  [pageSizeOptions]="[6, 12, 26]"
+  (page)="onPageChange($event)"
+  [showFirstLastButtons]="true"
+/>
+
+<app-loading [loading]="loading" [message]="loadingMessage" *ngIf="loading" />

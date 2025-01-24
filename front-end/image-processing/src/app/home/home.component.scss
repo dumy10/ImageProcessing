@@ -1,0 +1,59 @@
+.photo-editor-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 3.75rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dropzone {
+  border: 2px dashed #8e44ad;
+  border-radius: 0.625rem;
+  width: 90%;
+  height: 80%;
+  max-width: 75rem;
+  max-height: 37.5rem;
+  background-color: #fafafa;
+  padding: 1.25rem;
+  transition: background-color 0.3s ease;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.editor-content {
+  text-align: center;
+}
+
+.dropzone p {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 0.625rem;
+}
+
+.dropzone.dragging {
+  background-color: #e0e0e0;
+}
+
+.dropzone:hover {
+  background-color: #e0e0e0;
+}
+
+.upload-button {
+  background-color: #6b46bd;
+  color: #fff;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
+  border: none;
+  border-radius: 0.3125rem;
+  cursor: pointer;
+  margin-top: 0.625rem;
+  display: inline-block;
+  transition: background-color 0.3s ease;
+}
+
+.upload-button:hover {
+  background-color: #732d91;
+}

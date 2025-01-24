@@ -1,0 +1,51 @@
+.treeNodeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 1.25rem 0;
+}
+
+.treeNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 0.625rem;
+}
+
+.treeNodeImage {
+  max-width: 100%;
+  max-height: 9.375rem;
+  object-fit: contain;
+  border: 0.0625rem solid #ccc;
+  border-radius: 0.3125rem;
+  margin-bottom: 0.3125rem;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+.treeNodeImage:hover {
+  transform: scale(1.05);
+}
+
+.filtersContainer {
+  background-color: #f8f9fa;
+  color: #333;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.3125rem;
+  box-shadow: 0rem 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+}
+
+.filtersContainer:hover {
+  background-color: #495057;
+  color: #ffffff;
+}
+
+.treeNodeChildren {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9375rem;
+  margin-top: 0.625rem;
+}

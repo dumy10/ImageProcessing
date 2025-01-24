@@ -1,0 +1,17 @@
+<h2 mat-dialog-title class="dialogTitle">
+  Tree of Image: {{ data.tree.root?.value?.name }}
+</h2>
+<mat-dialog-content class="imageDialogContent">
+  <div class="imageTreeContainer">
+    <app-image-tree
+      [node]="data.tree.root"
+      [imagePairs]="data.imagePairs"
+      class="imageTree"
+    ></app-image-tree>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions id="imageDialogActions" class="imageDialogActions">
+  <button mat-button class="btn btn-primary" (click)="closeDialog()">
+    Close
+  </button>
+</mat-dialog-actions>
