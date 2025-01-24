@@ -10,6 +10,7 @@ import { ImageModel } from '../models/ImageModel';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { Tree, TreeNode } from '../models/tree';
+import { HttpErrorResponse } from '@angular/common/http';
 
 /**
  * GalleryComponent is a component that displays a gallery of images with pagination.
@@ -131,16 +132,16 @@ export class GalleryComponent implements OnInit {
         this.updatePagination();
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         if (error.status === 404) {
           console.error('No images found', error);
           this.loading = false;
-          alert('No images found');
+          alert(error.error);
           return;
         }
         console.error('Failed to fetch images', error);
         this.loading = false;
-        alert('Failed to fetch images');
+        alert(error.error);
       },
       complete: () => {
         this.loading = false;
@@ -274,9 +275,9 @@ export class GalleryComponent implements OnInit {
         document.body.removeChild(a);
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Failed to download image', error);
-        alert('Failed to download the image');
+        alert(error.error);
         this.loading = false;
       },
       complete: () => {

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { ImageService } from '../services/image.service';
 import { ImageModel } from '../models/ImageModel';
 import { LoadingComponent } from '../loading/loading.component';
+import { HttpErrorResponse } from '@angular/common/http';
 
 /**
  * HomeComponent is the main component for the home page of the application.
@@ -140,10 +141,10 @@ export class HomeComponent {
         this.loading = false;
         this.router.navigate(['/edit', response.id]);
       },
-      error: (error) => {
+      error: (error:HttpErrorResponse) => {
         this.loading = false;
         console.error('Error uploading image:', error);
-        alert('An error occurred while uploading the image. Please try again.');
+        alert(error.error);
       },
       complete: () => {
         this.loading = false;

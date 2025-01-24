@@ -8,6 +8,7 @@ import { LoadingComponent } from '../loading/loading.component';
 import { Filters } from '../models/filters';
 import { MatIconModule } from '@angular/material/icon';
 import { filter } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
 
 /**
  * EditImageComponent is a component that allows users to edit an image by applying various filters.
@@ -123,9 +124,9 @@ export class EditImageComponent implements OnInit {
         this.imagePath = this.image.url;
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Failed to fetch image', error);
-        alert('Failed to fetch the image');
+        alert(error.error);
         this.loading = false;
       },
       complete: () => {
@@ -155,9 +156,9 @@ export class EditImageComponent implements OnInit {
           this.imagePath = this.image.url;
           this.router.navigate(['/edit', response.id]);
         },
-        error: (error) => {
+        error: (error: HttpErrorResponse) => {
           console.error('Failed to edit image', error);
-          alert('Failed to edit the image');
+          alert(error.error);
           this.loading = false;
         },
         complete: () => {
@@ -190,9 +191,9 @@ export class EditImageComponent implements OnInit {
         document.body.removeChild(a);
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Failed to download image', error);
-        alert('Failed to download the image');
+        alert(error.error);
         this.loading = false;
       },
       complete: () => {
