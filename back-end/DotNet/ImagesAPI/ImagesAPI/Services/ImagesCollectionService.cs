@@ -3,6 +3,7 @@ using ImagesAPI.Models;
 using ImagesAPI.Settings;
 using MongoDB.Driver;
 using SkiaSharp;
+using System.IO;
 using System.Security.Authentication;
 
 namespace ImagesAPI.Services
@@ -13,6 +14,7 @@ namespace ImagesAPI.Services
     public class ImagesCollectionService : IImagesCollectionService
     {
         private readonly IMongoCollection<ImageModel> _images;
+        private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ImagesCollectionService"/> class.
@@ -114,7 +116,16 @@ namespace ImagesAPI.Services
 
             using var memoryStream = await driveService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
-            using var initialSkImage = SKImage.FromEncodedData(memoryStream) ?? throw new ArgumentException($"The image stream for the image with the id: {id} is invalid.");
+
+            using var skCodec = SKCodec.Create(memoryStream) ?? throw new ArgumentException("Invalid or corrupted image file.");
+
+            var imageFormat = skCodec.EncodedFormat.ToString().ToLower();
+            if (!_allowedExtensions.Contains($".{imageFormat}"))
+            {
+                throw new ArgumentException("Invalid file type. Please make sure the image was not altered. Allowed types: JPEG, JPG, PNG."); ;
+            }
+
+            memoryStream.Position = 0;
 
             byte[] imageData = memoryStream.ToArray();
 
