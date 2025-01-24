@@ -37,7 +37,7 @@ namespace ImagesAPI.Controllers
                 if (images == null || images.Count == 0)
                 {
                     Logging.Instance.LogWarning("No images found.");
-                    return NotFound();
+                    return NotFound("No images found.");
                 }
 
                 Logging.Instance.LogMessage("Images retrieved successfully.");
@@ -68,7 +68,7 @@ namespace ImagesAPI.Controllers
                 if (image == null)
                 {
                     Logging.Instance.LogWarning($"Image with ID {id} not found.");
-                    return NotFound();
+                    return NotFound($"Image with ID {id} not found.");
                 }
 
                 Logging.Instance.LogMessage($"Image with ID {id} retrieved successfully.");
@@ -101,13 +101,24 @@ namespace ImagesAPI.Controllers
                 return BadRequest("No file uploaded.");
             }
 
-            if (!_allowedExtensions.Contains(Path.GetExtension(image.FileName)))
+            using var inputStream = image.OpenReadStream();
+            using var skCodec = SKCodec.Create(inputStream);
+
+            if (skCodec == null)
             {
-                Logging.Instance.LogWarning("Invalid file type.");
-                return BadRequest("Invalid file type.");
+                Logging.Instance.LogWarning("Invalid or corrupted image file.");
+                return BadRequest("Invalid or corrupted image file.");
             }
 
-            using var inputStream = image.OpenReadStream();
+            var imageFormat = skCodec.EncodedFormat.ToString().ToLower(); // e.g. "jpeg", "png", "webp"
+            if (!_allowedExtensions.Contains($".{imageFormat}"))
+            {
+                Logging.Instance.LogWarning($"Invalid file type: {imageFormat}");
+                return BadRequest("Invalid file type. Please make sure the image was not altered. Allowed types: JPEG, JPG, PNG.");
+            }
+
+            inputStream.Position = 0;
+
             using var skImage = SKImage.FromEncodedData(inputStream);
 
             if (skImage == null)
@@ -220,7 +231,7 @@ namespace ImagesAPI.Controllers
                 if (image == null)
                 {
                     Logging.Instance.LogWarning($"Image with ID {id} not found.");
-                    return NotFound();
+                    return NotFound($"Image with ID {id} not found.");
                 }
 
                 var deleteFromDropbox = await _dropboxService.DeleteImage(id);
@@ -268,7 +279,7 @@ namespace ImagesAPI.Controllers
                 if (memoryStream == null)
                 {
                     Logging.Instance.LogWarning($"Image with ID {id} not found.");
-                    return NotFound();
+                    return NotFound($"Image with ID {id} not found.");
                 }
 
                 using var skImage = SKImage.FromEncodedData(memoryStream);
@@ -283,7 +294,7 @@ namespace ImagesAPI.Controllers
                 if (imageModel == null)
                 {
                     Logging.Instance.LogWarning($"Image with ID {id} not found.");
-                    return NotFound();
+                    return NotFound($"Image with ID {id} not found.");
                 }
 
                 memoryStream.Position = 0;
