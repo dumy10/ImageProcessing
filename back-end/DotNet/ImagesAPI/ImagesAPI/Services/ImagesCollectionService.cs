@@ -3,7 +3,6 @@ using ImagesAPI.Models;
 using ImagesAPI.Settings;
 using MongoDB.Driver;
 using SkiaSharp;
-using System.IO;
 using System.Security.Authentication;
 
 namespace ImagesAPI.Services

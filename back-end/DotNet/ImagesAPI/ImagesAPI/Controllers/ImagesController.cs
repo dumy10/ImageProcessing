@@ -111,6 +111,7 @@ namespace ImagesAPI.Controllers
             }
 
             var imageFormat = skCodec.EncodedFormat.ToString().ToLower(); // e.g. "jpeg", "png", "webp"
+            Logging.Instance.LogMessage($"Image format: {imageFormat}");
             if (!_allowedExtensions.Contains($".{imageFormat}"))
             {
                 Logging.Instance.LogWarning($"Invalid file type: {imageFormat}");
