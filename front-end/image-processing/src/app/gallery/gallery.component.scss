@@ -2,6 +2,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1.25rem;
+  align-items: stretch;
 }
 
 .pair {
@@ -10,8 +11,8 @@
   max-width: calc(50% - 1.25rem);
   justify-content: space-between;
   border: 1px solid #ccc;
-  border-radius: 0.25rem; 
-  padding: 0.625rem; 
+  border-radius: 0.25rem;
+  padding: 0.625rem;
   box-sizing: border-box;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -29,7 +30,8 @@
 
 .image-container img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   cursor: pointer;
   border-radius: 4px;
   transition: transform 0.3s ease, filter 0.3s ease;
@@ -44,7 +46,7 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  display: none;
+  display: flex;
   z-index: 1;
 }
 

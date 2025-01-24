@@ -1,23 +1,27 @@
-<div class="image-container">
-  <div class="filter-buttons">
-    <button
-      mat-button
-      *ngFor="let filter of filters"
-      (click)="filterImage(filter)"
-    >
-      {{ filter }}
-    </button>
-  </div>
-
-  <div class="image-display">
-    <img [src]="imagePath" alt="Image to be processed" class="image" (error)="onImageError()" />
-
-    <div class="save-button">
-      <button mat-button (click)="downloadImage()">
-        <mat-icon class="button">save</mat-icon>
+<div class="container">
+  <div class="image-container">
+    <div class="filter-buttons">
+      <button
+        mat-button
+        *ngFor="let filter of filters"
+        (click)="filterImage(filter)"
+        class="filter-button"
+      >
+        {{ filter }}
       </button>
     </div>
 
+    <div class="image-display">
+      <img
+        [src]="imagePath"
+        alt="Image to be processed"
+        class="image"
+        (error)="onImageError()"
+      />
+    </div>
+  </div>
+  <div class="save-button">
+    <button mat-button (click)="downloadImage()">Download Image</button>
   </div>
 </div>
 
