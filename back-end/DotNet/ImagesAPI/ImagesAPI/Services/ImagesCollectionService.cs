@@ -116,6 +116,7 @@ namespace ImagesAPI.Services
 
             using var memoryStream = await driveService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
+
             using var skCodec = SKCodec.Create(memoryStream) ?? throw new ArgumentException("Invalid or corrupted image file.");
 
             var imageFormat = skCodec.EncodedFormat.ToString().ToLower();
