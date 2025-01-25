@@ -207,4 +207,31 @@ export class EditImageComponent implements OnInit {
   onImageError(): void {
     this.imagePath = 'assets/images/notfound.jpg';
   }
+
+  /**
+   * Undoes the last filter applied to the image.
+   */
+  undoFilter(): void {
+    if (!this.image) {
+      console.error('No image to undo');
+      return;
+    }
+
+    if (!this.image.parentId) {
+      alert("The image hasn't been edited yet");
+      return;
+    }
+
+    this.imageService.getImage(this.image.parentId as string).subscribe({
+      next: (response) => {
+        this.image = response as ImageModel;
+        this.imagePath = this.image.url;
+        this.router.navigate(['/edit', response.id]);
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Failed to fetch image', error);
+        alert(error.error);
+      },
+    });
+  }
 }

@@ -19,6 +19,11 @@
         (error)="onImageError()"
       />
     </div>
+
+    <div *ngIf="image?.appliedFilters !== null" class="undo-button">
+      <button mat-button (click)="undoFilter()"><mat-icon>undo</mat-icon></button>
+    </div>
+
   </div>
   <div class="save-button">
     <button mat-button (click)="downloadImage()">Download Image</button>
