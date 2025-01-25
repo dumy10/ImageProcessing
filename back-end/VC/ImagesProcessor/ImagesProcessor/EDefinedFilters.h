@@ -11,5 +11,7 @@ enum class EDefinedFilters : uint8_t
 	INVERT,     ///< Invert filter.
 	BLUR,       ///< Blur filter.
 	SOBEL,      ///< Sobel filter.
-	CANNY       ///< Canny filter.
+	CANNY,       ///< Canny filter.
+	FLIPHORIZONTAL,       ///< Flip horizontal filter.
+	FLIPVERTICAL,       ///< Flip vertical filter.
 };

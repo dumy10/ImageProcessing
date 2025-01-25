@@ -30,6 +30,8 @@ static const std::unordered_map<std::string, EAllowedExtensions> kAllowedExtensi
  * - blur
  * - sobel
  * - canny
+ * - fliphorizontal
+ * - flipvertical
  */
 static const std::unordered_map<std::string, EDefinedFilters> kDefinedFilters =
 {
@@ -37,7 +39,9 @@ static const std::unordered_map<std::string, EDefinedFilters> kDefinedFilters =
 	{"invert", EDefinedFilters::INVERT},
 	{"blur", EDefinedFilters::BLUR},
 	{"sobel", EDefinedFilters::SOBEL},
-	{"canny", EDefinedFilters::CANNY}
+	{"canny", EDefinedFilters::CANNY},
+	{"fliphorizontal", EDefinedFilters::FLIPHORIZONTAL},
+	{"flipvertical", EDefinedFilters::FLIPVERTICAL},
 };
 
 /**

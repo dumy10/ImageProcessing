@@ -7,7 +7,9 @@ const std::unordered_map<EDefinedFilters, FilterFactory::FilterCreator> FilterFa
 	{EDefinedFilters::INVERT, []() { return std::make_unique<InvertFilter>(); }},
 	{EDefinedFilters::BLUR, []() { return std::make_unique<BlurFilter>(); }},
 	{EDefinedFilters::SOBEL, []() { return std::make_unique<SobelFilter>(); }},
-	{EDefinedFilters::CANNY, []() { return std::make_unique<CannyFilter>(); }}
+	{EDefinedFilters::CANNY, []() { return std::make_unique<CannyFilter>(); }},
+	{EDefinedFilters::FLIPHORIZONTAL, []() { return std::make_unique<FlipHorizontalFilter>(); }},
+	{EDefinedFilters::FLIPVERTICAL, []() { return std::make_unique<FlipVerticalFilter>(); }},
 };
 
 std::unique_ptr<IFilter> FilterFactory::CreateFilter(EDefinedFilters filterType)

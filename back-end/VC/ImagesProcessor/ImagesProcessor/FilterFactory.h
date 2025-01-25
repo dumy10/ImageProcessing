@@ -2,11 +2,7 @@
 #include <unordered_map>
 #include <memory>
 #include <functional>
-#include "GrayscaleFilter.h"
-#include "InvertFilter.h"
-#include "BlurFilter.h"
-#include "SobelFilter.h"
-#include "CannyFilter.h"
+#include "AllFilters.h"
 
 /**
  * @brief Factory class for creating image filters.

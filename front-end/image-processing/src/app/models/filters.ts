@@ -31,4 +31,16 @@ export enum Filters {
    * Applies the Canny edge detection filter to the image.
    */
   Canny = 'canny',
+
+  /**
+   * Flip horizontal filter.
+   * Flips the image horizontally
+   */
+  FlipHorizontal = 'flip horizontal',
+
+  /**
+   * Flip vertical filter.
+   * Flips the image vertically
+   */
+  FlipVertical = 'flip vertical',
 }
