@@ -20,19 +20,13 @@ namespace ImagesAPI.External
         {
             ApplyFilter(imageData, imageData.Length, filter, out IntPtr outputImageDataPtr, extension, out int outputLength);
 
-            if (outputLength <= 0)
-            {
-                Logging.Instance.LogError("The output image data length is invalid.");
-                throw new InvalidOperationException("The output image data length is invalid.");
-            }
-
-            outputImageData = new byte[outputLength];
-
             if (outputImageDataPtr == IntPtr.Zero)
             {
                 Logging.Instance.LogError("The output image data pointer is null.");
-                throw new InvalidOperationException("The output image data pointer is null.");
+                throw new InvalidOperationException("The output image data is null.");
             }
+
+            outputImageData = new byte[outputLength];
 
             Marshal.Copy(outputImageDataPtr, outputImageData, 0, outputLength);
 

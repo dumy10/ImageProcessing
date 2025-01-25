@@ -34,35 +34,60 @@
 
 .imageContainer:hover {
   transform: scale(1.03);
-  box-shadow: 0rem 0.25rem 0.625rem rgba(0, 0, 0, 0.2);
-}
-
-.image {
-  max-width: 100%;
-  max-height: 12.5rem;
-  object-fit: contain;
-  border-radius: 0.3125rem;
-  margin-top: 0.3125rem;
-}
-
-.filtersContainer {
-  background-color: #e9ecef;
-  padding: 0.3125rem 0.625rem;
-  border-radius: 0.3125rem;
-  font-size: 0.875rem;
-  color: #495057;
-  margin-bottom: 0.3125rem;
-  box-shadow: 0rem 0.0625rem 0.1875rem rgba(0, 0, 0, 0.1);
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .imageDialogActions {
   display: flex;
   justify-content: center;
-  padding: 0.9375rem 0;
+  padding: 0.625rem 0;
 }
 
-.filtersContainer:hover {
-  background-color: #495057;
-  color: #ffffff;
+.image {
+  max-width: 100%;
+  height: auto;
+  max-height: 20rem;
+}
+
+@media (max-width: 768px) {
+  .dialogTitle {
+    font-size: 1.25rem;
+  }
+
+  .imageDialogContent {
+    max-height: 30rem;
+  }
+
+  .imagesColumn {
+    gap: 0.625rem;
+  }
+
+  .imageContainer {
+    padding: 0.3125rem;
+  }
+
+  .imageDialogActions {
+    padding: 0.3125rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .dialogTitle {
+    font-size: 1rem;
+  }
+
+  .imageDialogContent {
+    max-height: 20rem;
+  }
+
+  .imagesColumn {
+    gap: 0.3125rem;
+  }
+
+  .imageContainer {
+    padding: 0.125rem;
+  }
+
+  .imageDialogActions {
+    padding: 0.125rem 0;
+  }
 }

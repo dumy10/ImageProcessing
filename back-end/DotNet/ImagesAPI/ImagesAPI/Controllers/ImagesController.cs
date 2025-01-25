@@ -17,7 +17,7 @@ namespace ImagesAPI.Controllers
         private readonly DropboxService _dropboxService = (DropboxService)(dropboxService ?? throw new ArgumentNullException(nameof(dropboxService)));
 
         private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
-        private static readonly HashSet<string> _allowedFilters = ["grayscale", "invert", "blur", "sobel", "canny"];
+        private static readonly HashSet<string> _allowedFilters = ["grayscale", "invert", "blur", "sobel", "canny", "fliphorizontal", "flipvertical"];
 
         /// <summary>
         /// Retrieves all images.
@@ -177,10 +177,14 @@ namespace ImagesAPI.Controllers
         public async Task<IActionResult> EditImage(string id, [FromBody] string filter)
         {
             Logging.Instance.LogMessage($"Applying filter {filter} to image with ID {id}...");
-            if (string.IsNullOrWhiteSpace(filter) || !_allowedFilters.Contains(filter.ToLower()))
+
+            // Remove spaces and whitespace from the filter
+            filter = filter.Replace(" ", string.Empty).ToLower();
+
+            if (string.IsNullOrWhiteSpace(filter) || !_allowedFilters.Contains(filter))
             {
                 Logging.Instance.LogWarning("Invalid filter.");
-                return BadRequest("Invalid filter.");
+                return BadRequest($"Invalid filter: {filter}");
             }
 
             ImageModel newImage;
