@@ -1,6 +1,6 @@
 <div class="container">
   <div class="image-container">
-    <div class="filter-buttons">
+    <div class="filter-buttons" *ngIf="!isMobileView">
       <button
         mat-button
         *ngFor="let filter of filters"
@@ -11,6 +11,22 @@
       </button>
     </div>
 
+    <div class="dropdown" *ngIf="isMobileView">
+      <button mat-button (click)="toggleDropdown()">
+        Filters <mat-icon>menu</mat-icon>
+      </button>
+      <div [ngClass]="{ show: dropdownOpen }" class="dropdown-menu">
+        <button
+          mat-button
+          *ngFor="let filter of filters"
+          (click)="filterImage(filter)"
+          class="filter-button"
+        >
+          {{ filter }}
+        </button>
+      </div>
+    </div>
+
     <div class="image-display">
       <img
         [src]="imagePath"
@@ -18,13 +34,14 @@
         class="image"
         (error)="onImageError()"
       />
+      <div *ngIf="image?.appliedFilters !== null" class="undo-button">
+        <button mat-button (click)="undoFilter()">
+          <mat-icon>undo</mat-icon>
+        </button>
+      </div>
     </div>
-
-    <div *ngIf="image?.appliedFilters !== null" class="undo-button">
-      <button mat-button (click)="undoFilter()"><mat-icon>undo</mat-icon></button>
-    </div>
-
   </div>
+
   <div class="save-button">
     <button mat-button (click)="downloadImage()">Download Image</button>
   </div>
