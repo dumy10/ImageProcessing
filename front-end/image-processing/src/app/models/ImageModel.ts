@@ -49,4 +49,9 @@ export interface ImageModel {
    * @type {string[] | undefined}
    */
   appliedFilters: string[] | undefined;
+
+  /**
+   * Flag indicating whether the image has been loaded in the gallery.
+   */
+  loaded: boolean;
 }

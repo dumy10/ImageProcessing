@@ -167,6 +167,7 @@ export class GalleryComponent implements OnInit {
     this.currentPage = event.pageIndex;
     this.itemsPerPage = event.pageSize;
     this.updatePagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /**
@@ -287,8 +288,18 @@ export class GalleryComponent implements OnInit {
   }
   /**
    * Handles the image error event.
+   * @param {ImageModel} image - The image that has been loaded.
    */
   onImageError(image: ImageModel): void {
+    image.loaded = true;
     image.url = 'assets/images/notfound.jpg';
+  }
+
+  /**
+   * Handles the image load event.
+   * @param {ImageModel} image - The image that has been loaded.
+   */
+  onImageLoad(image: ImageModel): void {
+    image.loaded = true;
   }
 }
