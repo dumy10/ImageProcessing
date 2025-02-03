@@ -13,10 +13,10 @@
         (load)="onImageLoad(image)"
       />
       <div class="button-container" *ngIf="image.loaded">
-        <button (click)="downloadImage(image)">
+        <button (click)="downloadImage(image)" aria-label="Download image">
           <mat-icon class="download-button">download</mat-icon>
         </button>
-        <button (click)="editImage(image)">
+        <button (click)="editImage(image)" aria-label="Edit image">
           <mat-icon class="edit-button">edit</mat-icon>
         </button>
       </div>
@@ -32,4 +32,4 @@
   [showFirstLastButtons]="true"
 />
 
-<app-loading [loading]="loading" [message]="loadingMessage" *ngIf="loading" />
+<app-loading *ngIf="loading" [loading]="loading" [message]="loadingMessage" />
