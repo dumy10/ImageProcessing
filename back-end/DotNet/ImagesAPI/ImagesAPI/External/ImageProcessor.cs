@@ -23,7 +23,7 @@ namespace ImagesAPI.External
             if (outputImageDataPtr == IntPtr.Zero)
             {
                 Logging.Instance.LogError("The output image data pointer is null.");
-                throw new InvalidOperationException("The output image data is null.");
+                throw new InvalidOperationException("An error has occured while filtering the image. Please try again.");
             }
 
             outputImageData = new byte[outputLength];
@@ -34,7 +34,7 @@ namespace ImagesAPI.External
             {
                 FreeMemory(outputImageDataPtr);
                 Logging.Instance.LogError("The output image data length does not match the expected length.");
-                throw new InvalidOperationException("The output image data length does not match the expected length.");
+                throw new InvalidOperationException("An error has occured while filtering the image. Please try again.");
             }
 
             if (outputImageDataPtr != IntPtr.Zero)

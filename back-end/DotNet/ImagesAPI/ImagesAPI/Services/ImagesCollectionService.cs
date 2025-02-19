@@ -1,4 +1,5 @@
 ﻿using ImagesAPI.External;
+using ImagesAPI.Logger;
 using ImagesAPI.Models;
 using ImagesAPI.Settings;
 using MongoDB.Driver;
@@ -115,10 +116,10 @@ namespace ImagesAPI.Services
 
             using var memoryStream = await driveService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
-
             using var skCodec = SKCodec.Create(memoryStream) ?? throw new ArgumentException("Invalid or corrupted image file.");
 
             var imageFormat = skCodec.EncodedFormat.ToString().ToLower();
+
             if (!_allowedExtensions.Contains($".{imageFormat}"))
             {
                 throw new ArgumentException("Invalid file type. Please make sure the image was not altered. Allowed types: JPEG, JPG, PNG."); ;
@@ -147,7 +148,13 @@ namespace ImagesAPI.Services
             }
 
             // Ensure the modified image stream is valid
-            using var skImage = SKImage.FromEncodedData(modifiedImageStream) ?? throw new ArgumentException("The modified image stream is invalid.");
+            using var skImage = SKImage.FromEncodedData(modifiedImageStream);
+
+            if (skImage == null)
+            {
+                Logging.Instance.LogError("The modified image stream is invalid.");
+                throw new ArgumentException("An error has occured while filtering the image. Please try again.");
+            }
 
             // Remove the extension
             imageModel.Name = Path.GetFileNameWithoutExtension(imageModel.Name);
