@@ -138,7 +138,7 @@ namespace ImagesAPI.Services.Concretes
         /// </summary>
         /// <param name="imageId">The ID of the image file.</param>
         /// <returns>A memory stream containing the image data.</returns>
-        public async Task<MemoryStream> GetStreamForImage(string imageId)
+        public async Task<MemoryStream?> GetStreamForImage(string imageId)
         {
             var request = _driveService.Files.Get(imageId);
             var memoryStream = new MemoryStream();

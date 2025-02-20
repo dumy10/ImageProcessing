@@ -14,6 +14,6 @@ namespace ImagesAPI.Services.Interfaces
         /// <param name="filter">The name of the filter to apply.</param>
         /// <param name="driveService">The drive service for image operations.</param>
         /// <returns>A task representing the asynchronous operation, containing the modified image model.</returns>
-        Task<ImageModel> ApplyFilterToImage(string id, string filter, IDriveService driveService);
+        Task<ImageModel?> ApplyFilterToImage(string id, string filter, IDriveService driveService);
     }
 }

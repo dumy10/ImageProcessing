@@ -14,8 +14,8 @@ namespace ImagesAPI.Controllers
     [Route("[controller]")]
     public class ImagesController(IImagesCollectionService imagesCollectionService, IDropboxService dropboxService) : ControllerBase
     {
-        private readonly ImagesCollectionService _imagesCollectionService = (ImagesCollectionService)(imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService)));
-        private readonly DropboxService _dropboxService = (DropboxService)(dropboxService ?? throw new ArgumentNullException(nameof(dropboxService)));
+        private readonly IImagesCollectionService _imagesCollectionService = imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService));
+        private readonly IDropboxService _dropboxService = dropboxService ?? throw new ArgumentNullException(nameof(dropboxService));
 
         private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
         private static readonly HashSet<string> _allowedFilters = ["grayscale", "invert", "blur", "sobel", "canny", "fliphorizontal", "flipvertical"];
@@ -93,7 +93,7 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UploadImage(IFormFile image)
+        public async Task<IActionResult> UploadImage(IFormFile? image)
         {
             Logging.Instance.LogMessage("Uploading image...");
 
@@ -190,11 +190,18 @@ namespace ImagesAPI.Controllers
                 return BadRequest($"The filter {filter} is not accepted. Please try again.");
             }
 
-            ImageModel newImage;
+            ImageModel? newImage;
 
             try
             {
                 newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter, _dropboxService);
+
+                if (newImage == null)
+                {
+                    Logging.Instance.LogWarning($"Image with ID {id} not found.");
+                    return NotFound($"Image with ID {id} not found.");
+                }
+
                 Logging.Instance.LogMessage($"Filter {filter} applied successfully to image with ID {id}.");
             }
             catch (ArgumentNullException error)

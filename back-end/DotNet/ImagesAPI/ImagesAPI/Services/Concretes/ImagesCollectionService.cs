@@ -69,7 +69,7 @@ namespace ImagesAPI.Services.Concretes
         /// </summary>
         /// <param name="id">The identifier of the image model to retrieve.</param>
         /// <returns>A task representing the asynchronous operation, containing the image model.</returns>
-        public async Task<ImageModel> Get(string id)
+        public async Task<ImageModel?> Get(string id)
         {
             return await _images.Find(image => image.Id == id).FirstOrDefaultAsync();
         }
@@ -111,7 +111,7 @@ namespace ImagesAPI.Services.Concretes
         /// <returns>A task representing the asynchronous operation, containing the modified image model.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the id or filter is null or empty.</exception>
         /// <exception cref="ArgumentException">Thrown when the image does not exist or the modified image is invalid.</exception>
-        public async Task<ImageModel> ApplyFilterToImage(string id, string filter, IDriveService driveService)
+        public async Task<ImageModel?> ApplyFilterToImage(string id, string filter, IDriveService driveService)
         {
             ImageModel imageModel = await Get(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
@@ -165,7 +165,7 @@ namespace ImagesAPI.Services.Concretes
 
             // Upload the modified image to the drive
             string modifiedImageId = await driveService.UploadImage(modifiedImageStream, imageModel.Name, imageModel.ContentType);
-
+            
             // Update image model properties
             imageModel.Id = modifiedImageId;
             imageModel.ParentId = id;

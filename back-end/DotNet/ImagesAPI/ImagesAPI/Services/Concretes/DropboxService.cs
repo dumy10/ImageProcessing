@@ -77,7 +77,7 @@ namespace ImagesAPI.Services.Concretes
         /// </summary>
         /// <param name="imageId">The ID of the image file.</param>
         /// <returns>A memory stream containing the image data.</returns>
-        public async Task<MemoryStream> GetStreamForImage(string imageId)
+        public async Task<MemoryStream?> GetStreamForImage(string imageId)
         {
             using var downloadedFile = await (await _dropboxClient.Files.DownloadAsync(imageId)).GetContentAsStreamAsync();
             var memoryStream = new MemoryStream();
