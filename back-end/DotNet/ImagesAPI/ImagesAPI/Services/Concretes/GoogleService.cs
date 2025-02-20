@@ -2,9 +2,10 @@
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Upload;
-using ImagesAPI.Settings;
+using ImagesAPI.Services.Interfaces;
+using ImagesAPI.Settings.Interfaces;
 
-namespace ImagesAPI.Services
+namespace ImagesAPI.Services.Concretes
 {
     /// <summary>
     /// Service for interacting with Google Drive to perform image-related operations.
@@ -137,7 +138,7 @@ namespace ImagesAPI.Services
         /// </summary>
         /// <param name="imageId">The ID of the image file.</param>
         /// <returns>A memory stream containing the image data.</returns>
-        public async Task<MemoryStream> GetStreamForImage(string imageId)
+        public async Task<MemoryStream?> GetStreamForImage(string imageId)
         {
             var request = _driveService.Files.Get(imageId);
             var memoryStream = new MemoryStream();

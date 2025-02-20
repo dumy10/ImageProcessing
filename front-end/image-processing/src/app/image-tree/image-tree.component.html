@@ -7,6 +7,8 @@
       (click)="openDialog(node.value)"
       loading="lazy"
       (error)="onImageError(node.value)"
+      role="button"
+      aria-label="Open image dialog"
     />
     <span *ngIf="node.value.appliedFilters" class="filtersContainer">
       {{ node.value.appliedFilters[node.value.appliedFilters.length - 1] }}

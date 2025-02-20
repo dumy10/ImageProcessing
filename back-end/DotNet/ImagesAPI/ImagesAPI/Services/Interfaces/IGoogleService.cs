@@ -1,4 +1,4 @@
-﻿namespace ImagesAPI.Services
+﻿namespace ImagesAPI.Services.Interfaces
 {
     /// <summary>
     /// Interface defining methods for interacting with Google Drive for image-related operations.

@@ -1,14 +1,41 @@
 <div class="container">
   <div class="image-container">
-    <div class="filter-buttons">
+    <div class="filter-buttons" *ngIf="!isMobileView">
       <button
         mat-button
         *ngFor="let filter of filters"
         (click)="filterImage(filter)"
         class="filter-button"
+        [attr.aria-label]="'Apply ' + filter + ' filter'"
       >
         {{ filter }}
       </button>
+    </div>
+
+    <div class="dropdown" *ngIf="isMobileView">
+      <button
+        mat-button
+        (click)="toggleDropdown()"
+        aria-label="Toggle filter dropdown"
+      >
+        Filters <mat-icon>menu</mat-icon>
+      </button>
+      <div
+        [ngClass]="{ show: dropdownOpen }"
+        class="dropdown-menu"
+        role="menu"
+        aria-label="Filter menu"
+      >
+        <button
+          mat-button
+          *ngFor="let filter of filters"
+          (click)="filterImage(filter)"
+          class="filter-button"
+          [attr.aria-label]="'Apply ' + filter + ' filter'"
+        >
+          {{ filter }}
+        </button>
+      </div>
     </div>
 
     <div class="image-display">
@@ -18,16 +45,23 @@
         class="image"
         (error)="onImageError()"
       />
+      <div *ngIf="image?.appliedFilters !== null" class="undo-button-container">
+        <button mat-button (click)="undoFilter()" aria-label="Undo last filter">
+          <mat-icon class="undo-button">undo</mat-icon>
+        </button>
+      </div>
     </div>
-
-    <div *ngIf="image?.appliedFilters !== null" class="undo-button">
-      <button mat-button (click)="undoFilter()"><mat-icon>undo</mat-icon></button>
-    </div>
-
   </div>
+
   <div class="save-button">
-    <button mat-button (click)="downloadImage()">Download Image</button>
+    <button
+      mat-button
+      (click)="downloadImage()"
+      aria-label="Download processed image"
+    >
+      Download Image
+    </button>
   </div>
 </div>
 
-<app-loading [loading]="loading" [message]="loadingMessage" />
+<app-loading *ngIf="loading" [loading]="loading" [message]="loadingMessage" />

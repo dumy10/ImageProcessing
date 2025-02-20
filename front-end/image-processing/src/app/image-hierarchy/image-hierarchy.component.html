@@ -1,4 +1,4 @@
-<h2 mat-dialog-title class="dialogTitle">
+<h2 mat-dialog-title class="dialogTitle" aria-label="Image title">
   Image: {{ data[data.length - 1].name }}
 </h2>
 <mat-dialog-content class="imageDialogContent">
@@ -9,13 +9,25 @@
           {{ imageModel.appliedFilters[imageModel.appliedFilters.length - 1] }}
         </span>
       </div>
-      <img [src]="imageModel.url" alt="Image" class="image" loading="lazy" (error)="onImageError(imageModel)"/>
+      <img
+        [src]="imageModel.url"
+        alt="Image"
+        class="image"
+        loading="lazy"
+        (error)="onImageError(imageModel)"
+        aria-label="Image"
+      />
     </div>
   </div>
 </mat-dialog-content>
 
 <mat-dialog-actions id="imageDialogActions" class="imageDialogActions">
-  <button mat-button class="btn btn-primary" (click)="closeDialog()">
+  <button
+    mat-button
+    class="btn btn-primary"
+    (click)="closeDialog()"
+    aria-label="Close dialog"
+  >
     Close
   </button>
 </mat-dialog-actions>

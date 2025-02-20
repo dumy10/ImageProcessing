@@ -1,4 +1,4 @@
-<div class="loading-overlay" *ngIf="loading">
-  <div class="spinner"></div>
-  <p>{{ message }}.</p>
+<div class="loading-overlay" *ngIf="loading" role="alert" aria-live="assertive">
+  <div class="spinner" aria-hidden="true"></div>
+  <p>{{ message }}</p>
 </div>

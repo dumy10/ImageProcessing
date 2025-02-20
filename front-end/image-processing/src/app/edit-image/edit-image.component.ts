@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -59,6 +59,15 @@ export class EditImageComponent implements OnInit {
   filters: Filters[] = [];
 
   /**
+   * Indicates whether the dropdown menu is open.
+   */
+  dropdownOpen = false;
+
+  /**
+   * Indicates whether the view is mobile.
+   */
+  isMobileView = false;
+  /**
    * Constructor for EditImageComponent.
    * @param {Router} router - The router for navigating between pages.
    * @param {ImageService} imageService - Service for handling image operations.
@@ -69,6 +78,7 @@ export class EditImageComponent implements OnInit {
    * Initializes the component and loads the image.
    */
   ngOnInit(): void {
+    this.checkScreenSize();
     this.loading = true;
     const id = this.getIdFromUrl();
 
@@ -233,5 +243,30 @@ export class EditImageComponent implements OnInit {
         alert(error.error);
       },
     });
+  }
+
+  /**
+   * Toggles the dropdown menu.
+   */
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  /**
+   * Listens for window resize events and updates the isMobileView flag
+   * based on the current window width.
+   *
+   * @param event The resize event
+   */
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event) {
+    this.checkScreenSize();
+  }
+
+  /**
+   * Checks the screen size and sets the isMobileView flag accordingly.
+   */
+  checkScreenSize() {
+    this.isMobileView = window.innerWidth <= 768;
   }
 }

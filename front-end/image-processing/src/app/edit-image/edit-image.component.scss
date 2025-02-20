@@ -1,3 +1,22 @@
+@mixin button-styles {
+  padding: 0.5rem 1rem;
+  background-color: #6b46bd;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+
+  &:hover {
+    background-color: #732d91;
+    transform: scale(1.05);
+  }
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -12,50 +31,38 @@
 
 .image-container {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   position: relative;
-  overflow: hidden;
 }
 
 .filter-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); 
-  gap: 0.3rem; 
-  margin-right: 1rem;
-  z-index: 10;
-}
-
-.filter-buttons button {
-  margin-bottom: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: #6b46bd;
-  color: #fff;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-size: 1rem;
-
-  &:hover {
-    background-color: #732d91;
-  }
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
 
   @media (max-width: 768px) {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.875rem;
+    display: none;
   }
 
-  @media (max-width: 480px) {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.75rem;
+  button {
+    @include button-styles;
+    margin-bottom: 0.5rem;
   }
 }
 
 .image-display {
+  width: 100%;
+  max-width: 100%;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
   position: relative;
-  overflow: hidden;
+
+  .image {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 .image {
@@ -73,27 +80,98 @@
 .save-button {
   margin-top: 1rem;
   z-index: 10;
-  button {
-    padding: 0.5rem 1rem;
-    background-color: #6b46bd;
-    color: #fff;
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-size: 1rem;
+  display: flex;
+  justify-content: center;
 
-    &:hover {
-      background-color: #732d91;
-    }
+  button {
+    @include button-styles;
+    width: 100%;
+    max-width: 100%;
 
     @media (max-width: 768px) {
-      padding: 0.4rem 0.8rem;
-      font-size: 0.875rem; 
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
     }
 
     @media (max-width: 480px) {
-      padding: 0.3rem 0.6rem;
+      padding: 0.25rem 0.5rem;
       font-size: 0.75rem;
     }
   }
+}
+
+.dropdown {
+  display: none;
+  margin-bottom: 0.5rem;
+
+  @media (max-width: 768px) {
+    display: block;
+  }
+
+  button {
+    @include button-styles;
+    width: 100%;
+  }
+}
+
+.dropdown-menu {
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+
+  &.show {
+    display: flex;
+  }
+
+  button {
+    @include button-styles;
+  }
+}
+
+.undo-button-container {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  background-color: gray;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  @media (max-width: 768px) {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  @media (max-width: 1024px) {
+    right: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    width: 1.5rem;
+    height: 1.5rem;
+    top: 0.3rem;
+    right: 0.3rem;
+  }
+}
+
+.undo-button {
+  font-size: 1.5rem;
+  color: #fff;
+  transition: color 0.3s ease;
+}
+
+.undo-button:hover {
+  color: #ffcc00;
 }

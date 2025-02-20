@@ -1,5 +1,7 @@
-using ImagesAPI.Services;
-using ImagesAPI.Settings;
+using ImagesAPI.Services.Concretes;
+using ImagesAPI.Services.Interfaces;
+using ImagesAPI.Settings.Concretes;
+using ImagesAPI.Settings.Interfaces;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,4 +1,4 @@
-﻿namespace ImagesAPI.Services
+﻿namespace ImagesAPI.Services.Interfaces
 {
     public interface IDropboxService : IDriveService
     {

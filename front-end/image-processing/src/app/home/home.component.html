@@ -4,13 +4,20 @@
     (dragover)="onDragOver($event)"
     (dragleave)="onDragLeave($event)"
     (drop)="onDrop($event)"
+    aria-label="Image drop zone"
   >
     <div class="editor-content">
       <h1>Image Processing</h1>
       <p>Upload an image and apply filters to it.</p>
       <p>Drag & Drop your image here or</p>
-      <button mat-button class="upload-button" (click)="onUploadClick()">
-        <i class="fas fa-cloud-upload-alt"></i> Upload your image
+      <button
+        mat-button
+        class="upload-button"
+        (click)="onUploadClick()"
+        aria-label="Upload your image"
+      >
+        <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i> Upload your
+        image
       </button>
     </div>
 
@@ -18,10 +25,11 @@
       type="file"
       id="imageUpload"
       (change)="onImageSelected($event)"
-      accept="image/*"
+      accept="image/png, image/jpeg"
       style="display: none"
+      aria-label="Image upload input"
     />
   </div>
 </div>
 
-<app-loading [loading]="loading" [message]="loadingMessage" />
+<app-loading *ngIf="loading" [loading]="loading" [message]="loadingMessage" />

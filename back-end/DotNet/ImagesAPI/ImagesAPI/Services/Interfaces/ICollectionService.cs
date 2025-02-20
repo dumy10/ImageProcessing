@@ -1,4 +1,4 @@
-﻿namespace ImagesAPI.Services
+﻿namespace ImagesAPI.Services.Interfaces
 {
     /// <summary>
     /// Defines basic CRUD operations for a collection of type <typeparamref name="T"/>.
@@ -17,7 +17,7 @@
         /// </summary>
         /// <param name="id">The identifier of the item to retrieve.</param>
         /// <returns>The item with the specified identifier.</returns>
-        Task<T> Get(string id);
+        Task<T?> Get(string id);
 
         /// <summary>
         /// Creates a new item in the collection.

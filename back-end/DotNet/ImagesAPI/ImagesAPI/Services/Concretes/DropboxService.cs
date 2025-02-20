@@ -1,8 +1,9 @@
 ﻿using Dropbox.Api;
 using Dropbox.Api.Files;
-using ImagesAPI.Settings;
+using ImagesAPI.Services.Interfaces;
+using ImagesAPI.Settings.Interfaces;
 
-namespace ImagesAPI.Services
+namespace ImagesAPI.Services.Concretes
 {
     /// <summary>
     /// Service for interacting with Dropbox to perform image-related operations.
@@ -76,7 +77,7 @@ namespace ImagesAPI.Services
         /// </summary>
         /// <param name="imageId">The ID of the image file.</param>
         /// <returns>A memory stream containing the image data.</returns>
-        public async Task<MemoryStream> GetStreamForImage(string imageId)
+        public async Task<MemoryStream?> GetStreamForImage(string imageId)
         {
             using var downloadedFile = await (await _dropboxClient.Files.DownloadAsync(imageId)).GetContentAsStreamAsync();
             var memoryStream = new MemoryStream();

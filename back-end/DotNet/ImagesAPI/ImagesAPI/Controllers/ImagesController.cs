@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SkiaSharp;
-using ImagesAPI.Services;
+﻿using ImagesAPI.Logger;
 using ImagesAPI.Models;
-using ImagesAPI.Logger;
+using ImagesAPI.Services.Concretes;
+using ImagesAPI.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using SkiaSharp;
 
 namespace ImagesAPI.Controllers
 {
@@ -13,8 +14,8 @@ namespace ImagesAPI.Controllers
     [Route("[controller]")]
     public class ImagesController(IImagesCollectionService imagesCollectionService, IDropboxService dropboxService) : ControllerBase
     {
-        private readonly ImagesCollectionService _imagesCollectionService = (ImagesCollectionService)(imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService)));
-        private readonly DropboxService _dropboxService = (DropboxService)(dropboxService ?? throw new ArgumentNullException(nameof(dropboxService)));
+        private readonly IImagesCollectionService _imagesCollectionService = imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService));
+        private readonly IDropboxService _dropboxService = dropboxService ?? throw new ArgumentNullException(nameof(dropboxService));
 
         private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
         private static readonly HashSet<string> _allowedFilters = ["grayscale", "invert", "blur", "sobel", "canny", "fliphorizontal", "flipvertical"];
@@ -46,7 +47,7 @@ namespace ImagesAPI.Controllers
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -78,7 +79,7 @@ namespace ImagesAPI.Controllers
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -92,9 +93,10 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UploadImage(IFormFile image)
+        public async Task<IActionResult> UploadImage(IFormFile? image)
         {
             Logging.Instance.LogMessage("Uploading image...");
+
             if (image == null || image.Length == 0)
             {
                 Logging.Instance.LogWarning("No file uploaded.");
@@ -112,6 +114,7 @@ namespace ImagesAPI.Controllers
 
             var imageFormat = skCodec.EncodedFormat.ToString().ToLower(); // e.g. "jpeg", "png", "webp"
             Logging.Instance.LogMessage($"Image format: {imageFormat}");
+
             if (!_allowedExtensions.Contains($".{imageFormat}"))
             {
                 Logging.Instance.LogWarning($"Invalid file type: {imageFormat}");
@@ -159,7 +162,7 @@ namespace ImagesAPI.Controllers
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -184,13 +187,21 @@ namespace ImagesAPI.Controllers
             if (string.IsNullOrWhiteSpace(filter) || !_allowedFilters.Contains(filter))
             {
                 Logging.Instance.LogWarning("Invalid filter.");
-                return BadRequest($"Invalid filter: {filter}");
+                return BadRequest($"The filter {filter} is not accepted. Please try again.");
             }
 
-            ImageModel newImage;
+            ImageModel? newImage;
+
             try
             {
                 newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter, _dropboxService);
+
+                if (newImage == null)
+                {
+                    Logging.Instance.LogWarning($"Image with ID {id} not found.");
+                    return NotFound($"Image with ID {id} not found.");
+                }
+
                 Logging.Instance.LogMessage($"Filter {filter} applied successfully to image with ID {id}.");
             }
             catch (ArgumentNullException error)
@@ -211,7 +222,7 @@ namespace ImagesAPI.Controllers
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
             return Ok(newImage);
@@ -239,9 +250,7 @@ namespace ImagesAPI.Controllers
                     return NotFound($"Image with ID {id} not found.");
                 }
 
-                var deleteFromDropbox = await _dropboxService.DeleteImage(id);
-
-                if (!deleteFromDropbox)
+                if (!(await _dropboxService.DeleteImage(id)))
                 {
                     Logging.Instance.LogError("Error deleting the image from drive.");
                     return BadRequest("Error deleting the image.");
@@ -260,7 +269,7 @@ namespace ImagesAPI.Controllers
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -309,7 +318,7 @@ namespace ImagesAPI.Controllers
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, error.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
     }

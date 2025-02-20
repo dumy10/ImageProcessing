@@ -5,6 +5,8 @@ VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImagesAPI", "ImagesAPI\ImagesAPI.csproj", "{D5034113-0D52-4EF9-A7CF-0394C4EB7E51}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImagesAPITests", "..\ImagesAPITests\ImagesAPITests.csproj", "{D8360C66-5B29-4F42-BA95-5C148B92FE19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{D5034113-0D52-4EF9-A7CF-0394C4EB7E51}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5034113-0D52-4EF9-A7CF-0394C4EB7E51}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5034113-0D52-4EF9-A7CF-0394C4EB7E51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8360C66-5B29-4F42-BA95-5C148B92FE19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8360C66-5B29-4F42-BA95-5C148B92FE19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8360C66-5B29-4F42-BA95-5C148B92FE19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8360C66-5B29-4F42-BA95-5C148B92FE19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

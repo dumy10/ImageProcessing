@@ -1,34 +1,27 @@
 <div class="gallery">
-  <div class="pair" *ngFor="let imagePair of paginatedImagePairs">
-    <div class="image-container">
+  <article class="pair" *ngFor="let imagePair of paginatedImagePairs">
+    <div
+      class="image-container"
+      *ngFor="let image of [imagePair.originalImage, imagePair.filteredImage]"
+    >
       <img
-        [src]="imagePair.originalImage.url"
-        alt="Original Image"
-        (click)="openDialog(imagePair.originalImage)"
+        [src]="image.url"
+        [alt]="image.name || 'Image'"
+        (click)="openDialog(image)"
         loading="lazy"
-        (error)="onImageError(imagePair.originalImage)"
+        (error)="onImageError(image)"
+        (load)="onImageLoad(image)"
       />
-      <div class="button">
-        <button alt="Edit" (click)="editImage(imagePair.originalImage)">
-          <mat-icon class="button">edit</mat-icon>
+      <div class="button-container" *ngIf="image.loaded">
+        <button (click)="downloadImage(image)" aria-label="Download image">
+          <mat-icon class="download-button">download</mat-icon>
+        </button>
+        <button (click)="editImage(image)" aria-label="Edit image">
+          <mat-icon class="edit-button">edit</mat-icon>
         </button>
       </div>
     </div>
-    <div class="image-container">
-      <img
-        [src]="imagePair.filteredImage.url"
-        alt="Filtered Image"
-        (click)="openDialog(imagePair.filteredImage)"
-        loading="lazy"
-        (error)="onImageError(imagePair.filteredImage)"
-      />
-      <div class="button">
-        <button alt="Edit" (click)="editImage(imagePair.filteredImage)">
-          <mat-icon class="button">edit</mat-icon>
-        </button>
-      </div>
-    </div>
-  </div>
+  </article>
 </div>
 
 <mat-paginator
@@ -39,4 +32,4 @@
   [showFirstLastButtons]="true"
 />
 
-<app-loading [loading]="loading" [message]="loadingMessage" *ngIf="loading" />
+<app-loading *ngIf="loading" [loading]="loading" [message]="loadingMessage" />

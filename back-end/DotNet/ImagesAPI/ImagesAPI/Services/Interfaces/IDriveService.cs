@@ -1,4 +1,4 @@
-﻿namespace ImagesAPI.Services
+﻿namespace ImagesAPI.Services.Interfaces
 {
     /// <summary>
     /// Interface defining methods for interacting with a cloud storage service for image-related operations.
@@ -33,7 +33,7 @@
         /// </summary>
         /// <param name="imageId">The ID of the image file.</param>
         /// <returns>A memory stream containing the image data.</returns>
-        Task<MemoryStream> GetStreamForImage(string imageId);
+        Task<MemoryStream?> GetStreamForImage(string imageId);
 
         /// <summary>
         /// Generates a public URL for the image stored on the Drive.

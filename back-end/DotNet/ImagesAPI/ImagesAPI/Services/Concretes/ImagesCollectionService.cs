@@ -1,11 +1,13 @@
 ﻿using ImagesAPI.External;
+using ImagesAPI.Logger;
 using ImagesAPI.Models;
-using ImagesAPI.Settings;
+using ImagesAPI.Services.Interfaces;
+using ImagesAPI.Settings.Interfaces;
 using MongoDB.Driver;
 using SkiaSharp;
 using System.Security.Authentication;
 
-namespace ImagesAPI.Services
+namespace ImagesAPI.Services.Concretes
 {
     /// <summary>
     /// Provides methods to manage image models in the MongoDB collection.
@@ -67,9 +69,9 @@ namespace ImagesAPI.Services
         /// </summary>
         /// <param name="id">The identifier of the image model to retrieve.</param>
         /// <returns>A task representing the asynchronous operation, containing the image model.</returns>
-        public async Task<ImageModel> Get(string id)
+        public async Task<ImageModel?> Get(string id)
         {
-            return await _images.Find<ImageModel>(image => image.Id == id).FirstOrDefaultAsync();
+            return await _images.Find(image => image.Id == id).FirstOrDefaultAsync();
         }
 
         /// <summary>
@@ -109,16 +111,16 @@ namespace ImagesAPI.Services
         /// <returns>A task representing the asynchronous operation, containing the modified image model.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the id or filter is null or empty.</exception>
         /// <exception cref="ArgumentException">Thrown when the image does not exist or the modified image is invalid.</exception>
-        public async Task<ImageModel> ApplyFilterToImage(string id, string filter, IDriveService driveService)
+        public async Task<ImageModel?> ApplyFilterToImage(string id, string filter, IDriveService driveService)
         {
-            ImageModel imageModel = await this.Get(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
+            ImageModel imageModel = await Get(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
             using var memoryStream = await driveService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
-
 
             using var skCodec = SKCodec.Create(memoryStream) ?? throw new ArgumentException("Invalid or corrupted image file.");
 
             var imageFormat = skCodec.EncodedFormat.ToString().ToLower();
+
             if (!_allowedExtensions.Contains($".{imageFormat}"))
             {
                 throw new ArgumentException("Invalid file type. Please make sure the image was not altered. Allowed types: JPEG, JPG, PNG."); ;
@@ -147,7 +149,13 @@ namespace ImagesAPI.Services
             }
 
             // Ensure the modified image stream is valid
-            using var skImage = SKImage.FromEncodedData(modifiedImageStream) ?? throw new ArgumentException("The modified image stream is invalid.");
+            using var skImage = SKImage.FromEncodedData(modifiedImageStream);
+
+            if (skImage == null)
+            {
+                Logging.Instance.LogError("The modified image stream is invalid.");
+                throw new ArgumentException("An error has occured while filtering the image. Please try again.");
+            }
 
             // Remove the extension
             imageModel.Name = Path.GetFileNameWithoutExtension(imageModel.Name);
@@ -157,7 +165,7 @@ namespace ImagesAPI.Services
 
             // Upload the modified image to the drive
             string modifiedImageId = await driveService.UploadImage(modifiedImageStream, imageModel.Name, imageModel.ContentType);
-
+            
             // Update image model properties
             imageModel.Id = modifiedImageId;
             imageModel.ParentId = id;
@@ -167,7 +175,7 @@ namespace ImagesAPI.Services
             imageModel.AppliedFilters.Add(filter);
 
             // Save the image in the database
-            await this.Create(imageModel);
+            await Create(imageModel);
 
             return imageModel;
         }
