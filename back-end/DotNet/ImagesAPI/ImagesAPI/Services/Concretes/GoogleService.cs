@@ -2,9 +2,10 @@
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Upload;
-using ImagesAPI.Settings;
+using ImagesAPI.Services.Interfaces;
+using ImagesAPI.Settings.Interfaces;
 
-namespace ImagesAPI.Services
+namespace ImagesAPI.Services.Concretes
 {
     /// <summary>
     /// Service for interacting with Google Drive to perform image-related operations.

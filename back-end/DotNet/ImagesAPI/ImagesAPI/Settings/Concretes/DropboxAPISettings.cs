@@ -1,4 +1,6 @@
-﻿namespace ImagesAPI.Settings
+﻿using ImagesAPI.Settings.Interfaces;
+
+namespace ImagesAPI.Settings.Concretes
 {
     /// <summary>
     /// Provides settings for accessing the Dropbox API.

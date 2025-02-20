@@ -1,4 +1,4 @@
-﻿namespace ImagesAPI.Services
+﻿namespace ImagesAPI.Services.Interfaces
 {
     /// <summary>
     /// Defines basic CRUD operations for a collection of type <typeparamref name="T"/>.

@@ -1,6 +1,6 @@
 ﻿using ImagesAPI.Models;
 
-namespace ImagesAPI.Services
+namespace ImagesAPI.Services.Interfaces
 {
     /// <summary>
     /// Provides image-specific collection services, including applying filters to images.

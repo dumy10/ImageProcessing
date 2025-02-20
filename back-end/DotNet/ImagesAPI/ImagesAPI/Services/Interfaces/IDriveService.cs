@@ -1,4 +1,4 @@
-﻿namespace ImagesAPI.Services
+﻿namespace ImagesAPI.Services.Interfaces
 {
     /// <summary>
     /// Interface defining methods for interacting with a cloud storage service for image-related operations.

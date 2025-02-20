@@ -1,8 +1,9 @@
 ﻿using Dropbox.Api;
 using Dropbox.Api.Files;
-using ImagesAPI.Settings;
+using ImagesAPI.Services.Interfaces;
+using ImagesAPI.Settings.Interfaces;
 
-namespace ImagesAPI.Services
+namespace ImagesAPI.Services.Concretes
 {
     /// <summary>
     /// Service for interacting with Dropbox to perform image-related operations.

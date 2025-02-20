@@ -1,4 +1,4 @@
-﻿namespace ImagesAPI.Settings
+﻿namespace ImagesAPI.Settings.Interfaces
 {
     /// <summary>
     /// Represents the settings required to connect to the Google Drive API.

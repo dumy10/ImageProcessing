@@ -1,6 +1,7 @@
 ﻿using ImagesAPI.Logger;
 using ImagesAPI.Models;
-using ImagesAPI.Services;
+using ImagesAPI.Services.Concretes;
+using ImagesAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using SkiaSharp;
 

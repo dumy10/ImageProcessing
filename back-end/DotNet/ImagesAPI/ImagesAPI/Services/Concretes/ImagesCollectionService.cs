@@ -1,12 +1,13 @@
 ﻿using ImagesAPI.External;
 using ImagesAPI.Logger;
 using ImagesAPI.Models;
-using ImagesAPI.Settings;
+using ImagesAPI.Services.Interfaces;
+using ImagesAPI.Settings.Interfaces;
 using MongoDB.Driver;
 using SkiaSharp;
 using System.Security.Authentication;
 
-namespace ImagesAPI.Services
+namespace ImagesAPI.Services.Concretes
 {
     /// <summary>
     /// Provides methods to manage image models in the MongoDB collection.
@@ -70,7 +71,7 @@ namespace ImagesAPI.Services
         /// <returns>A task representing the asynchronous operation, containing the image model.</returns>
         public async Task<ImageModel> Get(string id)
         {
-            return await _images.Find<ImageModel>(image => image.Id == id).FirstOrDefaultAsync();
+            return await _images.Find(image => image.Id == id).FirstOrDefaultAsync();
         }
 
         /// <summary>
@@ -112,7 +113,7 @@ namespace ImagesAPI.Services
         /// <exception cref="ArgumentException">Thrown when the image does not exist or the modified image is invalid.</exception>
         public async Task<ImageModel> ApplyFilterToImage(string id, string filter, IDriveService driveService)
         {
-            ImageModel imageModel = await this.Get(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
+            ImageModel imageModel = await Get(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
             using var memoryStream = await driveService.GetStreamForImage(id) ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
 
@@ -174,7 +175,7 @@ namespace ImagesAPI.Services
             imageModel.AppliedFilters.Add(filter);
 
             // Save the image in the database
-            await this.Create(imageModel);
+            await Create(imageModel);
 
             return imageModel;
         }
