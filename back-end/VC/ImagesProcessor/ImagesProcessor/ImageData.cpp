@@ -62,7 +62,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 {
 	try
 	{
-		auto filter = FilterFactory::CreateFilter(filterType);
+		std::unique_ptr<IFilter> filter = FilterFactory::CreateFilter(filterType);
 		filter->Apply(m_imageData, outputImage, m_width, m_height, m_channels);
 		return true;
 	}

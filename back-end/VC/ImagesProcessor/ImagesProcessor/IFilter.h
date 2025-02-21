@@ -1,6 +1,8 @@
 #pragma once
 #include "pch.h"
 
+constexpr float M_PI = 3.14159265358979323846f; /// < Value of Pi
+
 /**
  * @brief Interface for image filters.
  *

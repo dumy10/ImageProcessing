@@ -32,7 +32,7 @@ void Logger::LogError(const std::string& message)
 
 Logger::Logger()
 {
-	// Create a Path to the temp directory
+	// Get the current path and append the directory name
 	std::filesystem::path tempPath = std::filesystem::current_path() / "ImagesProcessorLogs";
 
 	// Create the directory if it does not exist
@@ -41,7 +41,7 @@ Logger::Logger()
 		std::filesystem::create_directory(tempPath);
 	}
 
-	// Create a path to the log file
+	// Add the log file name to the path
 	tempPath /= "ImagesProcessor.log";
 
 	// Open the log file (if it does not exist, it will be created)
