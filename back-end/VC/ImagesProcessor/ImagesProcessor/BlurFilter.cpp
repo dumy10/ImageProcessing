@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "BlurFilter.h"
+#include <omp.h>
 
 void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
@@ -12,9 +13,9 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
 	std::vector<unsigned char> tempImage(size);
 
 	// Parallel horizontal pass
-#pragma warning(push)
-#pragma warning(disable : 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
-#pragma omp parallel for
+	#pragma warning(push) 
+	#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
+	#pragma omp parallel for
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
@@ -49,7 +50,7 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
 		}
 	}
 	// Parallel vertical pass
-#pragma omp parallel for
+	#pragma omp parallel for
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
@@ -83,7 +84,8 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
 			}
 		}
 	}
-#pragma warning(pop) // Restore warning settings
+
+	#pragma warning(pop) // Restore warning settings
 
 	Logger::GetInstance().LogMessage("Blur filter applied successfully");
 }

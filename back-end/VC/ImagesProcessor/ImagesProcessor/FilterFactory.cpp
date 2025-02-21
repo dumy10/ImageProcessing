@@ -19,5 +19,5 @@ std::unique_ptr<IFilter> FilterFactory::CreateFilter(EDefinedFilters filterType)
 	{
 		return it->second();
 	}
-	throw std::invalid_argument("Unknown filter type");
+	throw std::invalid_argument("Unknown filter received by the filter factory.");
 }

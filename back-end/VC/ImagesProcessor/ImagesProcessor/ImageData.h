@@ -1,10 +1,10 @@
 #pragma once
 #include "pch.h"
+#include "FilterFactory.h"
+#include "IFilter.h"
+#include <omp.h>
 #include <stb_image.h>
 #include <stb_image_write.h>
-#include <omp.h>
-#include "IFilter.h"
-#include "FilterFactory.h"
 
 /**
  * @brief Allowed image file extensions.

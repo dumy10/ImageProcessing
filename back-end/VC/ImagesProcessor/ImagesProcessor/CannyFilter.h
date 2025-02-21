@@ -1,10 +1,9 @@
 #pragma once
+#include "GrayscaleFilter.h"
 #include "IFilter.h"
+#include <algorithm>
 #include <cmath>
 #include <vector>
-#include <algorithm>
-
-constexpr float M_PI = 3.14159265358979323846f;
 
 /**
  * @brief A filter that applies the Canny edge detection algorithm to an image.

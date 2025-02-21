@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "SobelFilter.h"
+#include <omp.h>
 
 void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
@@ -14,9 +15,9 @@ void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	std::vector<unsigned char> tempImage(size);
 
 	// Parallel horizontal pass
-#pragma warning(push)
-#pragma warning(disable : 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
-#pragma omp parallel for
+	#pragma warning(push) 
+	#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
+	#pragma omp parallel for
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
@@ -49,7 +50,7 @@ void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 		}
 	}
 	// Parallel vertical pass
-#pragma omp parallel for
+	#pragma omp parallel for
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
@@ -84,7 +85,7 @@ void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 			}
 		}
 	}
-#pragma warning(pop) // Restore warning settings
+	#pragma warning(pop) // Restore warning settings
 
 	Logger::GetInstance().LogMessage("Sobel filter applied successfully");
 }

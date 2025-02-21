@@ -1,8 +1,8 @@
 #pragma once
-#include <unordered_map>
-#include <memory>
-#include <functional>
 #include "AllFilters.h"
+#include <functional>
+#include <memory>
+#include <unordered_map>
 
 /**
  * @brief Factory class for creating image filters.

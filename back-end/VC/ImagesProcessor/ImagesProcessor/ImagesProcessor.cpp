@@ -62,7 +62,6 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	}
 
 	Logger::GetInstance().LogMessage("Output data size: " + std::to_string(((static_cast<double>(*outputLength) / 1024.0) / 1024.0)) + " MB");
-
 	Logger::GetInstance().LogMessage("ApplyFilter End");
 }
 
