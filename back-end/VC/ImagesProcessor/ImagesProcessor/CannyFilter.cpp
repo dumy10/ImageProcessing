@@ -7,12 +7,13 @@ void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 
 	// Step 1: Convert to grayscale
 	std::vector<unsigned char> grayImage(width * height);
-
-	// Use the existing GrayscaleFilter to convert the image to grayscale
-	IFilter* grayFilter = new GrayscaleFilter();
-	grayFilter->Apply(inputImage, grayImage.data(), width, height, channels);
-	delete grayFilter;
-	grayFilter = nullptr;
+	for (int i = 0; i < width * height * channels; i += channels)
+	{
+		unsigned char r = inputImage[i];
+		unsigned char g = inputImage[i + 1];
+		unsigned char b = inputImage[i + 2];
+		grayImage[i / channels] = static_cast<unsigned char>(r * 0.3f + g * 0.59f + b * 0.11f);
+	}
 
 	// Step 2: Apply Gaussian blur
 	std::vector<unsigned char> blurredImage = ApplyGaussianBlur(grayImage.data(), width, height);

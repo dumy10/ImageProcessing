@@ -22,6 +22,17 @@ jobs:
         with:
           dotnet-version: '8.x'
 
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: '3.20.0'
+
+      - name: Configure CMake
+        run: cmake -S back-end/VC/ImagesProcessor -B build
+
+      - name: Build with CMake
+        run: cmake --build build --config Release
+
       - name: Build with dotnet
         run: dotnet build back-end\DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj --configuration Release --runtime win-x64
 
@@ -29,7 +40,7 @@ jobs:
         run: dotnet publish back-end\DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Copy DLL Dependency
-        run: cp back-end/DotNet/ImagesAPI/ImagesAPI/Lib/Release/ImagesProcessor.dll "${{env.DOTNET_ROOT}}/myapp"
+        run: cp build/Release/ImagesProcessor.dll "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Run tests for ImagesAPITests
         run: dotnet test back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj --configuration Release --runtime win-x64
@@ -68,4 +79,3 @@ jobs:
           app-name: 'imageprocessingapi'
           slot-name: 'Production'
           package: .
-          
