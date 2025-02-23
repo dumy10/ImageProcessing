@@ -8,17 +8,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="Lib\$(Configuration)\ImagesProcessor.dll">
+		<None Include="..\..\..\VC\ImagesProcessor\build\bin\$(Configuration)\ImagesProcessor.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
 	<Target Name="CopyDependencies" AfterTargets="Build">
-		<Copy SourceFiles="Lib\$(Configuration)\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
+		<Copy SourceFiles="..\..\..\VC\ImagesProcessor\build\bin\$(Configuration)\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
 	</Target>
 
 	<Target Name="LogResolvedPaths" BeforeTargets="Build">
-		<Message Text="Resolved DLL Path: Lib\$(Configuration)\ImagesProcessor.dll" Importance="High" />
+		<Message Text="Resolved DLL Path: ..\..\..\VC\ImagesProcessor\build\bin\$(Configuration)\ImagesProcessor.dll" Importance="High" />
 	</Target>
 
 	<ItemGroup>
