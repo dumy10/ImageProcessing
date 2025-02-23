@@ -32,7 +32,7 @@ namespace ImagesAPI.External
 
             if (outputImageData.Length != outputLength)
             {
-                FreeMemory(outputImageDataPtr);
+                FreeMemory(ref outputImageDataPtr);
                 Logging.Instance.LogError("The output image data length does not match the expected length.");
                 throw new InvalidOperationException("An error has occured while filtering the image. Please try again.");
             }
@@ -40,8 +40,10 @@ namespace ImagesAPI.External
             if (outputImageDataPtr != IntPtr.Zero)
             {
                 Logging.Instance.LogMessage("Deallocating memory for the output image data.");
-                FreeMemory(outputImageDataPtr);
+                FreeMemory(ref outputImageDataPtr);
             }
+
+            Logging.Instance.LogMessage("Successfully deallocated image data.");
         }
 
         /// <summary>
@@ -63,6 +65,6 @@ namespace ImagesAPI.External
         /// <param name="data">A pointer to the memory to free.</param>
         [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
-        private static partial void FreeMemory(IntPtr data);
+        private static partial void FreeMemory(ref IntPtr data);
     }
 }
