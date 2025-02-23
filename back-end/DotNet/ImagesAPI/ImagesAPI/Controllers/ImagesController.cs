@@ -18,7 +18,6 @@ namespace ImagesAPI.Controllers
         private readonly IDropboxService _dropboxService = dropboxService ?? throw new ArgumentNullException(nameof(dropboxService));
 
         private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
-        private static readonly HashSet<string> _allowedFilters = ["grayscale", "invert", "blur", "sobel", "canny", "fliphorizontal", "flipvertical"];
 
         /// <summary>
         /// Retrieves all images.
@@ -184,7 +183,7 @@ namespace ImagesAPI.Controllers
             // Remove spaces and whitespace from the filter
             filter = filter.Replace(" ", string.Empty).ToLower();
 
-            if (string.IsNullOrWhiteSpace(filter) || !_allowedFilters.Contains(filter))
+            if (!Enum.TryParse<EAllowedFilters>(filter.ToUpper(), out _))
             {
                 Logging.Instance.LogWarning("Invalid filter.");
                 return BadRequest($"The filter {filter} is not accepted. Please try again.");
