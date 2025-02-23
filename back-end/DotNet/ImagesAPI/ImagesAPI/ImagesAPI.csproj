@@ -8,9 +8,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Condition="'$(Configuration)' == 'Debug'" Include="..\..\..\VC\ImagesProcessor\build\bin\Debug\ImagesProcessor.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Condition="'$(Configuration)' == 'Release'" Include="..\..\..\..\build\bin\Release\ImagesProcessor.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

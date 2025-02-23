@@ -59,25 +59,26 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 		Logger::GetInstance().LogError("Exception caught: " + std::string{ e.what() });
 		*outputLength = 0;
 		*outputData = nullptr;
+		return;
 	}
 
 	Logger::GetInstance().LogMessage("Output data size: " + std::to_string(((static_cast<double>(*outputLength) / 1024.0) / 1024.0)) + " MB");
 	Logger::GetInstance().LogMessage("ApplyFilter End");
 }
 
-void FreeMemory(unsigned char* data)
+void FreeMemory(unsigned char** data)
 {
 	Logger::GetInstance().LogMessage("FreeMemory Start");
 
-	if (!data)
+	if (!(*data))
 	{
-		Logger::GetInstance().LogWarning("FreeMemory called with null data.");
+		Logger::GetInstance().LogError("FreeMemory called with null data.");
 		return;
 	}
 
 	Logger::GetInstance().LogMessage("Freeing memory for received data.");
-	delete[] data;
-	data = nullptr;
+	delete[](*data);
+	*data = nullptr;
 
 	Logger::GetInstance().LogMessage("FreeMemory End");
 }

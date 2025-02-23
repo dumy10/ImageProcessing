@@ -21,7 +21,7 @@ extern "C" IMAGESPROCESSOR_API void ApplyFilter(const char* imageData, int lengt
  *
  * @param data Pointer to the data to be freed.
  */
-extern "C" IMAGESPROCESSOR_API void FreeMemory(unsigned char* data);
+extern "C" IMAGESPROCESSOR_API void FreeMemory(unsigned char** data);
 
 /**
  * @brief Converts a given string to lowercase.
