@@ -11,19 +11,19 @@
 		<None Condition="'$(Configuration)' == 'Debug'" Include="..\..\..\VC\ImagesProcessor\build\bin\Debug\ImagesProcessor.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Condition="'$(Configuration)' == 'Release'" Include="..\..\..\build\bin\Release\ImagesProcessor.dll">
+		<None Condition="'$(Configuration)' == 'Release'" Include="..\..\..\..\build\bin\Release\ImagesProcessor.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
 	<Target Name="CopyDependencies" AfterTargets="Build">
 		<Copy Condition="'$(Configuration)' == 'Debug'" SourceFiles="..\..\..\VC\ImagesProcessor\build\bin\Debug\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
-		<Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="..\..\..\build\bin\Release\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
+		<Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="..\..\..\..\build\bin\Release\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
 	</Target>
 
 	<Target Name="LogResolvedPaths" BeforeTargets="Build">
 		<Message Condition="'$(Configuration)' == 'Debug'" Text="Resolved DLL Path: ..\..\..\VC\ImagesProcessor\build\bin\$(Configuration)\ImagesProcessor.dll" Importance="High" />
-		<Message Condition="'$(Configuration)' == 'Release'" Text="Resolved DLL Path: ..\..\..\build\bin\Release\ImagesProcessor.dll" Importance="High" />
+		<Message Condition="'$(Configuration)' == 'Release'" Text="Resolved DLL Path: ..\..\..\..\build\bin\Release\ImagesProcessor.dll" Importance="High" />
 	</Target>
 
 	<ItemGroup>
