@@ -33,19 +33,19 @@ void Logger::LogError(const std::string& message)
 Logger::Logger()
 {
 	// Get the current path and append the directory name
-	std::filesystem::path tempPath = std::filesystem::current_path() / "ImagesProcessorLogs";
+	std::filesystem::path currentPath = std::filesystem::current_path() / "ImagesProcessorLogs";
 
 	// Create the directory if it does not exist
-	if (!std::filesystem::exists(tempPath))
+	if (!std::filesystem::exists(currentPath))
 	{
-		std::filesystem::create_directory(tempPath);
+		std::filesystem::create_directory(currentPath);
 	}
 
 	// Add the log file name to the path
-	tempPath /= "ImagesProcessor.log";
+	currentPath /= "ImagesProcessor.log";
 
 	// Open the log file (if it does not exist, it will be created)
-	m_logFile.open(tempPath, std::ios::out | std::ios::app);
+	m_logFile.open(currentPath, std::ios::out | std::ios::app);
 
 	// Check if the file was opened successfully
 	if (!m_logFile.is_open())
