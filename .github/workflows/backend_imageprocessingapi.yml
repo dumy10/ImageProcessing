@@ -25,7 +25,7 @@ jobs:
       - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v1
         with:
-          cmake-version: '3.20.0'
+          cmake-version: '3.21.0'
 
       - name: Configure CMake
         run: cmake -S back-end/VC/ImagesProcessor -B build -G "Visual Studio 17 2022" -A x64

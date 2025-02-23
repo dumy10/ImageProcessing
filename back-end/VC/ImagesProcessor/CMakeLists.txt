@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 project(ImagesProcessor VERSION 1.0 LANGUAGES CXX)
 
 # Set C++ standard and required features
