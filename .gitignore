@@ -398,3 +398,5 @@ FodyWeavers.xsd
 # Sensitive files
 */Credentials/*.json
 /back-end/DotNet/ImagesAPI/ImagesAPI/Credentials/imageprocessing-drive-api-c7e0d4e4ca93.json
+
+build/
