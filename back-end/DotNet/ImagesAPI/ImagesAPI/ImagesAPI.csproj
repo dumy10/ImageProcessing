@@ -7,12 +7,6 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<None Condition="'$(Configuration)' == 'Release'" Include="..\..\..\..\build\bin\Release\ImagesProcessor.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
 	<Target Name="CopyDependencies" AfterTargets="Build">
 		<Copy Condition="'$(Configuration)' == 'Debug'" SourceFiles="..\..\..\VC\ImagesProcessor\build\bin\Debug\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
 		<Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="..\..\..\..\build\bin\Release\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />

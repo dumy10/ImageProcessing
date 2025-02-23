@@ -44,6 +44,12 @@ Logger::Logger()
 	// Add the log file name to the path
 	currentPath /= "ImagesProcessor.log";
 
+	// If the file already exists, delete it
+	if (std::filesystem::exists(currentPath))
+	{
+		std::filesystem::remove(currentPath);
+	}
+
 	// Open the log file (if it does not exist, it will be created)
 	m_logFile.open(currentPath, std::ios::out | std::ios::app);
 
