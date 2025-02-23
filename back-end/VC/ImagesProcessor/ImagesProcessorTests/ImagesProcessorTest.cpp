@@ -37,7 +37,7 @@ const std::vector<unsigned char> ImagesProcessorTest::GetMockImageData(const std
 	}
 	else if (extension == ".jpg" || extension == ".jpeg")
 	{
-		stbi_write_jpg_to_func(kWriteCallback, &imageDataBuffer, width, height, channels, imageData.get(), 100);
+		stbi_write_jpg_to_func(kWriteCallback, &imageDataBuffer, width, height, channels, imageData.get(), kImageQuality);
 	}
 
 	return imageDataBuffer;
