@@ -87,7 +87,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	}
 	else if (m_extension == ".jpg" || m_extension == ".jpeg")
 	{
-		success = stbi_write_jpg_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, m_width * m_channels);
+		success = stbi_write_jpg_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, kImageQuality);
 	}
 	else
 	{
