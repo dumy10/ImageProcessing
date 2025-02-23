@@ -140,6 +140,8 @@ namespace ImagesAPI.Services.Concretes
             // Apply the filter to the image
             ImageProcessor.GetFilteredImageData(imageData, filter.ToLower(), extension.ToLower(), out byte[] modifiedImageData);
 
+            Logging.Instance.LogMessage($"Successfully applied the {filter} filter to the image.");
+
             // Get the modified stream
             using var modifiedImageStream = new MemoryStream(modifiedImageData);
 
@@ -165,7 +167,9 @@ namespace ImagesAPI.Services.Concretes
 
             // Upload the modified image to the drive
             string modifiedImageId = await driveService.UploadImage(modifiedImageStream, imageModel.Name, imageModel.ContentType);
-            
+
+            Logging.Instance.LogMessage("Successfully uploaded the modified image.");
+
             // Update image model properties
             imageModel.Id = modifiedImageId;
             imageModel.ParentId = id;
@@ -176,6 +180,8 @@ namespace ImagesAPI.Services.Concretes
 
             // Save the image in the database
             await Create(imageModel);
+
+            Logging.Instance.LogMessage("Successfully saved the modified image in the database.");
 
             return imageModel;
         }

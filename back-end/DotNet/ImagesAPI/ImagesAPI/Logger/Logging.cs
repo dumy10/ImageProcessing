@@ -29,6 +29,11 @@ namespace ImagesAPI.Logger
             string logDirectory = Path.Combine(executingAssemblyPath, "ImagesProcessorLogs");
             _logFile = Path.Combine(logDirectory, "ImagesAPI.log");
 
+            if (File.Exists(_logFile))
+            {
+                File.Delete(_logFile);
+            }
+
             if (!Directory.Exists(logDirectory))
             {
                 Directory.CreateDirectory(logDirectory);

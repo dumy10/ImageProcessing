@@ -43,10 +43,10 @@ jobs:
         run: dotnet publish back-end\DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Copy DLL Dependency
-        run: cp build/bin/Release/ImagesProcessor.dll "${{env.DOTNET_ROOT}}/myapp"
+        run: cp build\bin\Release\ImagesProcessor.dll "${{env.DOTNET_ROOT}}\myapp"
 
       - name: Run tests for ImagesAPITests
-        run: dotnet test back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj --configuration Release --runtime win-x64
+        run: dotnet test back-end\DotNet\ImagesAPITests\ImagesAPITests.csproj --configuration Release --runtime win-x64
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

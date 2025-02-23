@@ -39,6 +39,7 @@ namespace ImagesAPI.External
 
             if (outputImageDataPtr != IntPtr.Zero)
             {
+                Logging.Instance.LogMessage("Deallocating memory for the output image data.");
                 FreeMemory(outputImageDataPtr);
             }
         }
