@@ -52,10 +52,12 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: front-end\image-processing
+      - name: Install Dependencies
+        run: |
+          cd front-end/image-processing
+          npm ci
 
-      - name: Run frontend tests
-        run: npm test
-        working-directory: front-end\image-processing
+      - name: Run Tests
+        run: |
+          cd front-end/image-processing
+          npm test
