@@ -22,7 +22,6 @@ import { HttpErrorResponse } from '@angular/common/http';
  */
 @Component({
   selector: 'app-edit-image',
-  providers: [ImageService],
   imports: [MatButtonModule, LoadingComponent, CommonModule, MatIconModule],
   templateUrl: './edit-image.component.html',
   styleUrl: './edit-image.component.scss',

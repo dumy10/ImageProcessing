@@ -23,6 +23,11 @@ jobs:
           cd front-end/image-processing
           npm ci
 
+      - name: Run Tests
+        run: |
+          cd front-end/image-processing
+          npm test
+
       - name: Build Angular App
         run: |
           cd front-end/image-processing

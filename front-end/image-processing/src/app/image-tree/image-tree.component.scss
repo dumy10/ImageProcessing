@@ -44,9 +44,11 @@
 
 .treeNodeChildren {
   display: flex;
-  flex-direction: wrap;
-  justify-content: center;
+  flex-direction: row; 
+  flex-wrap: nowrap; 
+  justify-content: flex-start; 
   gap: 0.9375rem;
   margin-top: 0.625rem;
   width: 100%;
+  overflow-x: auto; 
 }
