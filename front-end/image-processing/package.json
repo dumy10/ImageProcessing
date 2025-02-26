@@ -8,7 +8,7 @@
     "deploy": "ng build --configuration production && npx angular-cli-ghpages --dir=dist/image-processing --no-silent",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "test-no-watch": "ng test -- --watch=false --browsers=ChromeHeadless"
+    "test-no-watch": "ng test --watch=false --browsers=ChromeHeadless"
   },
   "private": true,
   "dependencies": {
