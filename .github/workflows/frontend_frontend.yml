@@ -26,7 +26,7 @@ jobs:
       - name: Run Tests
         run: |
           cd front-end/image-processing
-          npm test-no-watch
+          npm test
 
       - name: Build Angular App
         run: |
