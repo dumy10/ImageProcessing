@@ -30,3 +30,11 @@ extern "C" IMAGESPROCESSOR_API void FreeMemory(unsigned char** data);
  * @return The converted lowercase string.
  */
 std::string ToLowerCase(const std::string& input);
+
+/**
+ * @brief Checks if a given pointer is valid.
+ *
+ * @param pointer The pointer to check.
+ * @return True if the pointer is valid, false otherwise.
+ */
+bool IsValidPointer(void* pointer);

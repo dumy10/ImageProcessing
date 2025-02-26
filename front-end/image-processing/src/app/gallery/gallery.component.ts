@@ -23,7 +23,6 @@ import { HttpErrorResponse } from '@angular/common/http';
  * @templateUrl ./gallery.component.html
  * @styleUrl ./gallery.component.scss
  */
-@Inject('ImageService')
 @Component({
   selector: 'app-gallery',
   imports: [
@@ -33,7 +32,6 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatIconModule,
     MatButtonModule,
   ],
-  providers: [ImageService],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss',
 })
@@ -136,12 +134,12 @@ export class GalleryComponent implements OnInit {
         if (error.status === 404) {
           console.error('No images found', error);
           this.loading = false;
-          alert(error.error);
+          alert(error.error || 'No images found');
           return;
         }
         console.error('Failed to fetch images', error);
         this.loading = false;
-        alert(error.error);
+        alert(error.message || 'An error occurred while fetching images.');
       },
       complete: () => {
         this.loading = false;
@@ -161,7 +159,7 @@ export class GalleryComponent implements OnInit {
 
   /**
    * Handles page change event from the paginator.
-   * @param {number} page - The new page number.
+   * @param {any} event - The event.
    */
   onPageChange(event: any): void {
     this.currentPage = event.pageIndex;
@@ -278,7 +276,9 @@ export class GalleryComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         console.error('Failed to download image', error);
-        alert(error.error);
+        alert(
+          error.message || 'An error occurred while downloading the image.'
+        );
         this.loading = false;
       },
       complete: () => {

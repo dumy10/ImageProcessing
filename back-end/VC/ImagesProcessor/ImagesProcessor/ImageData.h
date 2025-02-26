@@ -53,6 +53,8 @@ static stbi_write_func* kWriteCallback = [](void* context, void* data, int size)
 	buffer->insert(buffer->end(), bytes, bytes + size);
 	};
 
+static const size_t kImageQuality = 100; ///< Quality of the jpg image.
+
 /**
  * @brief Class for handling image data and applying filters.
  */

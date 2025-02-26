@@ -18,11 +18,9 @@ import { HttpErrorResponse } from '@angular/common/http';
  * @templateUrl ./home.component.html
  * @styleUrl ./home.component.scss
  */
-@Inject('ImageService')
 @Component({
   selector: 'app-home',
   imports: [CommonModule, LoadingComponent],
-  providers: [ImageService],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -141,7 +139,7 @@ export class HomeComponent {
         this.loading = false;
         this.router.navigate(['/edit', response.id]);
       },
-      error: (error:HttpErrorResponse) => {
+      error: (error: HttpErrorResponse) => {
         this.loading = false;
         console.error('Error uploading image:', error);
         alert(error.error);
