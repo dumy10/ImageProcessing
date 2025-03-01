@@ -1,5 +1,5 @@
 <h2 mat-dialog-title class="dialogTitle" aria-label="Image title">
-  Image: {{ data[data.length - 1].name }}
+  Image: {{ data.length ? data[data.length - 1].name : 'Unknown' }}
 </h2>
 <mat-dialog-content class="imageDialogContent">
   <div class="imagesColumn">

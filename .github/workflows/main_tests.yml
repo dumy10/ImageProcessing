@@ -1,0 +1,63 @@
+name: Run Tests on Main Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-backend:
+    runs-on: windows-latest
+    permissions:
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.x"
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: "3.21.0"
+
+      - name: Configure CMake
+        run: cmake -S back-end/VC/ImagesProcessor -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build with CMake
+        run: cmake --build build --config Release
+
+      - name: Run C++ Tests
+        run: build/bin/Release/ImagesProcessorTests.exe
+
+      - name: Build with dotnet
+        run: dotnet build back-end\DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj --configuration Release --runtime win-x64
+
+      - name: Run C# tests
+        run: dotnet test back-end\DotNet\ImagesAPITests\ImagesAPITests.csproj --configuration Release --runtime win-x64
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        run: |
+          cd front-end/image-processing
+          npm ci
+
+      - name: Run Tests
+        run: |
+          cd front-end/image-processing
+          npm test
