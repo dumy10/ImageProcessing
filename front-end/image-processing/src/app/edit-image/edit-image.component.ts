@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { FilterButtonsComponent } from '../filter-buttons/filter-buttons.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { Filters } from '../models/filters';
 import { ImageModel } from '../models/ImageModel';
@@ -16,13 +17,19 @@ import { ImageService } from '../services/image.service';
  *
  * @component
  * @selector app-edit-image
- * @imports CommonModule, MatButtonModule, LoadingComponent, MatIconModule
+ * @imports CommonModule, MatButtonModule, LoadingComponent, MatIconModule, FilterButtonsComponent
  * @templateUrl ./edit-image.component.html
  * @styleUrl ./edit-image.component.scss
  */
 @Component({
   selector: 'app-edit-image',
-  imports: [MatButtonModule, LoadingComponent, CommonModule, MatIconModule],
+  imports: [
+    MatButtonModule,
+    LoadingComponent,
+    CommonModule,
+    MatIconModule,
+    FilterButtonsComponent,
+  ],
   templateUrl: './edit-image.component.html',
   styleUrl: './edit-image.component.scss',
 })
@@ -267,5 +274,16 @@ export class EditImageComponent implements OnInit {
    */
   checkScreenSize() {
     this.isMobileView = window.innerWidth <= 768;
+  }
+
+  /**
+   * Handles the image load event.
+   */
+  onImageLoad(): void {
+    if (!this.image) {
+      return;
+    }
+
+    this.image.loaded = true;
   }
 }

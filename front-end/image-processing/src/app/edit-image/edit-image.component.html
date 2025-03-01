@@ -1,18 +1,13 @@
 <div class="container">
   <div class="image-container">
-    <div class="filter-buttons" *ngIf="!isMobileView">
-      <button
-        mat-button
-        *ngFor="let filter of filters"
-        (click)="filterImage(filter)"
-        class="filter-button"
-        [attr.aria-label]="'Apply ' + filter + ' filter'"
-      >
-        <mat-icon>filter</mat-icon> {{ filter }}
-      </button>
+    <div *ngIf="!isMobileView && image?.loaded">
+      <app-filter-buttons
+        [filters]="filters"
+        (filterSelected)="filterImage($event)"
+      ></app-filter-buttons>
     </div>
 
-    <div class="dropdown" *ngIf="isMobileView">
+    <div class="dropdown" *ngIf="isMobileView && image?.loaded">
       <button
         mat-button
         (click)="toggleDropdown()"
@@ -26,15 +21,10 @@
         role="menu"
         aria-label="Filter menu"
       >
-        <button
-          mat-button
-          *ngFor="let filter of filters"
-          (click)="filterImage(filter)"
-          class="filter-button"
-          [attr.aria-label]="'Apply ' + filter + ' filter'"
-        >
-          <mat-icon>filter</mat-icon> {{ filter }}
-        </button>
+        <app-filter-buttons
+          [filters]="filters"
+          (filterSelected)="filterImage($event)"
+        ></app-filter-buttons>
       </div>
     </div>
 
@@ -44,8 +34,12 @@
         alt="Image to be processed"
         class="image"
         (error)="onImageError()"
+        (load)="onImageLoad()"
       />
-      <div *ngIf="image?.appliedFilters !== null" class="undo-button-container">
+      <div
+        *ngIf="image?.appliedFilters !== null && image?.loaded"
+        class="undo-button-container"
+      >
         <button mat-button (click)="undoFilter()" aria-label="Undo last filter">
           <mat-icon class="undo-button">undo</mat-icon>
         </button>
@@ -53,7 +47,7 @@
     </div>
   </div>
 
-  <div class="save-button">
+  <div class="save-button" *ngIf="image?.loaded">
     <button
       mat-button
       (click)="downloadImage()"
