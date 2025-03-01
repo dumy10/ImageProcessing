@@ -1,17 +1,17 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialogModule } from '@angular/material/dialog';
-import { RouterModule } from '@angular/router';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { GalleryComponent } from './gallery.component';
-import { ImageService } from '../services/image.service';
-import { of, throwError } from 'rxjs';
-import { ImageModel } from '../models/ImageModel';
 import {
   provideHttpClient,
   withInterceptorsFromDi,
 } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogModule } from '@angular/material/dialog';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { RouterModule } from '@angular/router';
+import { of, throwError } from 'rxjs';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { ImageModel } from '../models/ImageModel';
+import { ImageService } from '../services/image.service';
+import { GalleryComponent } from './gallery.component';
 
 describe('GalleryComponent', () => {
   let component: GalleryComponent;

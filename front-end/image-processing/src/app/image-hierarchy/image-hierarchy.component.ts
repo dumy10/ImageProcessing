@@ -1,3 +1,6 @@
+import { CommonModule } from '@angular/common';
+import { Component, Inject } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import {
   MAT_DIALOG_DATA,
   MatDialogActions,
@@ -5,9 +8,6 @@ import {
   MatDialogRef,
   MatDialogTitle,
 } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ImageModel } from '../models/ImageModel';
 
 /**
