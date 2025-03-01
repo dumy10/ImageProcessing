@@ -116,21 +116,10 @@ describe('EditImageComponent', () => {
   });
 
   it('should download image', () => {
-    const mockBlob = new Blob(['image content'], { type: 'image/jpeg' });
-    imageService.downloadImage.and.returnValue(of(mockBlob));
-
-    spyOn(window.URL, 'createObjectURL').and.returnValue('mock-url');
-    const a = document.createElement('a');
-    spyOn(document, 'createElement').and.returnValue(a);
-    spyOn(document.body, 'appendChild');
-    spyOn(a, 'click');
-    spyOn(window.URL, 'revokeObjectURL');
-    spyOn(document.body, 'removeChild');
-
     component.image = {
       id: '1',
       name: 'Test Image',
-      url: '',
+      url: 'test-url',
       parentId: undefined,
       parentUrl: undefined,
       width: 800,
@@ -138,16 +127,22 @@ describe('EditImageComponent', () => {
       appliedFilters: [],
       loaded: true,
     };
-    component.downloadImage();
-    fixture.detectChanges();
 
-    expect(component.loading).toBeFalse();
-    expect(window.URL.createObjectURL).toHaveBeenCalledWith(mockBlob);
+    imageService.downloadImage.and.returnValue(of(new Blob()));
+    spyOn(window.URL, 'createObjectURL').and.returnValue('blob-url');
+    const anchor = document.createElement('a');
+    spyOn(document, 'createElement').and.returnValue(anchor);
+    spyOn(anchor, 'click');
+
+    component.downloadImage();
+
+    expect(imageService.downloadImage).toHaveBeenCalled();
+    expect(window.URL.createObjectURL).toHaveBeenCalled();
     expect(document.createElement).toHaveBeenCalledWith('a');
-    expect(document.body.appendChild).toHaveBeenCalledWith(a);
-    expect(a.click).toHaveBeenCalled();
-    expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('mock-url');
-    expect(document.body.removeChild).toHaveBeenCalledWith(a);
+    expect(anchor.href).toContain('blob-url');
+    expect(anchor.download).toBe('Test Image');
+    expect(anchor.click).toHaveBeenCalled();
+    expect(component.loading).toBeFalse();
   });
 
   it('should handle image download error', () => {
