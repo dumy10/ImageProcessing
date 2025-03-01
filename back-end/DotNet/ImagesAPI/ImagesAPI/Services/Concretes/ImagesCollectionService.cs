@@ -7,6 +7,30 @@ using MongoDB.Driver;
 using SkiaSharp;
 using System.Security.Authentication;
 
+/*
+public class ImagesCollectionService : IImagesCollectionService
+{
+    private readonly IMongoCollection<ImageModel> _images;
+
+    public ImagesCollectionService(IMongoDBSettings settings, IMongoCollection<ImageModel>? imagesCollection = null)
+    {
+        if (imagesCollection != null)
+        {
+            _images = imagesCollection;
+        }
+        else
+        {
+            MongoClientSettings clientSettings = MongoClientSettings.FromUrl(new MongoUrl(settings.ConnectionString));
+            clientSettings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+            var client = new MongoClient(clientSettings);
+            var database = client.GetDatabase(settings.DatabaseName);
+
+            _images = database.GetCollection<ImageModel>(settings.ImagesCollectionName);
+        }
+    } 
+
+ */
+
 namespace ImagesAPI.Services.Concretes
 {
     /// <summary>
@@ -15,7 +39,6 @@ namespace ImagesAPI.Services.Concretes
     public class ImagesCollectionService : IImagesCollectionService
     {
         private readonly IMongoCollection<ImageModel> _images;
-        private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ImagesCollectionService"/> class.
@@ -29,6 +52,28 @@ namespace ImagesAPI.Services.Concretes
             var database = client.GetDatabase(settings.DatabaseName);
 
             _images = database.GetCollection<ImageModel>(settings.ImagesCollectionName);
+        }
+
+        /// <summary>
+        /// Constructor used for mocking. Can also be used with the actual collection, if needed.
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="imagesCollection"></param>
+        public ImagesCollectionService(IMongoDBSettings settings, IMongoCollection<ImageModel>? imagesCollection = null)
+        {
+            if (imagesCollection != null)
+            {
+                _images = imagesCollection;
+            }
+            else
+            {
+                MongoClientSettings clientSettings = MongoClientSettings.FromUrl(new MongoUrl(settings.ConnectionString));
+                clientSettings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+                var client = new MongoClient(clientSettings);
+                var database = client.GetDatabase(settings.DatabaseName);
+
+                _images = database.GetCollection<ImageModel>(settings.ImagesCollectionName);
+            }
         }
 
         /// <summary>
@@ -56,7 +101,7 @@ namespace ImagesAPI.Services.Concretes
         {
             var result = await _images.DeleteOneAsync(image => image.Id == id);
 
-            if (!result.IsAcknowledged && result.DeletedCount == 0)
+            if (!result.IsAcknowledged || result.DeletedCount == 0)
             {
                 return false;
             }
@@ -94,7 +139,7 @@ namespace ImagesAPI.Services.Concretes
         {
             model.Id = id;
             var result = await _images.ReplaceOneAsync(image => image.Id == id, model);
-            if (!result.IsAcknowledged && result.ModifiedCount == 0)
+            if (!result.IsAcknowledged || result.ModifiedCount == 0)
             {
                 await _images.InsertOneAsync(model);
                 return false;
@@ -121,7 +166,7 @@ namespace ImagesAPI.Services.Concretes
 
             var imageFormat = skCodec.EncodedFormat.ToString().ToLower();
 
-            if (!_allowedExtensions.Contains($".{imageFormat}"))
+            if (!Enum.TryParse<EAllowedExtensions>(imageFormat.ToUpper(), out _))
             {
                 throw new ArgumentException("Invalid file type. Please make sure the image was not altered. Allowed types: JPEG, JPG, PNG."); ;
             }

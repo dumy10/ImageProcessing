@@ -17,8 +17,6 @@ namespace ImagesAPI.Controllers
         private readonly IImagesCollectionService _imagesCollectionService = imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService));
         private readonly IDropboxService _dropboxService = dropboxService ?? throw new ArgumentNullException(nameof(dropboxService));
 
-        private static readonly HashSet<string> _allowedExtensions = [".jpeg", ".jpg", ".png"];
-
         /// <summary>
         /// Retrieves all images.
         /// </summary>
@@ -114,7 +112,7 @@ namespace ImagesAPI.Controllers
             var imageFormat = skCodec.EncodedFormat.ToString().ToLower(); // e.g. "jpeg", "png", "webp"
             Logging.Instance.LogMessage($"Image format: {imageFormat}");
 
-            if (!_allowedExtensions.Contains($".{imageFormat}"))
+            if (!Enum.TryParse<EAllowedExtensions>(imageFormat.ToUpper(), out _))
             {
                 Logging.Instance.LogWarning($"Invalid file type: {imageFormat}");
                 return BadRequest("Invalid file type. Please make sure the image was not altered. Allowed types: JPEG, JPG, PNG.");
