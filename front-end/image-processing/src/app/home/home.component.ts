@@ -1,10 +1,12 @@
-import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { ImageService } from '../services/image.service';
-import { ImageModel } from '../models/ImageModel';
-import { LoadingComponent } from '../loading/loading.component';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { Router } from '@angular/router';
+import { LoadingComponent } from '../loading/loading.component';
+import { ImageModel } from '../models/ImageModel';
+import { ImageService } from '../services/image.service';
 
 /**
  * HomeComponent is the main component for the home page of the application.
@@ -13,14 +15,14 @@ import { HttpErrorResponse } from '@angular/common/http';
  *
  * @component
  * @selector app-home
- * @imports CommonModule, LoadingComponent
+ * @imports CommonModule, LoadingComponent, MatIconModule
  * @providers ImageService
  * @templateUrl ./home.component.html
  * @styleUrl ./home.component.scss
  */
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, LoadingComponent],
+  imports: [CommonModule, LoadingComponent, MatIconModule, MatButtonModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

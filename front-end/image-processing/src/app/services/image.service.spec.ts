@@ -1,14 +1,14 @@
-import { TestBed } from '@angular/core/testing';
 import {
   provideHttpClient,
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import {
-  provideHttpClientTesting,
   HttpTestingController,
+  provideHttpClientTesting,
 } from '@angular/common/http/testing';
-import { ImageService } from './image.service';
+import { TestBed } from '@angular/core/testing';
 import { ImageModel } from '../models/ImageModel';
+import { ImageService } from './image.service';
 
 describe('ImageService', () => {
   let service: ImageService;

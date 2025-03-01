@@ -1,14 +1,13 @@
-import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import {
   provideHttpClient,
   withInterceptorsFromDi,
 } from '@angular/common/http';
+import { TestBed } from '@angular/core/testing';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { AppComponent } from './app.component';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
+import { AppComponent } from './app.component';
 import { routes } from './app.routes';
 
 describe('AppComponent', () => {

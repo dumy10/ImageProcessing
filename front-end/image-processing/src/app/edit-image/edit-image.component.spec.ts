@@ -1,16 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { EditImageComponent } from './edit-image.component';
-import { ImageService } from '../services/image.service';
-import { of, throwError } from 'rxjs';
-import { ImageModel } from '../models/ImageModel';
-import { Filters } from '../models/filters';
 import {
   provideHttpClient,
   withInterceptorsFromDi,
 } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { of, throwError } from 'rxjs';
+import { ImageModel } from '../models/ImageModel';
+import { Filters } from '../models/filters';
+import { ImageService } from '../services/image.service';
+import { EditImageComponent } from './edit-image.component';
 
 describe('EditImageComponent', () => {
   let component: EditImageComponent;

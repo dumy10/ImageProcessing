@@ -8,7 +8,7 @@
         class="filter-button"
         [attr.aria-label]="'Apply ' + filter + ' filter'"
       >
-        {{ filter }}
+        <mat-icon>filter</mat-icon> {{ filter }}
       </button>
     </div>
 
@@ -33,7 +33,7 @@
           class="filter-button"
           [attr.aria-label]="'Apply ' + filter + ' filter'"
         >
-          {{ filter }}
+          <mat-icon>filter</mat-icon> {{ filter }}
         </button>
       </div>
     </div>
@@ -59,7 +59,7 @@
       (click)="downloadImage()"
       aria-label="Download processed image"
     >
-      Download Image
+      <mat-icon>download</mat-icon>Download Image
     </button>
   </div>
 </div>

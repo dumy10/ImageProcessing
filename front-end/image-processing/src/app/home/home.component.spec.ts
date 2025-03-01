@@ -1,13 +1,13 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HomeComponent } from './home.component';
-import { ImageService } from '../services/image.service';
-import { Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
 import {
   HttpErrorResponse,
   provideHttpClient,
   withInterceptorsFromDi,
 } from '@angular/common/http';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { ImageService } from '../services/image.service';
+import { HomeComponent } from './home.component';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;

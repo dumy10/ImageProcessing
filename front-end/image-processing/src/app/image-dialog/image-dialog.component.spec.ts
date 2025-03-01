@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { ImageDialogComponent } from './image-dialog.component';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { By } from '@angular/platform-browser';
 import { ImageModel } from '../models/ImageModel';
 import { Tree, TreeNode } from '../models/tree';
-import { By } from '@angular/platform-browser';
+import { ImageDialogComponent } from './image-dialog.component';
 
 describe('ImageDialogComponent', () => {
   let component: ImageDialogComponent;

@@ -1,16 +1,16 @@
-import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { MatPaginatorModule } from '@angular/material/paginator';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { ImageService } from '../services/image.service';
-import { ImageModel } from '../models/ImageModel';
-import { LoadingComponent } from '../loading/loading.component';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { Router } from '@angular/router';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { LoadingComponent } from '../loading/loading.component';
+import { ImageModel } from '../models/ImageModel';
 import { Tree, TreeNode } from '../models/tree';
-import { HttpErrorResponse } from '@angular/common/http';
+import { ImageService } from '../services/image.service';
 
 /**
  * GalleryComponent is a component that displays a gallery of images with pagination.

@@ -1,4 +1,7 @@
 <div class="loading-overlay" *ngIf="loading" role="alert" aria-live="assertive">
-  <div class="spinner" aria-hidden="true"></div>
+  <mat-progress-spinner
+    mode="indeterminate"
+    aria-hidden="true"
+  ></mat-progress-spinner>
   <p class="loading-message">{{ message }}</p>
 </div>

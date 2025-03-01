@@ -1,14 +1,14 @@
-import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, NavigationEnd } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { ImageService } from '../services/image.service';
-import { ImageModel } from '../models/ImageModel';
+import { MatIconModule } from '@angular/material/icon';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { LoadingComponent } from '../loading/loading.component';
 import { Filters } from '../models/filters';
-import { MatIconModule } from '@angular/material/icon';
-import { filter } from 'rxjs/operators';
-import { HttpErrorResponse } from '@angular/common/http';
+import { ImageModel } from '../models/ImageModel';
+import { ImageService } from '../services/image.service';
 
 /**
  * EditImageComponent is a component that allows users to edit an image by applying various filters.
