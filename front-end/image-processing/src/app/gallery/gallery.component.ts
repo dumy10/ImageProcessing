@@ -134,7 +134,7 @@ export class GalleryComponent implements OnInit {
         if (error.status === 404) {
           console.error('No images found', error);
           this.loading = false;
-          alert(error.error || 'No images found');
+          alert(error.message || 'No images found');
           return;
         }
         console.error('Failed to fetch images', error);

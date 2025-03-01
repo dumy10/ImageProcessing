@@ -142,7 +142,7 @@ export class HomeComponent {
       error: (error: HttpErrorResponse) => {
         this.loading = false;
         console.error('Error uploading image:', error);
-        alert(error.error);
+        alert(error.message);
       },
       complete: () => {
         this.loading = false;
