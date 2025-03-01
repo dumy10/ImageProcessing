@@ -36,7 +36,7 @@ jobs:
       - name: Build with dotnet
         run: dotnet build back-end\DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj --configuration Release --runtime win-x64
 
-      - name: Run tests for ImagesAPITests
+      - name: Run C# tests
         run: dotnet test back-end\DotNet\ImagesAPITests\ImagesAPITests.csproj --configuration Release --runtime win-x64
 
   test-frontend:

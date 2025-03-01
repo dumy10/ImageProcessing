@@ -5,7 +5,6 @@ using ImagesAPI.Settings.Interfaces;
 using MongoDB.Driver;
 using Moq;
 using SkiaSharp;
-using Xunit;
 
 namespace ImagesAPITests
 {
