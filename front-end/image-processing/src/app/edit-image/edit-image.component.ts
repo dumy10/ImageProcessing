@@ -135,7 +135,7 @@ export class EditImageComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         console.error('Failed to fetch image', error);
-        alert(error.error);
+        alert(error.message);
         this.loading = false;
       },
       complete: () => {
@@ -167,7 +167,7 @@ export class EditImageComponent implements OnInit {
         },
         error: (error: HttpErrorResponse) => {
           console.error('Failed to edit image', error);
-          alert(error.error);
+          alert(error.message);
           this.loading = false;
         },
         complete: () => {
@@ -202,7 +202,7 @@ export class EditImageComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         console.error('Failed to download image', error);
-        alert(error.error);
+        alert(error.message);
         this.loading = false;
       },
       complete: () => {
@@ -239,7 +239,7 @@ export class EditImageComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         console.error('Failed to fetch image', error);
-        alert(error.error);
+        alert(error.message);
       },
     });
   }
