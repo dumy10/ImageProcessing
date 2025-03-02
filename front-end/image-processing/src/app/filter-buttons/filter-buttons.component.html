@@ -1,0 +1,11 @@
+<div class="filter-buttons">
+  <button
+    mat-button
+    *ngFor="let filter of filters"
+    (click)="filterImage(filter)"
+    class="filter-button"
+    [attr.aria-label]="'Apply ' + filter + ' filter'"
+  >
+    <mat-icon>filter</mat-icon> {{ filter }}
+  </button>
+</div>

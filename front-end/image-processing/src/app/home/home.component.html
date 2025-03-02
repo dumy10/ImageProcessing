@@ -1,4 +1,4 @@
-<div class="photo-editor-container text-center">
+<div class="photo-editor-container">
   <div
     class="dropzone"
     (dragover)="onDragOver($event)"
@@ -16,8 +16,7 @@
         (click)="onUploadClick()"
         aria-label="Upload your image"
       >
-        <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i> Upload your
-        image
+        <mat-icon>cloud_upload</mat-icon> Upload your image
       </button>
     </div>
 

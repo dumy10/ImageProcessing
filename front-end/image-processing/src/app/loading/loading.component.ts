@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 /**
  * LoadingComponent is a reusable component that displays a loading message
@@ -7,13 +8,13 @@ import { Component, Input } from '@angular/core';
  *
  * @component
  * @selector app-loading
- * @imports CommonModule
+ * @imports CommonModule, MatProgressSpinnerModule
  * @templateUrl ./loading.component.html
  * @styleUrl ./loading.component.scss
  */
 @Component({
   selector: 'app-loading',
-  imports: [CommonModule],
+  imports: [CommonModule, MatProgressSpinnerModule],
   templateUrl: './loading.component.html',
   styleUrl: './loading.component.scss',
 })

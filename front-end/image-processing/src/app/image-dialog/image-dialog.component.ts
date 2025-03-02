@@ -1,13 +1,13 @@
+import { CommonModule } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import {
-  MatDialogRef,
   MAT_DIALOG_DATA,
-  MatDialogTitle,
-  MatDialogContent,
   MatDialogActions,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle,
 } from '@angular/material/dialog';
-import { CommonModule } from '@angular/common';
 import { ImageTreeComponent } from '../image-tree/image-tree.component';
 import { ImageModel } from '../models/ImageModel';
 import { Tree } from '../models/tree';

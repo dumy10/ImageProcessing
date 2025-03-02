@@ -36,22 +36,6 @@
   position: relative;
 }
 
-.filter-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-
-  button {
-    @include button-styles;
-    margin-bottom: 0.5rem;
-  }
-}
-
 .image-display {
   width: 100%;
   max-width: 100%;

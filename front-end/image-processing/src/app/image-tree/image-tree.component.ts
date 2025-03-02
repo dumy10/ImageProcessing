@@ -1,9 +1,9 @@
-import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { TreeNode } from '../models/tree';
-import { ImageModel } from '../models/ImageModel';
 import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
+import { ImageModel } from '../models/ImageModel';
+import { TreeNode } from '../models/tree';
 
 /**
  * ImageTreeComponent is a component that displays a tree structure of images.
@@ -84,6 +84,7 @@ export class ImageTreeComponent {
 
   /**
    * Handles the image error event.
+   * @param {ImageModel} image - The image that encountered an error.
    */
   onImageError(image: ImageModel): void {
     image.url = 'assets/images/notfound.jpg';

@@ -1,9 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
-import { ImageTreeComponent } from './image-tree.component';
 import { ImageModel } from '../models/ImageModel';
-import { TreeNode } from '../models/tree';
+import { ImageTreeComponent } from './image-tree.component';
 
 describe('ImageTreeComponent', () => {
   let component: ImageTreeComponent;
