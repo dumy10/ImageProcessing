@@ -14,21 +14,23 @@
 #include "libdefine.h"
 
 // Enum headers
-#include "EDefinedFilters.h"
 #include "EAllowedExtensions.h"
+#include "EDefinedFilters.h"
 
 // C++ needed headers
-#include <vector>
-#include <unordered_map>
-#include <memory>
+#include <algorithm>
+#include <cmath>
 #include <functional>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 // Logger needed headers
-#include <fstream>
-#include <filesystem>
-#include <mutex>
 #include <chrono>
 #include <ctime>
+#include <filesystem>
+#include <fstream>
+#include <mutex>
 
 // Include the Logger Singleton class in every component that includes the precompiled header
 #include "Logger.h"

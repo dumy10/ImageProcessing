@@ -1,8 +1,6 @@
 #pragma once
+#include "pch.h"
 #include "AllFilters.h"
-#include <functional>
-#include <memory>
-#include <unordered_map>
 
 /**
  * @brief Factory class for creating image filters.

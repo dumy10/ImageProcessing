@@ -7,44 +7,6 @@
 #include <stb_image_write.h>
 
 /**
- * @brief Allowed image file extensions.
- *
- * Supported extensions:
- * - .png
- * - .jpg
- * - .jpeg
- */
-static const std::unordered_map<std::string, EAllowedExtensions> kAllowedExtensions =
-{
-	{".png", EAllowedExtensions::PNG},
-	{".jpg", EAllowedExtensions::JPG},
-	{".jpeg", EAllowedExtensions::JPEG},
-};
-
-/**
- * @brief Defined image filters.
- *
- * Supported filters:
- * - grayscale
- * - invert
- * - blur
- * - sobel
- * - canny
- * - fliphorizontal
- * - flipvertical
- */
-static const std::unordered_map<std::string, EDefinedFilters> kDefinedFilters =
-{
-	{"grayscale", EDefinedFilters::GRAYSCALE},
-	{"invert", EDefinedFilters::INVERT},
-	{"blur", EDefinedFilters::BLUR},
-	{"sobel", EDefinedFilters::SOBEL},
-	{"canny", EDefinedFilters::CANNY},
-	{"fliphorizontal", EDefinedFilters::FLIPHORIZONTAL},
-	{"flipvertical", EDefinedFilters::FLIPVERTICAL},
-};
-
-/**
  * @brief Callback function for writing image data.
  */
 static stbi_write_func* kWriteCallback = [](void* context, void* data, int size) {
