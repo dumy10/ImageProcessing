@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageModel } from '../models/ImageModel';
@@ -87,17 +87,27 @@ export class GalleryComponent implements OnInit {
    * @param {MatDialog} dialog - The dialog service for opening dialogs.
    * @param {ImageService} imageService - Service for handling image operations.
    * @param {Router} router - Router for navigating between pages.
+   * @param {ActivatedRoute} route - The activated route for accessing URL parameters.
    */
   constructor(
     private dialog: MatDialog,
     private imageService: ImageService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   /**
    * Initializes the component and loads the images.
    */
   ngOnInit(): void {
+    this.route.queryParams.subscribe((params) => {
+      this.currentPage = params['page'] ? +params['page'] : 0;
+      this.itemsPerPage = params['pageSize'] ? +params['pageSize'] : 6;
+      this.onPageChange({
+        pageIndex: this.currentPage,
+        pageSize: this.itemsPerPage,
+      });
+    });
     this.loading = true;
     this.loadImages();
   }
@@ -165,6 +175,11 @@ export class GalleryComponent implements OnInit {
     this.currentPage = event.pageIndex;
     this.itemsPerPage = event.pageSize;
     this.updatePagination();
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { page: this.currentPage, pageSize: this.itemsPerPage },
+      queryParamsHandling: 'merge',
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
