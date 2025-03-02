@@ -12,6 +12,8 @@ import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { ImageModel } from '../models/ImageModel';
 import { ImageService } from '../services/image.service';
 import { GalleryComponent } from './gallery.component';
+import { ActivatedRoute } from '@angular/router';
+import { convertToParamMap } from '@angular/router';
 
 describe('GalleryComponent', () => {
   let component: GalleryComponent;
@@ -406,5 +408,25 @@ describe('GalleryComponent', () => {
         imagePairs: component.imagePairs,
       },
     });
+  });
+
+  it('should set currentPage and itemsPerPage from query params', () => {
+    const activatedRoute = TestBed.inject(ActivatedRoute);
+    activatedRoute.queryParams = of({ page: '2', pageSize: '10' });
+
+    component.ngOnInit();
+
+    expect(component.currentPage).toBe(2);
+    expect(component.itemsPerPage).toBe(10);
+  });
+
+  it('should set default currentPage and itemsPerPage if query params are not provided', () => {
+    const activatedRoute = TestBed.inject(ActivatedRoute);
+    activatedRoute.queryParams = of({});
+
+    component.ngOnInit();
+
+    expect(component.currentPage).toBe(0);
+    expect(component.itemsPerPage).toBe(6);
   });
 });
