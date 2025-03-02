@@ -6,7 +6,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogModule } from '@angular/material/dialog';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { ImageModel } from '../models/ImageModel';
@@ -406,5 +406,25 @@ describe('GalleryComponent', () => {
         imagePairs: component.imagePairs,
       },
     });
+  });
+
+  it('should set currentPage and itemsPerPage from query params', () => {
+    const activatedRoute = TestBed.inject(ActivatedRoute);
+    activatedRoute.queryParams = of({ page: '2', pageSize: '10' });
+
+    component.ngOnInit();
+
+    expect(component.currentPage).toBe(2);
+    expect(component.itemsPerPage).toBe(10);
+  });
+
+  it('should set default currentPage and itemsPerPage if query params are not provided', () => {
+    const activatedRoute = TestBed.inject(ActivatedRoute);
+    activatedRoute.queryParams = of({});
+
+    component.ngOnInit();
+
+    expect(component.currentPage).toBe(0);
+    expect(component.itemsPerPage).toBe(6);
   });
 });
