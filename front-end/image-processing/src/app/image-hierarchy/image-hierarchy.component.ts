@@ -36,7 +36,7 @@ export class ImageHierarchyComponent {
   /**
    * Constructor for ImageHierarchyComponent.
    * @param {MatDialogRef<ImageHierarchyComponent>} dialogRef - Reference to the dialog containing this component.
-   * @param {ImageModel} data - Data passed to the dialog, typically the image model.
+   * @param {ImageModel[]} data - Data passed to the dialog, typically the image model array.
    */
   constructor(
     public dialogRef: MatDialogRef<ImageHierarchyComponent>,
@@ -49,8 +49,10 @@ export class ImageHierarchyComponent {
   closeDialog(): void {
     this.dialogRef.close();
   }
+
   /**
    * Handles the image error event.
+   * @param {ImageModel} image - The image that encountered an error.
    */
   onImageError(image: ImageModel): void {
     image.url = 'assets/images/notfound.jpg';

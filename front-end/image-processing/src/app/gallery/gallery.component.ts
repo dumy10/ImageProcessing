@@ -192,8 +192,10 @@ export class GalleryComponent implements OnInit {
       console.log('The dialog was closed');
     });
   }
+
   /**
    * Builds a tree structure of images based on their parent-child relationships.
+   * @param {ImageModel} image - The image for which to build the tree.
    * @returns {Tree<ImageModel>} - The tree structure of images.
    */
   getImageTree(image: ImageModel): Tree<ImageModel> {
@@ -249,6 +251,7 @@ export class GalleryComponent implements OnInit {
     }
     return currentImage as ImageModel;
   }
+
   /**
    * Downloads the given image.
    * @param {ImageModel} image - The image to download.
@@ -286,6 +289,7 @@ export class GalleryComponent implements OnInit {
       },
     });
   }
+
   /**
    * Handles the image error event.
    * @param {ImageModel} image - The image that has been loaded.

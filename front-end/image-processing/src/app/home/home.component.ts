@@ -15,8 +15,7 @@ import { ImageService } from '../services/image.service';
  *
  * @component
  * @selector app-home
- * @imports CommonModule, LoadingComponent, MatIconModule
- * @providers ImageService
+ * @imports CommonModule, LoadingComponent, MatIconModule, MatButtonModule
  * @templateUrl ./home.component.html
  * @styleUrl ./home.component.scss
  */
