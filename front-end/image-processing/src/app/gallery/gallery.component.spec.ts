@@ -6,14 +6,12 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogModule } from '@angular/material/dialog';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { ImageModel } from '../models/ImageModel';
 import { ImageService } from '../services/image.service';
 import { GalleryComponent } from './gallery.component';
-import { ActivatedRoute } from '@angular/router';
-import { convertToParamMap } from '@angular/router';
 
 describe('GalleryComponent', () => {
   let component: GalleryComponent;
