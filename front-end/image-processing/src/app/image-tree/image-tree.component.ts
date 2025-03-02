@@ -84,6 +84,7 @@ export class ImageTreeComponent {
 
   /**
    * Handles the image error event.
+   * @param {ImageModel} image - The image that encountered an error.
    */
   onImageError(image: ImageModel): void {
     image.url = 'assets/images/notfound.jpg';

@@ -73,6 +73,7 @@ export class EditImageComponent implements OnInit {
    * Indicates whether the view is mobile.
    */
   isMobileView = false;
+
   /**
    * Constructor for EditImageComponent.
    * @param {Router} router - The router for navigating between pages.
@@ -217,6 +218,7 @@ export class EditImageComponent implements OnInit {
       },
     });
   }
+
   /**
    * Handles the image error event.
    */

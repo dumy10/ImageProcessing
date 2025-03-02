@@ -7,30 +7,6 @@ using MongoDB.Driver;
 using SkiaSharp;
 using System.Security.Authentication;
 
-/*
-public class ImagesCollectionService : IImagesCollectionService
-{
-    private readonly IMongoCollection<ImageModel> _images;
-
-    public ImagesCollectionService(IMongoDBSettings settings, IMongoCollection<ImageModel>? imagesCollection = null)
-    {
-        if (imagesCollection != null)
-        {
-            _images = imagesCollection;
-        }
-        else
-        {
-            MongoClientSettings clientSettings = MongoClientSettings.FromUrl(new MongoUrl(settings.ConnectionString));
-            clientSettings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
-            var client = new MongoClient(clientSettings);
-            var database = client.GetDatabase(settings.DatabaseName);
-
-            _images = database.GetCollection<ImageModel>(settings.ImagesCollectionName);
-        }
-    } 
-
- */
-
 namespace ImagesAPI.Services.Concretes
 {
     /// <summary>
@@ -41,24 +17,10 @@ namespace ImagesAPI.Services.Concretes
         private readonly IMongoCollection<ImageModel> _images;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ImagesCollectionService"/> class.
+        /// Initializes a new instance of the <see cref="ImagesCollectionService"/> class. Also used for unit testing.
         /// </summary>
         /// <param name="settings">The MongoDB settings.</param>
-        public ImagesCollectionService(IMongoDBSettings settings)
-        {
-            MongoClientSettings clientSettings = MongoClientSettings.FromUrl(new MongoUrl(settings.ConnectionString));
-            clientSettings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
-            var client = new MongoClient(clientSettings);
-            var database = client.GetDatabase(settings.DatabaseName);
-
-            _images = database.GetCollection<ImageModel>(settings.ImagesCollectionName);
-        }
-
-        /// <summary>
-        /// Constructor used for mocking. Can also be used with the actual collection, if needed.
-        /// </summary>
-        /// <param name="settings"></param>
-        /// <param name="imagesCollection"></param>
+        /// <param name="imagesCollection">The collectio used for testing. </param>
         public ImagesCollectionService(IMongoDBSettings settings, IMongoCollection<ImageModel>? imagesCollection = null)
         {
             if (imagesCollection != null)

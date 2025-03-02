@@ -8,7 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
  *
  * @component
  * @selector app-loading
- * @imports CommonModule
+ * @imports CommonModule, MatProgressSpinnerModule
  * @templateUrl ./loading.component.html
  * @styleUrl ./loading.component.scss
  */

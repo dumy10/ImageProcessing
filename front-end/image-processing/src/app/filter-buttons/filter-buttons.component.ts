@@ -12,12 +12,12 @@ import { Filters } from '../models/filters';
  * @selector app-filter-buttons
  * @imports CommonModule, MatButtonModule, MatIconModule
  * @templateUrl ./filter-buttons.component.html
- * @styleUrl ./filter-buttons.component.scss
+ * @styleUrl './filter-buttons.component.scss'
  */
 @Component({
   selector: 'app-filter-buttons',
   templateUrl: './filter-buttons.component.html',
-  styleUrls: ['./filter-buttons.component.scss'],
+  styleUrl: './filter-buttons.component.scss',
   imports: [CommonModule, MatButtonModule, MatIconModule],
 })
 export class FilterButtonsComponent {
