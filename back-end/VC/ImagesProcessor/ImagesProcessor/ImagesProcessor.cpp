@@ -24,7 +24,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	std::string lowerExtension{ ToLowerCase(extension) };
 
 	// Check if the extension received is allowed
-	if (kAllowedExtensions.find(lowerExtension) == kAllowedExtensions.end())
+	if (g_kAllowedExtensions.find(lowerExtension) == g_kAllowedExtensions.end())
 	{
 		Logger::GetInstance().LogError("Extension not allowed: " + std::string{ lowerExtension });
 		*outputLength = 0;
@@ -35,7 +35,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 	std::string lowerFilter{ ToLowerCase(filter) };
 
 	// Check if the filter received is allowed
-	if (kDefinedFilters.find(lowerFilter) == kDefinedFilters.end())
+	if (g_kDefinedFilters.find(lowerFilter) == g_kDefinedFilters.end())
 	{
 		Logger::GetInstance().LogError("Filter not allowed: " + std::string{ filter });
 		*outputLength = 0;
@@ -52,7 +52,7 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 		std::unique_ptr<ImageData> image = std::make_unique<ImageData>(reinterpret_cast<const unsigned char*>(imageData), length, lowerExtension);
 
 		// Filter the image data
-		image->FilterImage(kDefinedFilters.at(lowerFilter), outputData, outputLength);
+		image->FilterImage(g_kDefinedFilters.at(lowerFilter), outputData, outputLength);
 	}
 	catch (const std::exception& e)
 	{

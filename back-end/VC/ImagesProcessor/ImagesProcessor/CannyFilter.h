@@ -1,9 +1,7 @@
 #pragma once
+#include "pch.h"
 #include "GrayscaleFilter.h"
 #include "IFilter.h"
-#include <algorithm>
-#include <cmath>
-#include <vector>
 
 /**
  * @brief A filter that applies the Canny edge detection algorithm to an image.
