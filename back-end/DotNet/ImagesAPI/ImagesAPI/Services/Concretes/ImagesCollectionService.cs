@@ -20,7 +20,7 @@ namespace ImagesAPI.Services.Concretes
         /// Initializes a new instance of the <see cref="ImagesCollectionService"/> class. Also used for unit testing.
         /// </summary>
         /// <param name="settings">The MongoDB settings.</param>
-        /// <param name="imagesCollection">The collectio used for testing. </param>
+        /// <param name="imagesCollection">The collection used for testing. </param>
         public ImagesCollectionService(IMongoDBSettings settings, IMongoCollection<ImageModel>? imagesCollection = null)
         {
             if (imagesCollection != null)
