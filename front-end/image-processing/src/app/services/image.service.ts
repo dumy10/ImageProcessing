@@ -14,8 +14,7 @@ export class ImageService {
    * Base URL for the image API.
    * @type {string}
    */
-  baseURL: string =
-    'https://imageprocessingapi-hdb5gpfah7h3bbdh.eastus-01.azurewebsites.net/Images';
+  baseURL: string = 'https://localhost:7156/Images';
 
   /**
    * Cache for storing images.

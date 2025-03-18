@@ -16,6 +16,9 @@ enum class EDefinedFilters : uint8_t
 	CANNY,						///< Canny filter.
 	FLIPHORIZONTAL,				///< Flip horizontal filter.
 	FLIPVERTICAL,				///< Flip vertical filter.
+	SEPIA,						///< Sepia filter.
+	OILPAINT,					///< Oil paint filter.
+	KALEIDOSCOPE,				///< Kaleidoscope filter.
 };
 
 /**
@@ -29,6 +32,9 @@ enum class EDefinedFilters : uint8_t
  * - canny
  * - fliphorizontal
  * - flipvertical
+ * - sepia
+ * - oilpaint
+ * - kaleidoscope
  */
 static const std::unordered_map<std::string, EDefinedFilters> g_kDefinedFilters =
 {
@@ -39,4 +45,7 @@ static const std::unordered_map<std::string, EDefinedFilters> g_kDefinedFilters 
 	{"canny", EDefinedFilters::CANNY},
 	{"fliphorizontal", EDefinedFilters::FLIPHORIZONTAL},
 	{"flipvertical", EDefinedFilters::FLIPVERTICAL},
+	{"sepia", EDefinedFilters::SEPIA},
+	{"oilpaint", EDefinedFilters::OILPAINT},
+	{"kaleidoscope", EDefinedFilters::KALEIDOSCOPE},
 };

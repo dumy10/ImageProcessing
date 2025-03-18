@@ -177,9 +177,12 @@
     <ClInclude Include="ImageData.h" />
     <ClInclude Include="ImagesProcessor.h" />
     <ClInclude Include="InvertFilter.h" />
+    <ClInclude Include="KaleidoscopeFilter.h" />
     <ClInclude Include="libdefine.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="OilPaintFilter.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="SepiaFilter.h" />
     <ClInclude Include="SobelFilter.h" />
     <ClInclude Include="stb_image_implementation.h" />
   </ItemGroup>
@@ -194,13 +197,16 @@
     <ClCompile Include="ImageData.cpp" />
     <ClCompile Include="ImagesProcessor.cpp" />
     <ClCompile Include="InvertFilter.cpp" />
+    <ClCompile Include="KaleidoscopeFilter.cpp" />
     <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="OilPaintFilter.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SepiaFilter.cpp" />
     <ClCompile Include="SobelFilter.cpp" />
     <ClCompile Include="stb_image_implementation.cpp" />
   </ItemGroup>

@@ -81,6 +81,15 @@
     <ClInclude Include="AllFilters.h">
       <Filter>Filters\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="SepiaFilter.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="KaleidoscopeFilter.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="OilPaintFilter.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -123,6 +132,15 @@
       <Filter>Filters\Sources</Filter>
     </ClCompile>
     <ClCompile Include="FlipVerticalFilter.cpp">
+      <Filter>Filters\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="SepiaFilter.cpp">
+      <Filter>Filters\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="KaleidoscopeFilter.cpp">
+      <Filter>Filters\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="OilPaintFilter.cpp">
       <Filter>Filters\Sources</Filter>
     </ClCompile>
   </ItemGroup>

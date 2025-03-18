@@ -12,3 +12,6 @@ Further includes can be added here as needed.
 #include "GrayscaleFilter.h"
 #include "InvertFilter.h"
 #include "SobelFilter.h"
+#include "SepiaFilter.h"
+#include "OilPaintFilter.h"
+#include "KaleidoscopeFilter.h"
