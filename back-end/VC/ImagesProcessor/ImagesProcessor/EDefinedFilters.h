@@ -20,6 +20,7 @@ enum class EDefinedFilters : uint8_t
 	OILPAINT,					///< Oil paint filter.
 	KALEIDOSCOPE,				///< Kaleidoscope filter.
 	MOSAIC,						///< Mosaic filter.
+	GLITCH,						///< Glitch filter.
 };
 
 /**
@@ -36,6 +37,8 @@ enum class EDefinedFilters : uint8_t
  * - sepia
  * - oilpaint
  * - kaleidoscope
+ * - mosaic
+ * - glitch
  */
 static const std::unordered_map<std::string, EDefinedFilters> g_kDefinedFilters =
 {
@@ -50,4 +53,5 @@ static const std::unordered_map<std::string, EDefinedFilters> g_kDefinedFilters 
 	{"oilpaint", EDefinedFilters::OILPAINT},
 	{"kaleidoscope", EDefinedFilters::KALEIDOSCOPE},
 	{"mosaic", EDefinedFilters::MOSAIC},
+	{"glitch", EDefinedFilters::GLITCH},
 };

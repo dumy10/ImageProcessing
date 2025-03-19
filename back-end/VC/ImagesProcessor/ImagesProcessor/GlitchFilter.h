@@ -2,13 +2,13 @@
 #include "IFilter.h"
 
 /**
-* @brief Mosaic filter class.
-*/
-class MosaicFilter : public IFilter
+ * @brief Glitch filter class.
+ */
+class GlitchFilter : public IFilter
 {
 public:
 	/**
-	 * @brief Applies the mosaic filter to an image.
+	 * @brief Applies the glitch filter to an image.
 	 *
 	 * @param inputImage Pointer to the input image data.
 	 * @param outputImage Pointer to the output image data.
@@ -16,5 +16,5 @@ public:
 	 * @param height Height of the image.
 	 * @param channels Number of color channels in the image.
 	 */
-	void Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const;
+	void Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const override;
 };

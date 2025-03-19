@@ -67,4 +67,10 @@ export enum Filters {
    * Applies a mosaic effect to the image.
    */
   Mosaic = 'mosaic',
+
+  /**
+   * Glitch filter.
+   * Applies a glitch effect to the image.
+   */
+  Glitch = 'glitch',
 }

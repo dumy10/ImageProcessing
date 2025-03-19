@@ -172,6 +172,7 @@
     <ClInclude Include="FlipHorizontalFilter.h" />
     <ClInclude Include="FlipVerticalFilter.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="GlitchFilter.h" />
     <ClInclude Include="GrayscaleFilter.h" />
     <ClInclude Include="IFilter.h" />
     <ClInclude Include="ImageData.h" />
@@ -194,6 +195,7 @@
     <ClCompile Include="FilterFactory.cpp" />
     <ClCompile Include="FlipHorizontalFilter.cpp" />
     <ClCompile Include="FlipVerticalFilter.cpp" />
+    <ClCompile Include="GlitchFilter.cpp" />
     <ClCompile Include="GrayscaleFilter.cpp" />
     <ClCompile Include="ImageData.cpp" />
     <ClCompile Include="ImagesProcessor.cpp" />

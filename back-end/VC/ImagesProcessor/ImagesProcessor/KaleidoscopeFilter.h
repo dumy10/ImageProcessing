@@ -4,7 +4,6 @@
 /**
  * @brief Kaleidoscope filter.
  */
-
 class KaleidoscopeFilter : public IFilter
 {
 public:

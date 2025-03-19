@@ -93,6 +93,9 @@
     <ClInclude Include="MosaicFilter.h">
       <Filter>Filters\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="GlitchFilter.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -147,6 +150,9 @@
       <Filter>Filters\Sources</Filter>
     </ClCompile>
     <ClCompile Include="MosaicFilter.cpp">
+      <Filter>Filters\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="GlitchFilter.cpp">
       <Filter>Filters\Sources</Filter>
     </ClCompile>
   </ItemGroup>

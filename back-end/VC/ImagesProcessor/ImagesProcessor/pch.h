@@ -22,8 +22,11 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <queue>
+#include <random>
 #include <unordered_map>
 #include <vector>
+#include <stack>
 
 // Logger needed headers
 #include <chrono>

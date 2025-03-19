@@ -14,6 +14,7 @@ const std::unordered_map<EDefinedFilters, FilterFactory::FilterCreator> FilterFa
 	{EDefinedFilters::OILPAINT, []() { return std::make_unique<OilPaintFilter>(); }},
 	{EDefinedFilters::KALEIDOSCOPE, []() { return std::make_unique<KaleidoscopeFilter>(); }},
 	{EDefinedFilters::MOSAIC, []() { return std::make_unique<MosaicFilter>(); }},
+	{EDefinedFilters::GLITCH, []() { return std::make_unique<GlitchFilter>(); }},
 };
 
 std::unique_ptr<IFilter> FilterFactory::CreateFilter(EDefinedFilters filterType)

@@ -13,14 +13,14 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
 	std::vector<unsigned char> tempImage(size);
 
 	// Parallel horizontal pass
-	#pragma warning(push) 
-	#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
-	#pragma omp parallel for
+#pragma warning(push) 
+#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
+#pragma omp parallel for 
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
 		{
-			float sum[4] = { 0 };
+			std::vector<float> sum(channels, 0.0f);
 			int count = 0;
 
 			for (int k = -halfKernel; k <= halfKernel; ++k)
@@ -42,20 +42,21 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
 			int index = (y * width + x) * channels;
 			for (int c = 0; c < channels; c++)
 			{
-				if (index + c < size) // Ensure buffer overflow does not happen
+				if (index + c < size)
 				{
-					tempImage[static_cast<std::vector<unsigned char, std::allocator<unsigned char>>::size_type>(index) + c] = static_cast<unsigned char>(sum[c] / count);
+					tempImage[index + c] = static_cast<unsigned char>(sum[c] / count);
 				}
 			}
 		}
 	}
+
 	// Parallel vertical pass
-	#pragma omp parallel for
+#pragma omp parallel for 
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
 		{
-			float sum[4] = { 0 };
+			std::vector<float> sum(channels, 0.0f);
 			int count = 0;
 
 			for (int k = -halfKernel; k <= halfKernel; k++)
@@ -68,7 +69,7 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
 
 					for (int c = 0; c < channels; c++)
 					{
-						sum[c] += tempImage[static_cast<std::vector<unsigned char, std::allocator<unsigned char>>::size_type>(sampleIndex) + c];
+						sum[c] += tempImage[sampleIndex + c];
 					}
 					count++;
 				}
@@ -77,7 +78,7 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
 			int index = (y * width + x) * channels;
 			for (int c = 0; c < channels; c++)
 			{
-				if (index + c < size) // Ensure buffer overflow does not happen
+				if (index + c < size)
 				{
 					outputImage[index + c] = static_cast<unsigned char>(sum[c] / count);
 				}
@@ -85,7 +86,7 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
 		}
 	}
 
-	#pragma warning(pop) // Restore warning settings
+#pragma warning(pop) // Restore warning settings
 
 	Logger::GetInstance().LogMessage("Blur filter applied successfully");
 }

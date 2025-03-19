@@ -49,5 +49,9 @@
         /// Mosaic filter
         /// </summary>
         MOSAIC,
+        /// <summary>
+        /// Glitch filter
+        /// </summary>
+        GLITCH,
     }
 }

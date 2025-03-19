@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "SepiaFilter.h"
+#include <omp.h>
 
 void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
@@ -12,6 +13,10 @@ void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	};
 
 	const int size = width * height * channels;
+
+#pragma warning(push) 
+#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
+#pragma omp parallel for
 	for (int i = 0; i < size; i += channels)
 	{
 		float r = inputImage[i];
@@ -23,11 +28,13 @@ void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 		float newG = (r * sepiaMatrix[1][0]) + (g * sepiaMatrix[1][1]) + (b * sepiaMatrix[1][2]);
 		float newB = (r * sepiaMatrix[2][0]) + (g * sepiaMatrix[2][1]) + (b * sepiaMatrix[2][2]);
 
-		// Clamp the values to the valid range [0, 255]
-		outputImage[i] = static_cast<unsigned char>(std::min<float>(newR, 255.0f));
-		outputImage[i + 1] = static_cast<unsigned char>(std::min<float>(newG, 255.0f));
-		outputImage[i + 2] = static_cast<unsigned char>(std::min<float>(newB, 255.0f));
+		// Clamp values
+		outputImage[i] = static_cast<unsigned char>(std::clamp(newR, 0.0f, 255.0f));
+		outputImage[i + 1] = static_cast<unsigned char>(std::clamp(newG, 0.0f, 255.0f));
+		outputImage[i + 2] = static_cast<unsigned char>(std::clamp(newB, 0.0f, 255.0f));
 	}
+
+#pragma warning(pop)
 
 	Logger::GetInstance().LogMessage("Sepia filter applied");
 }
