@@ -13,6 +13,7 @@ const std::unordered_map<EDefinedFilters, FilterFactory::FilterCreator> FilterFa
 	{EDefinedFilters::SEPIA, []() { return std::make_unique<SepiaFilter>(); }},
 	{EDefinedFilters::OILPAINT, []() { return std::make_unique<OilPaintFilter>(); }},
 	{EDefinedFilters::KALEIDOSCOPE, []() { return std::make_unique<KaleidoscopeFilter>(); }},
+	{EDefinedFilters::MOSAIC, []() { return std::make_unique<MosaicFilter>(); }},
 };
 
 std::unique_ptr<IFilter> FilterFactory::CreateFilter(EDefinedFilters filterType)

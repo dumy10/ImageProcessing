@@ -45,5 +45,9 @@
         /// Kaleidoscope filter
         /// </summary>
         KALEIDOSCOPE,
+        /// <summary>
+        /// Mosaic filter
+        /// </summary>
+        MOSAIC,
     }
 }

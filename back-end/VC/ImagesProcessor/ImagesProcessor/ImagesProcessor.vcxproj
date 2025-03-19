@@ -180,6 +180,7 @@
     <ClInclude Include="KaleidoscopeFilter.h" />
     <ClInclude Include="libdefine.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="MosaicFilter.h" />
     <ClInclude Include="OilPaintFilter.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SepiaFilter.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="InvertFilter.cpp" />
     <ClCompile Include="KaleidoscopeFilter.cpp" />
     <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="MosaicFilter.cpp" />
     <ClCompile Include="OilPaintFilter.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

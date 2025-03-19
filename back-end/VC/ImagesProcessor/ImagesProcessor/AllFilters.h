@@ -15,3 +15,4 @@ Further includes can be added here as needed.
 #include "SepiaFilter.h"
 #include "OilPaintFilter.h"
 #include "KaleidoscopeFilter.h"
+#include "MosaicFilter.h"

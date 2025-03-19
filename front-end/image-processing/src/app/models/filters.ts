@@ -61,4 +61,10 @@ export enum Filters {
    * Applies a kaleidoscope effect to the image.
    */
   Kaleidoscope = 'kaleidoscope',
+
+  /**
+   * Mosaic filter.
+   * Applies a mosaic effect to the image.
+   */
+  Mosaic = 'mosaic',
 }

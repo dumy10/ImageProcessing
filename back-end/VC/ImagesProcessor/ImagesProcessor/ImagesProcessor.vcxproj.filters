@@ -90,6 +90,9 @@
     <ClInclude Include="OilPaintFilter.h">
       <Filter>Filters\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MosaicFilter.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -141,6 +144,9 @@
       <Filter>Filters\Sources</Filter>
     </ClCompile>
     <ClCompile Include="OilPaintFilter.cpp">
+      <Filter>Filters\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="MosaicFilter.cpp">
       <Filter>Filters\Sources</Filter>
     </ClCompile>
   </ItemGroup>
