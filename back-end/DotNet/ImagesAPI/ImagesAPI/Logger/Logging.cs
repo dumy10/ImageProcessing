@@ -29,7 +29,7 @@ namespace ImagesAPI.Logger
             string logDirectory = Path.Combine(executingAssemblyPath, "ImagesProcessorLogs");
 
             // Create a log file for the current execution of the program in order to avoid overwriting logs across different executions
-            _logFile = Path.Combine(logDirectory, "ImagesAPI" + DateTime.UtcNow + ".log");
+            _logFile = Path.Combine(logDirectory, $"ImagesAPI-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log");
 
             if (!Directory.Exists(logDirectory))
             {

@@ -45,7 +45,7 @@ Logger::Logger()
 	std::string localTimeString = GetLocalTimeAsString();
 
 	// Create a log file for the current execution of the program in order to avoid overwriting logs across different executions
-	currentPath /= "ImagesProcessor - " + localTimeString + ".log";
+	currentPath /= "ImagesProcessor-" + localTimeString + ".log";
 
 	// Open the log file (if it does not exist, it will be created)
 	m_logFile.open(currentPath, std::ios::out | std::ios::app);
