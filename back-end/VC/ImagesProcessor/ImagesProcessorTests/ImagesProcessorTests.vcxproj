@@ -154,6 +154,11 @@
   <ItemGroup>
     <ClInclude Include="ImagesProcessorTest.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ImagesProcessor\ImagesProcessor.vcxproj">
+      <Project>{aaa70945-028c-464d-b5fa-fdf362e79bdc}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\gmock.1.11.0\build\native\gmock.targets" Condition="Exists('..\packages\gmock.1.11.0\build\native\gmock.targets')" />

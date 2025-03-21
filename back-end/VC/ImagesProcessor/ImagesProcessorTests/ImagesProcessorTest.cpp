@@ -168,3 +168,8 @@ TEST_F(ImagesProcessorTest, ApplyFilter_ValidParameters_ValidJpegImageData)
 	EXPECT_NO_THROW(FreeMemory(&outputData));
 	EXPECT_EQ(outputData, nullptr);
 }
+
+TEST_F(ImagesProcessorTest, LoggerInstanceCreationAndLogging)
+{
+	EXPECT_NO_THROW(Logger::GetInstance().LogMessage("Logger instance created successfully."));
+}

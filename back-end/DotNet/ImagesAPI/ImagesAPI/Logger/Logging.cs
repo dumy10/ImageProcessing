@@ -27,12 +27,9 @@ namespace ImagesAPI.Logger
             executingAssemblyPath = Path.GetDirectoryName(executingAssemblyPath) ?? string.Empty;
 
             string logDirectory = Path.Combine(executingAssemblyPath, "ImagesProcessorLogs");
-            _logFile = Path.Combine(logDirectory, "ImagesAPI.log");
 
-            if (File.Exists(_logFile))
-            {
-                File.Delete(_logFile);
-            }
+            // Create a log file for the current execution of the program in order to avoid overwriting logs across different executions
+            _logFile = Path.Combine(logDirectory, "ImagesAPI" + DateTime.UtcNow + ".log");
 
             if (!Directory.Exists(logDirectory))
             {
