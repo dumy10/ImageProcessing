@@ -1,8 +1,21 @@
+using DotNetEnv;
 using ImagesAPI.Services.Concretes;
 using ImagesAPI.Services.Interfaces;
 using ImagesAPI.Settings.Concretes;
 using ImagesAPI.Settings.Interfaces;
 using Microsoft.Extensions.Options;
+
+Env.Load();
+
+string[] variables = ["MONGODB_CONNECTION_STRING", "MONGODB_DATABASE_NAME", "DROPBOX_APP_KEY", "DROPBOX_APP_SECRET", "DROPBOX_REFRESH_TOKEN"];
+
+foreach (var variable in variables)
+{
+    if(string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
+    {
+        throw new Exception($"The {variable} environment variable is not set.");
+    }
+}
 
 var builder = WebApplication.CreateBuilder(args);
 

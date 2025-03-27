@@ -12,12 +12,7 @@ namespace ImagesAPI.Settings.Concretes
         /// </summary>
         public string ImagesCollectionName
         {
-            get
-            {
-                return "Images";
-            }
-            set
-            { }
+            get => Environment.GetEnvironmentVariable("MONGODB_COLLECTION_NAME")!;
         }
 
         /// <summary>
@@ -25,12 +20,7 @@ namespace ImagesAPI.Settings.Concretes
         /// </summary>
         public string ConnectionString
         {
-            get
-            {
-                return "mongodb+srv://dumitru:databasepassword@auth0.reiue.mongodb.net/?retryWrites=true&w=majority&appName=auth0";
-            }
-            set
-            { }
+            get => Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING")!;
         }
 
         /// <summary>
@@ -38,12 +28,7 @@ namespace ImagesAPI.Settings.Concretes
         /// </summary>
         public string DatabaseName
         {
-            get
-            {
-                return "imagesManagement";
-            }
-            set
-            { }
+            get => Environment.GetEnvironmentVariable("MONGODB_DATABASE_NAME")!;
         }
     }
 }
