@@ -2,11 +2,13 @@
 #include "SepiaFilter.h"
 #include <omp.h>
 
+#pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
+
 void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
 	Logger::GetInstance().LogMessage("Applying sepia filter");
 
-	const float sepiaMatrix[3][3] = {
+	static constexpr float sepiaMatrix[3][3] = {
 		{0.393f, 0.769f, 0.189f}, // Coefficients for the red channel
 		{0.349f, 0.686f, 0.168f}, // Coefficients for the green channel
 		{0.272f, 0.534f, 0.131f}  // Coefficients for the blue channel
@@ -14,8 +16,6 @@ void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 
 	const int size = width * height * channels;
 
-#pragma warning(push) 
-#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
 #pragma omp parallel for
 	for (int i = 0; i < size; i += channels)
 	{
@@ -34,7 +34,7 @@ void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 		outputImage[i + 2] = static_cast<unsigned char>(std::clamp(newB, 0.0f, 255.0f));
 	}
 
-#pragma warning(pop)
-
 	Logger::GetInstance().LogMessage("Sepia filter applied");
 }
+
+#pragma warning(default : 6993) // Restore warning about OpenMP not being supported in this configuration

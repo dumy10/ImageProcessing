@@ -2,16 +2,16 @@
 #include "MosaicFilter.h"
 #include <omp.h>
 
+#pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
+
 void MosaicFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
 	Logger::GetInstance().LogMessage("Applying mosaic filter to image.");
 
-	const int tileSize = 10;
+	static constexpr int tileSize = 10;
 	const int numTilesX = width / tileSize;
 	const int numTilesY = height / tileSize;
 
-#pragma warning(push) 
-#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
 #pragma omp parallel for schedule(dynamic)
 	for (int tileY = 0; tileY < numTilesY; tileY++)
 	{
@@ -65,7 +65,7 @@ void MosaicFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 		}
 	}
 
-#pragma warning(pop)
-
 	Logger::GetInstance().LogMessage("Mosaic filter applied to image.");
 }
+
+#pragma warning(default : 6993) // Restore warning about OpenMP not being supported in this configuration

@@ -2,21 +2,26 @@
 #include "GlitchFilter.h"
 #include <omp.h>
 
+#pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
+
 void GlitchFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
 	Logger::GetInstance().LogMessage("Applying glitch filter to the image");
 
 	// Copy the input image to the output image
-	std::copy(inputImage, inputImage + width * height * channels, outputImage);
+#pragma omp parallel for
+	for (int i = 0; i < height; i++) 
+	{
+		memcpy(outputImage + i * width * channels, inputImage + i * width * channels, width * channels * sizeof(unsigned char));
+	}
 
 	// Seed for random number generators
 	std::random_device rd;
 	unsigned int seed = rd();
 
 	// Randomly shift pixel columns
-	int numColumnsToShift = width / 20; // Number of columns to shift 
-#pragma warning(push) 
-#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
+	const int numColumnsToShift = width / 20; // Number of columns to shift 
+
 #pragma omp parallel
 	{
 		// Each thread gets its own random number generator
@@ -42,7 +47,7 @@ void GlitchFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 	}
 
 	// Randomly shift color channels
-	int numPixelsToAlter = (width * height) / 100; // Number of pixels to alter
+	const int numPixelsToAlter = (width * height) / 100; // Number of pixels to alter
 
 #pragma omp parallel
 	{
@@ -62,7 +67,7 @@ void GlitchFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 		}
 	}
 
-#pragma warning(pop)
-
 	Logger::GetInstance().LogMessage("Glitch filter applied");
 }
+
+#pragma warning(default : 6993) // Restore warning settings

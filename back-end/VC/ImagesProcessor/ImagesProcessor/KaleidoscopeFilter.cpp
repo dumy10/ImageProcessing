@@ -2,16 +2,16 @@
 #include "KaleidoscopeFilter.h"
 #include <omp.h>
 
+#pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
+
 void KaleidoscopeFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
 	Logger::GetInstance().LogMessage("Applying kaleidoscope filter");
 
+	static constexpr int numReflections = 6;  // Number of mirrored segments (adjustable for different effects)
 	const int centerX = width / 2;
 	const int centerY = height / 2;
-	const int numReflections = 6;  // Number of mirrored segments (adjustable for different effects)
 
-#pragma warning(push) 
-#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
 #pragma omp parallel for schedule(dynamic) // Use dynamic scheduling for better load balancing
 	for (int y = 0; y < height; ++y)
 	{
@@ -41,7 +41,8 @@ void KaleidoscopeFilter::Apply(const unsigned char* inputImage, unsigned char* o
 			memcpy(&outputImage[dstIndex], &inputImage[srcIndex], channels);
 		}
 	}
-#pragma warning(pop) // Restore warning settings
 
 	Logger::GetInstance().LogMessage("Kaleidoscope filter applied");
 }
+
+#pragma warning(default : 6993) // Restore warning about OpenMP not being supported in this configuration

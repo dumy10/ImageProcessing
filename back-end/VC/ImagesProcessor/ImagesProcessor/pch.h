@@ -20,13 +20,16 @@
 // C++ needed headers
 #include <algorithm>
 #include <cmath>
+#include <execution>
 #include <functional>
 #include <memory>
+#include <numeric>
 #include <queue>
 #include <random>
+#include <stack>
 #include <unordered_map>
 #include <vector>
-#include <stack>
+#include <array>
 
 // Logger needed headers
 #include <chrono>

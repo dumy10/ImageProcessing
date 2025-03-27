@@ -2,13 +2,13 @@
 #include "GrayscaleFilter.h"
 #include <omp.h>
 
+#pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
+
 void GrayscaleFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
 	Logger::GetInstance().LogMessage("Applying grayscale filter");
-	int size = width * height * channels;
+	const int size = width * height * channels;
 
-#pragma warning(push) 
-#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
 #pragma omp parallel for
 	for (int i = 0; i < size; i += channels)
 	{
@@ -21,7 +21,7 @@ void GrayscaleFilter::Apply(const unsigned char* inputImage, unsigned char* outp
 		if (channels > 2 && i + 2 < size) outputImage[i + 2] = gray;
 	}
 
-#pragma warning(pop)
-
 	Logger::GetInstance().LogMessage("Grayscale filter applied successfully");
 }
+
+#pragma warning(default : 6993) // Restore warning about OpenMP not being supported in this configuration

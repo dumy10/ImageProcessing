@@ -2,7 +2,7 @@
 #include "pch.h"
 #include "ImageData.h"
 
-constexpr size_t kMaxImageLength = 1024 * 1024 * 50; /// < Maximum image length allowed. 50 MB
+constexpr size_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length allowed. 10 MB
 
 /**
  * @brief Applies a specified filter to the given image data.

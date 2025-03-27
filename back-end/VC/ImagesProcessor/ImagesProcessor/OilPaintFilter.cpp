@@ -2,72 +2,105 @@
 #include "OilPaintFilter.h"
 #include <omp.h>
 
+#pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
+
 void OilPaintFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
 	Logger::GetInstance().LogMessage("Applying oil paint filter");
 
-	const int filterRadius = 4;  // Can be adjusted for stronger or weaker effect
-	const int intensityLevels = 256; // Levels for color binning
+	static constexpr int filterRadius = 4;
+	static constexpr int intensityLevels = 256;
 
-#pragma warning(push) 
-#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
+	const int imageSize = width * height;
+
+	// Precompute intensity values
+	std::vector<int> intensityMap(imageSize);
 #pragma omp parallel for
-	for (int y = 0; y < height; y++)
+	for (int idx = 0; idx < imageSize; idx++)
 	{
-		for (int x = 0; x < width; x++)
+		int i = idx * channels;
+		int intensity = (inputImage[i] + inputImage[i + 1] + inputImage[i + 2]) / 3;
+		intensityMap[idx] = intensity;
+	}
+
+#pragma omp parallel
+	{
+		int localIntensityCount[intensityLevels] = { 0 };
+		int localSumR[intensityLevels] = { 0 };
+		int localSumG[intensityLevels] = { 0 };
+		int localSumB[intensityLevels] = { 0 };
+
+#pragma omp for schedule(dynamic)
+		for (int y = 0; y < height; y++)
 		{
-			std::vector<int> intensityCount(intensityLevels, 0);
-			std::vector<int> sumR(intensityLevels, 0);
-			std::vector<int> sumG(intensityLevels, 0);
-			std::vector<int> sumB(intensityLevels, 0);
-
-			for (int offsetY = -filterRadius; offsetY <= filterRadius; offsetY++)
+			for (int x = 0; x < width; x++)
 			{
-				for (int offsetX = -filterRadius; offsetX <= filterRadius; offsetX++)
+				// Reset local arrays
+				memset(localIntensityCount, 0, sizeof(localIntensityCount));
+				memset(localSumR, 0, sizeof(localSumR));
+				memset(localSumG, 0, sizeof(localSumG));
+				memset(localSumB, 0, sizeof(localSumB));
+
+				// Neighborhood calculation
+				for (int offsetY = -filterRadius; offsetY <= filterRadius; offsetY++)
 				{
-					int sampleX = std::clamp(x + offsetX, 0, width - 1);
-					int sampleY = std::clamp(y + offsetY, 0, height - 1);
-					int sampleIndex = (sampleY * width + sampleX) * channels;
+					int sampleY = y + offsetY;
+					if (sampleY < 0)
+						sampleY = 0;
+					else if (sampleY >= height)
+						sampleY = height - 1;
 
-					int intensity = (inputImage[sampleIndex] + inputImage[sampleIndex + 1] + inputImage[sampleIndex + 2]) / 3;
+					for (int offsetX = -filterRadius; offsetX <= filterRadius; offsetX++)
+					{
+						int sampleX = x + offsetX;
+						if (sampleX < 0)
+							sampleX = 0;
+						else if (sampleX >= width)
+							sampleX = width - 1;
 
-					intensity = std::clamp(intensity, 0, intensityLevels - 1);
+						int sampleIdx = sampleY * width + sampleX;
+						int intensity = intensityMap[sampleIdx];
 
-					intensityCount[intensity]++;
-					sumR[intensity] += inputImage[sampleIndex];
-					sumG[intensity] += inputImage[sampleIndex + 1];
-					sumB[intensity] += inputImage[sampleIndex + 2];
+						int idx = sampleIdx * channels;
+						localIntensityCount[intensity]++;
+						localSumR[intensity] += inputImage[idx];
+						localSumG[intensity] += inputImage[idx + 1];
+						localSumB[intensity] += inputImage[idx + 2];
+					}
 				}
-			}
 
-			// Find the most dominant intensity
-			int dominantIntensity = 0;
-			for (int i = 1; i < intensityLevels; i++)
-			{
-				if (intensityCount[i] > intensityCount[dominantIntensity])
-					dominantIntensity = i;
-			}
+				// Find the dominant intensity
+				int maxCount = 0;
+				int dominantIntensity = 0;
+				for (int i = 0; i < intensityLevels; i++)
+				{
+					if (localIntensityCount[i] > maxCount)
+					{
+						maxCount = localIntensityCount[i];
+						dominantIntensity = i;
+					}
+				}
 
-			// Assign the most frequent color in the neighborhood
-			int index = (y * width + x) * channels;
-
-			// Prevent division by zero
-			if (intensityCount[dominantIntensity] > 0)
-			{
-				outputImage[index] = sumR[dominantIntensity] / intensityCount[dominantIntensity];
-				outputImage[index + 1] = sumG[dominantIntensity] / intensityCount[dominantIntensity];
-				outputImage[index + 2] = sumB[dominantIntensity] / intensityCount[dominantIntensity];
-			}
-			else
-			{
-				outputImage[index] = inputImage[index];
-				outputImage[index + 1] = inputImage[index + 1];
-				outputImage[index + 2] = inputImage[index + 2];
+				// Assign the most frequent color
+				int index = (y * width + x) * channels;
+				if (maxCount > 0)
+				{
+					outputImage[index] = localSumR[dominantIntensity] / maxCount;
+					outputImage[index + 1] = localSumG[dominantIntensity] / maxCount;
+					outputImage[index + 2] = localSumB[dominantIntensity] / maxCount;
+				}
+				else
+				{
+					// Fallback to the original pixel value
+					outputImage[index] = inputImage[index];
+					outputImage[index + 1] = inputImage[index + 1];
+					outputImage[index + 2] = inputImage[index + 2];
+				}
 			}
 		}
 	}
 
-#pragma warning(pop) // Restore warning settings
-
 	Logger::GetInstance().LogMessage("Oil paint filter applied");
 }
+
+#pragma warning(default : 6993) // Restore warning settings

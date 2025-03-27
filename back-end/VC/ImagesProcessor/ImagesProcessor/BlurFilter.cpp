@@ -2,91 +2,84 @@
 #include "BlurFilter.h"
 #include <omp.h>
 
+#pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
+
 void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
 	Logger::GetInstance().LogMessage("Applying blur filter");
-	int kernelSize = 7; // The kernel defines how much blur the image will have.
-	int halfKernel = kernelSize / 2;
+    static constexpr int kernelSize = 7; // Defines the blur intensity.
+    static constexpr int halfKernel = kernelSize / 2;
+    const int size = width * height * channels;
 
-	int size = width * height * channels;
+    // Compute integral images for each channel
+    std::vector<uint64_t> integralImages(size, 0);
 
-	std::vector<unsigned char> tempImage(size);
+    // Parallel computation of integral images
+#pragma omp parallel for
+    for (int c = 0; c < channels; c++)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            uint64_t sum = 0;
+            for (int x = 0; x < width; x++)
+            {
+                int idx = (y * width + x) * channels + c;
+                sum += inputImage[idx];
+                if (y == 0)
+                {
+                    integralImages[idx] = sum;
+                }
+                else
+                {
+                    integralImages[idx] = sum + integralImages[idx - width * channels];
+                }
+            }
+        }
+    }
 
-	// Parallel horizontal pass
-#pragma warning(push) 
-#pragma warning(disable: 6993) // The Code Analyzer doesn't understand the OpenMP pragma and generates a warning
-#pragma omp parallel for 
-	for (int y = 0; y < height; y++)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			std::vector<float> sum(channels, 0.0f);
-			int count = 0;
+    // Apply blur using the integral image
+#pragma omp parallel for
+    for (int idx = 0; idx < width * height; idx++)
+    {
+        int x = idx % width;
+        int y = idx / width;
 
-			for (int k = -halfKernel; k <= halfKernel; ++k)
-			{
-				int sampleX = x + k;
+        int x0 = x - halfKernel;
+        int y0 = y - halfKernel;
+        int x1 = x + halfKernel;
+        int y1 = y + halfKernel;
 
-				if (sampleX >= 0 && sampleX < width)
-				{
-					int sampleIndex = (y * width + sampleX) * channels;
+        // Clamp coordinates to image boundaries
+        x0 = std::max<int>(x0, 0);
+        y0 = std::max<int>(y0, 0);
+        x1 = std::min<int>(x1, width - 1);
+        y1 = std::min<int>(y1, height - 1);
 
-					for (int c = 0; c < channels; c++)
-					{
-						sum[c] += inputImage[sampleIndex + c];
-					}
-					count++;
-				}
-			}
+        int area = (x1 - x0 + 1) * (y1 - y0 + 1);
 
-			int index = (y * width + x) * channels;
-			for (int c = 0; c < channels; c++)
-			{
-				if (index + c < size)
-				{
-					tempImage[index + c] = static_cast<unsigned char>(sum[c] / count);
-				}
-			}
-		}
-	}
+        for (int c = 0; c < channels; c++)
+        {
+            uint64_t sum = 0;
 
-	// Parallel vertical pass
-#pragma omp parallel for 
-	for (int y = 0; y < height; y++)
-	{
-		for (int x = 0; x < width; x++)
-		{
-			std::vector<float> sum(channels, 0.0f);
-			int count = 0;
+            int idxA = (y0 > 0 && x0 > 0) ? ((y0 - 1) * width + (x0 - 1)) * channels + c : -1;
+            int idxB = (y0 > 0) ? ((y0 - 1) * width + x1) * channels + c : -1;
+            int idxC = (x0 > 0) ? (y1 * width + (x0 - 1)) * channels + c : -1;
+            int idxD = (y1 * width + x1) * channels + c;
 
-			for (int k = -halfKernel; k <= halfKernel; k++)
-			{
-				int sampleY = y + k;
+            sum = integralImages[idxD];
+            if (idxB != -1)
+                sum -= integralImages[idxB];
+            if (idxC != -1)
+                sum -= integralImages[idxC];
+            if (idxA != -1)
+                sum += integralImages[idxA];
 
-				if (sampleY >= 0 && sampleY < height)
-				{
-					int sampleIndex = (sampleY * width + x) * channels;
-
-					for (int c = 0; c < channels; c++)
-					{
-						sum[c] += tempImage[sampleIndex + c];
-					}
-					count++;
-				}
-			}
-
-			int index = (y * width + x) * channels;
-			for (int c = 0; c < channels; c++)
-			{
-				if (index + c < size)
-				{
-					outputImage[index + c] = static_cast<unsigned char>(sum[c] / count);
-				}
-			}
-		}
-	}
-
-#pragma warning(pop) // Restore warning settings
+            int outIdx = idx * channels + c;
+            outputImage[outIdx] = static_cast<unsigned char>(sum / area);
+        }
+    }
 
 	Logger::GetInstance().LogMessage("Blur filter applied successfully");
 }
+
+#pragma warning(default : 6993) // Restore warning settings

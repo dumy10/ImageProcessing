@@ -1,6 +1,4 @@
 #pragma once
-#include "pch.h"
-#include "GrayscaleFilter.h"
 #include "IFilter.h"
 
 /**
@@ -12,68 +10,68 @@
 class CannyFilter : public IFilter
 {
 public:
-	/**
-	* @brief Applies the Canny filter to an image.
-	*
-	* This method applies the Canny edge detection algorithm to the input image
-	 * and stores the result in the output image.
-	*
-	* @param inputImage Pointer to the input image data.
-	* @param outputImage Pointer to the output image data.
-	* @param width Width of the image.
-	* @param height Height of the image.
-	* @param channels Number of color channels in the image.
-	*/
-	void Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const override;
+    /**
+     * @brief Applies the Canny filter to an image.
+     *
+     * This method applies the Canny edge detection algorithm to the input image
+     * and stores the result in the output image.
+     *
+     * @param inputImage Pointer to the input image data.
+     * @param outputImage Pointer to the output image data.
+     * @param width Width of the image.
+     * @param height Height of the image.
+     * @param channels Number of color channels in the image.
+     */
+    void Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const override;
 
 private:
-	/**
-	* @brief Applies a Gaussian blur to the input image.
-	*
-	* This method applies a 3x3 Gaussian blur to the input image to reduce noise.
-	*
-	* @param inputImage Pointer to the input image data.
-	* @param width Width of the image.
-	* @param height Height of the image.
-	* @return std::vector<unsigned char> The blurred image data.
-	*/
-	[[nodiscard]] std::vector<unsigned char> ApplyGaussianBlur(const unsigned char* inputImage, int width, int height) const;
+    /**
+     * @brief Applies Gaussian blur to reduce noise in the image.
+     *
+     * This method smooths the input image using a Gaussian filter to minimize the effect of noise.
+     *
+     * @param inputImage Pointer to the input image data.
+     * @param outputImage Pointer to the blurred image data.
+     * @param width Width of the image.
+     * @param height Height of the image.
+     */
+    void ApplyGaussianBlur(const unsigned char* inputImage, unsigned char* outputImage, int width, int height) const;
 
-	/**
-	* @brief Calculates the gradients of the input image.
-	*
-	* This method calculates the gradient magnitude and direction using the Sobel operator.
-	*
-	* @param inputImage Pointer to the input image data.
-	* @param gradientMagnitude Pointer to the gradient magnitude data.
-	* @param gradientDirection Pointer to the gradient direction data.
-	* @param width Width of the image.
-	* @param height Height of the image.
-	*/
-	void CalculateGradients(const unsigned char* inputImage, float* gradientMagnitude, float* gradientDirection, int width, int height) const;
+    /**
+     * @brief Calculates the gradient magnitude and direction of the image.
+     *
+     * Computes the intensity gradients of the image using differential operators.
+     *
+     * @param inputImage Pointer to the input image data.
+     * @param gradientMagnitude Pointer to store the gradient magnitudes.
+     * @param gradientDirection Pointer to store the gradient directions.
+     * @param width Width of the image.
+     * @param height Height of the image.
+     */
+    void CalculateGradients(const unsigned char* inputImage, float* gradientMagnitude, float* gradientDirection, int width, int height) const;
 
-	/**
-	 * @brief Applies non-maximum suppression to the gradient magnitudes.
-	 *
-	 * This method suppresses non-maximum pixels to thin out the edges.
-	 *
-	 * @param gradientMagnitude Pointer to the gradient magnitude data.
-	 * @param gradientDirection Pointer to the gradient direction data.
-	 * @param width Width of the image.
-	 * @param height Height of the image.
-	 * @return std::vector<unsigned char> The non-maximum suppressed image data.
-	 */
-	[[nodiscard]] std::vector<unsigned char> NonMaximumSuppression(const float* gradientMagnitude, const float* gradientDirection, int width, int height) const;
+    /**
+     * @brief Performs non-maximum suppression to thin out the edges.
+     *
+     * This method suppresses pixels that are not part of an edge, keeping only the local maxima.
+     *
+     * @param gradientMagnitude Pointer to the gradient magnitudes.
+     * @param gradientDirection Pointer to the gradient directions.
+     * @param outputImage Pointer to store the suppressed image data.
+     * @param width Width of the image.
+     * @param height Height of the image.
+     */
+    void NonMaximumSuppression(const float* gradientMagnitude, const float* gradientDirection, unsigned char* outputImage, int width, int height) const;
 
-	/**
-	 * @brief Applies edge tracking by hysteresis to the non-maximum suppressed image.
-	 *
-	 * This method applies double thresholding and edge tracking to finalize the edges.
-	 *
-	 * @param inputImage Pointer to the non-maximum suppressed image data.
-	 * @param width Width of the image.
-	 * @param height Height of the image.
-	 * @return std::vector<unsigned char> The final edge-detected image data.
-	 */
-	[[nodiscard]] std::vector<unsigned char> Hysteresis(const unsigned char* inputImage, int width, int height) const;
+    /**
+     * @brief Applies double thresholding and edge tracking by hysteresis.
+     *
+     * Identifies strong and weak edges and finalizes the detection by suppressing false edges.
+     *
+     * @param inputImage Pointer to the non-max suppressed image data.
+     * @param outputImage Pointer to store the final edge-detected image data.
+     * @param width Width of the image.
+     * @param height Height of the image.
+     */
+    void DoubleThresholdAndHysteresis(const unsigned char* inputImage, unsigned char* outputImage, int width, int height) const;
 };
