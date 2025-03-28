@@ -46,6 +46,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 		Logger::GetInstance().LogError("Failed to write image data to memory");
 		*outputLength = 0;
 		*outputData = nullptr;
+		encodedData.clear();
 		return;
 	}
 	Logger::GetInstance().LogMessage("Image data written to memory successfully");
@@ -77,21 +78,26 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 {
 	Logger::GetInstance().LogMessage("Writing image data to memory");
 
-	encodedData->reserve(m_imageSize);
+	encodedData->clear();
+	int size = m_imageSize + 1024; // Add an extra buffer for the encoded data to prevent reallocation of memory
+	encodedData->reserve(size);
 
 	bool success = false;
+	EAllowedExtensions extension = g_kAllowedExtensions.find(m_extension)->second;
 
-	if (m_extension == ".png")
+	switch (extension)
 	{
+	case EAllowedExtensions::PNG:
 		success = stbi_write_png_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, m_width * m_channels);
-	}
-	else if (m_extension == ".jpg" || m_extension == ".jpeg")
-	{
+		break;
+	case EAllowedExtensions::JPG:
+	case EAllowedExtensions::JPEG:
 		success = stbi_write_jpg_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, kImageQuality);
-	}
-	else
-	{
+		break;
+	case EAllowedExtensions::UNDEFINED:
+	default:
 		Logger::GetInstance().LogError("Extension not supported: " + m_extension);
+		break;
 	}
 
 	return success;

@@ -10,6 +10,11 @@ const std::unordered_map<EDefinedFilters, FilterFactory::FilterCreator> FilterFa
 	{EDefinedFilters::CANNY, []() { return std::make_unique<CannyFilter>(); }},
 	{EDefinedFilters::FLIPHORIZONTAL, []() { return std::make_unique<FlipHorizontalFilter>(); }},
 	{EDefinedFilters::FLIPVERTICAL, []() { return std::make_unique<FlipVerticalFilter>(); }},
+	{EDefinedFilters::SEPIA, []() { return std::make_unique<SepiaFilter>(); }},
+	{EDefinedFilters::OILPAINT, []() { return std::make_unique<OilPaintFilter>(); }},
+	{EDefinedFilters::KALEIDOSCOPE, []() { return std::make_unique<KaleidoscopeFilter>(); }},
+	{EDefinedFilters::MOSAIC, []() { return std::make_unique<MosaicFilter>(); }},
+	{EDefinedFilters::GLITCH, []() { return std::make_unique<GlitchFilter>(); }},
 };
 
 std::unique_ptr<IFilter> FilterFactory::CreateFilter(EDefinedFilters filterType)

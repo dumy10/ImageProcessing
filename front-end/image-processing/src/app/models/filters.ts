@@ -43,4 +43,34 @@ export enum Filters {
    * Flips the image vertically
    */
   FlipVertical = 'flip vertical',
+
+  /**
+   * Sepia filter.
+   * Applies a sepia effect to the image.
+   */
+  Sepia = 'sepia',
+
+  /**
+   * Oil paint filter.
+   * Applies an oil paint effect to the image.
+   */
+  OilPaint = 'oil paint',
+
+  /**
+   * Kaleidoscope filter.
+   * Applies a kaleidoscope effect to the image.
+   */
+  Kaleidoscope = 'kaleidoscope',
+
+  /**
+   * Mosaic filter.
+   * Applies a mosaic effect to the image.
+   */
+  Mosaic = 'mosaic',
+
+  /**
+   * Glitch filter.
+   * Applies a glitch effect to the image.
+   */
+  Glitch = 'glitch',
 }

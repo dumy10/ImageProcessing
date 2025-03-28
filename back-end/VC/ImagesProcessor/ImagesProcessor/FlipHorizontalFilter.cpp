@@ -1,23 +1,32 @@
 #include "pch.h"
 #include "FlipHorizontalFilter.h"
+#include <omp.h>
+
+#pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
 void FlipHorizontalFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
 {
 	Logger::GetInstance().LogMessage("Applying FlipHorizontalFilter");
 	const int rowSize = width * channels;
+
+#pragma omp parallel for
 	for (int y = 0; y < height; y++)
 	{
 		const int rowOffset = y * rowSize;
+		unsigned char* outputRow = outputImage + rowOffset;
+		const unsigned char* inputRow = inputImage + rowOffset;
+
 		for (int x = 0; x < width; x++)
 		{
-			const int offset = rowOffset + (x * channels);
-			const int flippedOffset = rowOffset + ((width - x - 1) * channels);
-			for (int c = 0; c < channels; c++)
-			{
-				outputImage[flippedOffset + c] = inputImage[offset + c];
-			}
+			const int offset = x * channels;
+			const int flippedOffset = (width - x - 1) * channels;
+
+			// Copy all channels
+			std::copy_n(inputRow + offset, channels, outputRow + flippedOffset);
 		}
 	}
 
 	Logger::GetInstance().LogMessage("Applied FlipHorizontalFilter");
 }
+
+#pragma warning(default : 6993) // Restore warning about OpenMP not being supported in this configuration

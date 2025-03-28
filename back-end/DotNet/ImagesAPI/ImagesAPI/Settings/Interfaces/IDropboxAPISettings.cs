@@ -8,14 +8,14 @@
         /// <summary>
         /// Gets or sets the refresh token for accessing the Dropbox API.
         /// </summary>
-        string RefreshToken { get; set; }
+        string RefreshToken { get; }
         /// <summary>
         /// Gets or sets the app key for accessing the Dropbox API.
         /// </summary>
-        string AppKey { get; set; }
+        string AppKey { get; }
         /// <summary>
         /// Gets or sets the app secret for accessing the Dropbox API.
         /// </summary>
-        string AppSecret { get; set; }
+        string AppSecret { get; }
     }
 }

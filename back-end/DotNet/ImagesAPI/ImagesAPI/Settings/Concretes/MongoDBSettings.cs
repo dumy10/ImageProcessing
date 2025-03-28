@@ -12,12 +12,7 @@ namespace ImagesAPI.Settings.Concretes
         /// </summary>
         public string ImagesCollectionName
         {
-            get
-            {
-                return "Images";
-            }
-            set
-            { }
+            get => Environment.GetEnvironmentVariable("MONGODB_COLLECTION_NAME")!;
         }
 
         /// <summary>
@@ -25,12 +20,7 @@ namespace ImagesAPI.Settings.Concretes
         /// </summary>
         public string ConnectionString
         {
-            get
-            {
-                return "mongodb://hd-nosql-db:X8rmHFhXq1T2kGAAQeQn50xL2oKiH04fqcqBWc79HhHlYALLUObLaxTvrsuISOYteiI8D9JgjMcuACDbiAqfuA==@hd-nosql-db.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@hd-nosql-db@";
-            }
-            set
-            { }
+            get => Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING")!;
         }
 
         /// <summary>
@@ -38,12 +28,7 @@ namespace ImagesAPI.Settings.Concretes
         /// </summary>
         public string DatabaseName
         {
-            get
-            {
-                return "imagesManagement";
-            }
-            set
-            { }
+            get => Environment.GetEnvironmentVariable("MONGODB_DATABASE_NAME")!;
         }
     }
 }

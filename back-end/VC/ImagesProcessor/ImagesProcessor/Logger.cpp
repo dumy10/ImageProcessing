@@ -3,29 +3,30 @@
 
 std::ofstream Logger::m_logFile;
 std::mutex Logger::m_mutex;
-std::unique_ptr<Logger> Logger::m_instance;
-std::once_flag Logger::m_onceFlag;
+Logger* Logger::m_instance = nullptr;
 
 Logger& Logger::GetInstance()
 {
-	std::call_once(m_onceFlag, []() {
-		m_instance.reset(new Logger());
-		});
+	if (m_instance == nullptr)
+	{
+		m_instance = new Logger();
+		m_instance->LogMessage("Logger instance created");
+	}
 
 	return *m_instance;
 }
 
-void Logger::LogMessage(const std::string& message)
+void Logger::LogMessage(const std::string& message) const noexcept
 {
 	WriteLog("INFO", message);
 }
 
-void Logger::LogWarning(const std::string& message)
+void Logger::LogWarning(const std::string& message) const noexcept
 {
 	WriteLog("WARN", message);
 }
 
-void Logger::LogError(const std::string& message)
+void Logger::LogError(const std::string& message) const noexcept
 {
 	WriteLog("ERROR", message);
 }
@@ -41,14 +42,10 @@ Logger::Logger()
 		std::filesystem::create_directory(currentPath);
 	}
 
-	// Add the log file name to the path
-	currentPath /= "ImagesProcessor.log";
+	std::string localTimeString = GetLocalTimeAsString();
 
-	// If the file already exists, delete it
-	if (std::filesystem::exists(currentPath))
-	{
-		std::filesystem::remove(currentPath);
-	}
+	// Create a log file for the current execution of the program in order to avoid overwriting logs across different executions
+	currentPath /= "ImagesProcessor-" + localTimeString + ".log";
 
 	// Open the log file (if it does not exist, it will be created)
 	m_logFile.open(currentPath, std::ios::out | std::ios::app);
@@ -65,14 +62,22 @@ Logger::Logger()
 Logger::~Logger()
 {
 	LogMessage("Deleting logger");
+
 	// Close the log file
 	if (m_logFile.is_open())
 	{
 		m_logFile.close();
 	}
+
+	// Delete the instance
+	if (m_instance != nullptr)
+	{
+		delete m_instance;
+		m_instance = nullptr;
+	}
 }
 
-std::tm Logger::GetLocalTime()
+std::tm Logger::GetLocalTime() noexcept
 {
 	// Get the current time
 	std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -84,7 +89,28 @@ std::tm Logger::GetLocalTime()
 	return localTime;
 }
 
-void Logger::WriteLog(const std::string& level, const std::string& message)
+std::string Logger::GetLocalTimeAsString() noexcept
+{
+	// Get the current time
+	std::tm localTime = Logger::GetLocalTime();
+	std::ostringstream oss;
+
+	// Format the time string
+	oss << std::put_time(&localTime, "%Y-%m-%d %H:%M:%S");
+
+	// Get the formatted time string
+	std::string localTimeString = oss.str();
+
+	// Replace colons from the time string to avoid issues with file names
+	std::replace(localTimeString.begin(), localTimeString.end(), ':', '-');
+
+	// Replace spaces from the time string to avoid issues with file names
+	std::replace(localTimeString.begin(), localTimeString.end(), ' ', '-');
+
+	return localTimeString;
+}
+
+void Logger::WriteLog(const std::string& level, const std::string& message) const noexcept
 {
 	// Lock the mutex
 	std::lock_guard<std::mutex> lock(m_mutex);

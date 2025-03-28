@@ -51,8 +51,14 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 		// Create an ImageData object with the received data
 		std::unique_ptr<ImageData> image = std::make_unique<ImageData>(reinterpret_cast<const unsigned char*>(imageData), length, lowerExtension);
 
+		double start = omp_get_wtime();
+
 		// Filter the image data
 		image->FilterImage(g_kDefinedFilters.at(lowerFilter), outputData, outputLength);
+
+		double end = omp_get_wtime();
+
+		Logger::GetInstance().LogMessage("Filtering took: " + std::to_string(end - start) + " seconds");
 	}
 	catch (const std::exception& e)
 	{

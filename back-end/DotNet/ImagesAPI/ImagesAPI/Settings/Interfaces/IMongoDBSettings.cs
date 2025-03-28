@@ -8,16 +8,16 @@
         /// <summary>
         /// Gets or sets the name of the images collection in the database.
         /// </summary>
-        string ImagesCollectionName { get; set; }
+        string ImagesCollectionName { get; }
 
         /// <summary>
         /// Gets or sets the connection string for the MongoDB database.
         /// </summary>
-        string ConnectionString { get; set; }
+        string ConnectionString { get; }
 
         /// <summary>
         /// Gets or sets the name of the MongoDB database.
         /// </summary>
-        string DatabaseName { get; set; }
+        string DatabaseName { get; }
     }
 }

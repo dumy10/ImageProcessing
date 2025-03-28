@@ -10,9 +10,13 @@
  * @brief Callback function for writing image data.
  */
 static stbi_write_func* kWriteCallback = [](void* context, void* data, int size) {
-	std::vector<unsigned char>* buffer = reinterpret_cast<std::vector<unsigned char>*>(context);
-	unsigned char* bytes = reinterpret_cast<unsigned char*>(data);
-	buffer->insert(buffer->end(), bytes, bytes + size);
+	auto* buffer = static_cast<std::vector<unsigned char>*>(context);
+
+	// Minimize reallocation
+	size_t currentSize = buffer->size();
+	buffer->resize(currentSize + size);
+
+	std::memcpy(buffer->data() + currentSize, data, size);
 	};
 
 static const size_t kImageQuality = 100; ///< Quality of the jpg image.

@@ -1,6 +1,6 @@
 <div class="container">
   <div class="image-container">
-    <div *ngIf="!isMobileView && image?.loaded">
+    <div *ngIf="!isMobileView && image?.loaded" class="filter-buttons">
       <app-filter-buttons
         [filters]="filters"
         (filterSelected)="filterImage($event)"
