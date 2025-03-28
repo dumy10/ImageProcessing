@@ -7,8 +7,7 @@ using Microsoft.Extensions.Options;
 
 Env.Load();
 
-string[] variables = ["MONGODB_CONNECTION_STRING", "MONGODB_DATABASE_NAME", "DROPBOX_APP_KEY", "DROPBOX_APP_SECRET", "DROPBOX_REFRESH_TOKEN"];
-
+string[] variables = ["MONGODB_CONNECTION_STRING", "MONGODB_DATABASE_NAME", "MONGODB_COLLECTION_NAME", "DROPBOX_APP_KEY", "DROPBOX_APP_SECRET", "DROPBOX_REFRESH_TOKEN"];
 foreach (var variable in variables)
 {
     if(string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
