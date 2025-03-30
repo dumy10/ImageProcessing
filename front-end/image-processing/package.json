@@ -8,7 +8,7 @@
     "build": "npm run config-env && ng build",
     "deploy": "npm run config-env && ng build --configuration production && npx angular-cli-ghpages --dir=dist/image-processing --no-silent",
     "watch": "npm run config-env && ng build --watch --configuration development",
-    "test": "ng test --watch=false --browsers=ChromeHeadless"
+    "test": "npm run config-env && ng test --watch=false --browsers=ChromeHeadless"
   },
   "private": true,
   "dependencies": {
