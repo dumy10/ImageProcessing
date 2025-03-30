@@ -402,3 +402,6 @@ FodyWeavers.xsd
 build/
 ImagesProcessorLogs/
 .env
+
+/front-end/image-processing/src/environments/*
+/front-end/image-processing/src/environments/*.ts

@@ -44,8 +44,8 @@ namespace ImagesAPITests
             _mockHttpRequest = new Mock<HttpRequest>();
             _mockHttpResponse = new Mock<HttpResponse>();
 
-            _requestHeaders = [];
-            _responseHeaders = [];
+            _requestHeaders = new HeaderDictionary();
+            _responseHeaders = new HeaderDictionary();
 
             _mockHttpRequest.Setup(r => r.Headers).Returns(_requestHeaders);
             _mockHttpResponse.Setup(r => r.Headers).Returns(_responseHeaders);
@@ -61,6 +61,8 @@ namespace ImagesAPITests
                 }
             };
         }
+
+        #region GetImages Tests
 
         [Fact]
         public async Task GetImages_ReturnsOkResult_WithListOfImages()
@@ -85,7 +87,7 @@ namespace ImagesAPITests
         public async Task GetImages_ReturnsNotFound_WhenNoImages()
         {
             // Arrange
-            _mockImagesCollectionService.Setup(service => service.GetAll()).ReturnsAsync([]);
+            _mockImagesCollectionService.Setup(service => service.GetAll()).ReturnsAsync(new List<ImageModel>());
 
             // Act
             var result = await _controller.GetImages();
@@ -93,6 +95,38 @@ namespace ImagesAPITests
             // Assert
             Assert.IsType<NotFoundObjectResult>(result);
         }
+
+        [Fact]
+        public async Task GetImages_UsesCache_WhenAvailable()
+        {
+            // Arrange
+            var images = new List<ImageModel> { new() { Id = "1", Name = "TestImage" } };
+
+            // Setup cache to return the images directly
+            _mockCacheService.Setup(s => s.GetOrCreateAsync<List<ImageModel>?>(
+                "all_images",
+                It.IsAny<Func<Task<List<ImageModel>?>>>(),
+                It.IsAny<int>()))
+                .ReturnsAsync(images);
+
+            // Clear any If-None-Match headers to ensure we don't get a 304
+            _requestHeaders.Clear();
+
+            // Act
+            var result = await _controller.GetImages();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnValue = Assert.IsType<List<ImageModel>>(okResult.Value);
+            Assert.Single(returnValue);
+
+            // Verify that the database was not called
+            _mockImagesCollectionService.Verify(s => s.GetAll(), Times.Never);
+        }
+
+        #endregion
+
+        #region GetImage Tests
 
         [Fact]
         public async Task GetImage_ReturnsOkResult_WithImage()
@@ -125,6 +159,38 @@ namespace ImagesAPITests
             // Assert
             Assert.IsType<NotFoundObjectResult>(result);
         }
+
+        [Fact]
+        public async Task GetImage_UsesCache_WhenAvailable()
+        {
+            // Arrange
+            var image = new ImageModel { Id = "1", Name = "TestImage" };
+
+            // Setup cache to return the image directly
+            _mockCacheService.Setup(s => s.GetOrCreateAsync<ImageModel?>(
+                "image_1",
+                It.IsAny<Func<Task<ImageModel?>>>(),
+                It.IsAny<int>()))
+                .ReturnsAsync(image);
+
+            // Clear any If-None-Match headers to ensure we don't get a 304
+            _requestHeaders.Clear();
+
+            // Act
+            var result = await _controller.GetImage("1");
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnValue = Assert.IsType<ImageModel>(okResult.Value);
+            Assert.Equal("1", returnValue.Id);
+
+            // Verify that the database was not called
+            _mockImagesCollectionService.Verify(s => s.Get("1"), Times.Never);
+        }
+
+        #endregion
+
+        #region UploadImage Tests
 
         [Fact]
         public async Task UploadImage_ReturnsOkResult_WithImageModel()
@@ -232,6 +298,58 @@ namespace ImagesAPITests
         }
 
         [Fact]
+        public async Task UploadImage_ReturnsBadRequest_WhenExtensionNotAllowed_Bmp()
+        {
+            // Arrange
+            var fileMock = new Mock<IFormFile>();
+            var fileName = "test.bmp";
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms);
+            writer.Write("Invalid image content");
+            writer.Flush();
+            ms.Position = 0;
+
+            fileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
+            fileMock.Setup(_ => _.FileName).Returns(fileName);
+            fileMock.Setup(_ => _.Length).Returns(ms.Length);
+            fileMock.Setup(_ => _.ContentType).Returns("image/bmp");
+
+            // Act
+            var result = await _controller.UploadImage(fileMock.Object);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UploadImage_ReturnsBadRequest_WhenExtensionNotAllowed_Gif()
+        {
+            // Arrange
+            var fileMock = new Mock<IFormFile>();
+            var fileName = "test.gif";
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms);
+            writer.Write("Invalid image content");
+            writer.Flush();
+            ms.Position = 0;
+
+            fileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
+            fileMock.Setup(_ => _.FileName).Returns(fileName);
+            fileMock.Setup(_ => _.Length).Returns(ms.Length);
+            fileMock.Setup(_ => _.ContentType).Returns("image/gif");
+
+            // Act
+            var result = await _controller.UploadImage(fileMock.Object);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        #endregion
+
+        #region EditImage Tests
+
+        [Fact]
         public async Task EditImage_ReturnsOkResult_WithModifiedImage()
         {
             // Arrange
@@ -290,52 +408,29 @@ namespace ImagesAPITests
         }
 
         [Fact]
-        public async Task UploadImage_ReturnsBadRequest_WhenExtensionNotAllowed_Bmp()
+        public async Task EditImage_InvalidatesCache_WhenSuccessful()
         {
             // Arrange
-            var fileMock = new Mock<IFormFile>();
-            var fileName = "test.bmp";
-            var ms = new MemoryStream();
-            var writer = new StreamWriter(ms);
-            writer.Write("Invalid image content");
-            writer.Flush();
-            ms.Position = 0;
-
-            fileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
-            fileMock.Setup(_ => _.FileName).Returns(fileName);
-            fileMock.Setup(_ => _.Length).Returns(ms.Length);
-            fileMock.Setup(_ => _.ContentType).Returns("image/bmp");
+            var image = new ImageModel { Id = "2", Name = "TestImage", ParentId = "1" };
+            var filter = "grayscale";
+            _mockImagesCollectionService.Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object)).ReturnsAsync(image);
 
             // Act
-            var result = await _controller.UploadImage(fileMock.Object);
+            var result = await _controller.EditImage("1", filter);
 
             // Assert
-            Assert.IsType<BadRequestObjectResult>(result);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnValue = Assert.IsType<ImageModel>(okResult.Value);
+
+            // Verify that the cache was cleared for both the original and new image, and for all images
+            _mockCacheService.Verify(s => s.Remove("all_images"), Times.Once);
+            _mockCacheService.Verify(s => s.Remove("image_1"), Times.Once);
+            _mockCacheService.Verify(s => s.Remove("image_2"), Times.Once);
         }
 
-        [Fact]
-        public async Task UploadImage_ReturnsBadRequest_WhenExtensionNotAllowed_Gif()
-        {
-            // Arrange
-            var fileMock = new Mock<IFormFile>();
-            var fileName = "test.gif";
-            var ms = new MemoryStream();
-            var writer = new StreamWriter(ms);
-            writer.Write("Invalid image content");
-            writer.Flush();
-            ms.Position = 0;
+        #endregion
 
-            fileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
-            fileMock.Setup(_ => _.FileName).Returns(fileName);
-            fileMock.Setup(_ => _.Length).Returns(ms.Length);
-            fileMock.Setup(_ => _.ContentType).Returns("image/gif");
-
-            // Act
-            var result = await _controller.UploadImage(fileMock.Object);
-
-            // Assert
-            Assert.IsType<BadRequestObjectResult>(result);
-        }
+        #region DeleteImage Tests
 
         [Fact]
         public async Task DeleteImage_ReturnsOkResult_WhenImageDeleted()
@@ -413,6 +508,30 @@ namespace ImagesAPITests
             var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
         }
+
+        [Fact]
+        public async Task DeleteImage_InvalidatesCache_WhenSuccessful()
+        {
+            // Arrange
+            var image = new ImageModel { Id = "1", Name = "TestImage" };
+            _mockImagesCollectionService.Setup(service => service.Get("1")).ReturnsAsync(image);
+            _mockDropboxService.Setup(service => service.DeleteImage("1")).ReturnsAsync(true);
+            _mockImagesCollectionService.Setup(service => service.Delete("1")).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.DeleteImage("1");
+
+            // Assert
+            Assert.IsType<OkResult>(result);
+
+            // Verify that the cache was cleared for both the image and for all images
+            _mockCacheService.Verify(s => s.Remove("all_images"), Times.Once);
+            _mockCacheService.Verify(s => s.Remove("image_1"), Times.Once);
+        }
+
+        #endregion
+
+        #region DownloadImage Tests
 
         [Fact]
         public async Task DownloadImage_ReturnsFileResult_WithImage()
@@ -504,101 +623,6 @@ namespace ImagesAPITests
             Assert.IsType<NotFoundObjectResult>(result);
         }
 
-        [Fact]
-        public async Task GetImages_UsesCache_WhenAvailable()
-        {
-            // Arrange
-            var images = new List<ImageModel> { new() { Id = "1", Name = "TestImage" } };
-
-            // Setup cache to return the images directly
-            _mockCacheService.Setup(s => s.GetOrCreateAsync<List<ImageModel>?>(
-                "all_images",
-                It.IsAny<Func<Task<List<ImageModel>?>>>(),
-                It.IsAny<int>()))
-                .ReturnsAsync(images);
-
-            // Clear any If-None-Match headers to ensure we don't get a 304
-            _requestHeaders.Clear();
-
-            // Act
-            var result = await _controller.GetImages();
-
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<List<ImageModel>>(okResult.Value);
-            Assert.Single(returnValue);
-
-            // Verify that the database was not called
-            _mockImagesCollectionService.Verify(s => s.GetAll(), Times.Never);
-        }
-
-        [Fact]
-        public async Task GetImage_UsesCache_WhenAvailable()
-        {
-            // Arrange
-            var image = new ImageModel { Id = "1", Name = "TestImage" };
-
-            // Setup cache to return the image directly
-            _mockCacheService.Setup(s => s.GetOrCreateAsync<ImageModel?>(
-                "image_1",
-                It.IsAny<Func<Task<ImageModel?>>>(),
-                It.IsAny<int>()))
-                .ReturnsAsync(image);
-
-            // Clear any If-None-Match headers to ensure we don't get a 304
-            _requestHeaders.Clear();
-
-            // Act
-            var result = await _controller.GetImage("1");
-
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<ImageModel>(okResult.Value);
-            Assert.Equal("1", returnValue.Id);
-
-            // Verify that the database was not called
-            _mockImagesCollectionService.Verify(s => s.Get("1"), Times.Never);
-        }
-
-        [Fact]
-        public async Task EditImage_InvalidatesCache_WhenSuccessful()
-        {
-            // Arrange
-            var image = new ImageModel { Id = "2", Name = "TestImage", ParentId = "1" };
-            var filter = "grayscale";
-            _mockImagesCollectionService.Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object)).ReturnsAsync(image);
-
-            // Act
-            var result = await _controller.EditImage("1", filter);
-
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<ImageModel>(okResult.Value);
-
-            // Verify that the cache was cleared for both the original and new image, and for all images
-            _mockCacheService.Verify(s => s.Remove("all_images"), Times.Once);
-            _mockCacheService.Verify(s => s.Remove("image_1"), Times.Once);
-            _mockCacheService.Verify(s => s.Remove("image_2"), Times.Once);
-        }
-
-        [Fact]
-        public async Task DeleteImage_InvalidatesCache_WhenSuccessful()
-        {
-            // Arrange
-            var image = new ImageModel { Id = "1", Name = "TestImage" };
-            _mockImagesCollectionService.Setup(service => service.Get("1")).ReturnsAsync(image);
-            _mockDropboxService.Setup(service => service.DeleteImage("1")).ReturnsAsync(true);
-            _mockImagesCollectionService.Setup(service => service.Delete("1")).ReturnsAsync(true);
-
-            // Act
-            var result = await _controller.DeleteImage("1");
-
-            // Assert
-            Assert.IsType<OkResult>(result);
-
-            // Verify that the cache was cleared for both the image and for all images
-            _mockCacheService.Verify(s => s.Remove("all_images"), Times.Once);
-            _mockCacheService.Verify(s => s.Remove("image_1"), Times.Once);
-        }
+        #endregion
     }
 }

@@ -20,6 +20,24 @@ export class ImageService {
   baseURL: string = environment.apiUrl;
 
   /**
+   * API Key for authentication
+   * @type {string}
+   */
+  private apiKey: string = environment.apiKey;
+
+  /**
+   * Common HTTP headers used in requests
+   * @type {HttpHeaders}
+   */
+  private get commonHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'X-API-Key': this.apiKey,
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    });
+  }
+
+  /**
    * Constructor for ImageService.
    * @param {HttpClient} httpClient - The HTTP client for making requests.
    * @param {CacheService} cacheService - The cache service for caching images.
@@ -41,7 +59,15 @@ export class ImageService {
     // Clear all caches as the collection has changed
     this.cacheService.clearAll();
 
-    return this.httpClient.post<ImageModel>(`${this.baseURL}/upload`, formData);
+    return this.httpClient.post<ImageModel>(
+      `${this.baseURL}/upload`,
+      formData,
+      {
+        headers: new HttpHeaders({
+          'X-API-Key': this.apiKey,
+        }),
+      }
+    );
   }
 
   /**
@@ -58,10 +84,7 @@ export class ImageService {
     // If not cached, fetch from server and cache the result
     const images$ = this.httpClient
       .get<ImageModel[]>(`${this.baseURL}`, {
-        headers: new HttpHeaders({
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-        }),
+        headers: this.commonHeaders,
       })
       .pipe(
         tap((images: ImageModel[]) => {
@@ -101,10 +124,7 @@ export class ImageService {
     // If not cached, fetch from server and cache the result
     const image$ = this.httpClient
       .get<ImageModel>(`${this.baseURL}/${id}`, {
-        headers: new HttpHeaders({
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-        }),
+        headers: this.commonHeaders,
       })
       .pipe(
         catchError((error) => {
@@ -137,6 +157,7 @@ export class ImageService {
       JSON.stringify(filter),
       {
         headers: new HttpHeaders({
+          'X-API-Key': this.apiKey,
           'Content-Type': 'application/json',
         }),
       }
@@ -159,10 +180,7 @@ export class ImageService {
     return this.httpClient
       .get(`${this.baseURL}/download/${id}`, {
         responseType: 'blob',
-        headers: new HttpHeaders({
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-        }),
+        headers: this.commonHeaders,
       })
       .pipe(
         tap((blob) => {
