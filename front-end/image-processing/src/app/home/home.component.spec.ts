@@ -42,16 +42,31 @@ describe('HomeComponent', () => {
   });
 
   it('should handle drag over event', () => {
+    // Create a mock dropzone element
     const dropzone = document.createElement('div');
+    dropzone.classList.add('inner-box', 'dropzone');
+    document.body.appendChild(dropzone);
+
+    // Mock querySelector to return our dropzone
+    spyOn(document, 'querySelector').and.returnValue(dropzone);
+
     const event = new DragEvent('dragover', {
       bubbles: true,
       cancelable: true,
     });
-    Object.defineProperty(event, 'target', { value: dropzone });
+
     spyOn(event, 'preventDefault');
+    spyOn(event, 'stopPropagation');
+
     component.onDragOver(event);
+
     expect(event.preventDefault).toHaveBeenCalled();
+    expect(event.stopPropagation).toHaveBeenCalled();
+    expect(document.querySelector).toHaveBeenCalledWith('.inner-box.dropzone');
     expect(dropzone.classList.contains('dragging')).toBeTrue();
+
+    // Clean up
+    document.body.removeChild(dropzone);
   });
 
   it('should handle drag leave event', () => {

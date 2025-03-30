@@ -200,6 +200,8 @@ namespace ImagesAPI.Services.Concretes
                     ContentType = imageModel.ContentType,
                     ParentId = id,
                     ParentUrl = imageModel.Url,
+                    Width = skCodec.Info.Width,
+                    Height = skCodec.Info.Height,
                     AppliedFilters = new List<string>(imageModel.AppliedFilters ?? []) { filter }
                 };
 

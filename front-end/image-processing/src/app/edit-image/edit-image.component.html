@@ -1,60 +1,32 @@
-<div class="container">
-  <div class="image-container">
-    <div *ngIf="!isMobileView && image?.loaded" class="filter-buttons">
-      <app-filter-buttons
-        [filters]="filters"
-        (filterSelected)="filterImage($event)"
-      ></app-filter-buttons>
-    </div>
+<div class="container" [class.sidebar-collapsed]="sidebarCollapsed">
+  <!-- Filter sidebar component -->
+  <app-filter-sidebar
+    *ngIf="image?.loaded"
+    [image]="image"
+    [filters]="filters"
+    [sidebarCollapsed]="sidebarCollapsed"
+    [canUndo]="canUndo()"
+    [canRedo]="canRedo()"
+    (filterSelected)="filterImage($event)"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (downloadImageEvent)="downloadImage()"
+    (undoEvent)="undoFilter()"
+    (redoEvent)="redoFilter()"
+  ></app-filter-sidebar>
 
-    <div class="dropdown" *ngIf="isMobileView && image?.loaded">
-      <button
-        mat-button
-        (click)="toggleDropdown()"
-        aria-label="Toggle filter dropdown"
-      >
-        Filters <mat-icon>menu</mat-icon>
-      </button>
-      <div
-        [ngClass]="{ show: dropdownOpen }"
-        class="dropdown-menu"
-        role="menu"
-        aria-label="Filter menu"
-      >
-        <app-filter-buttons
-          [filters]="filters"
-          (filterSelected)="filterImage($event)"
-        ></app-filter-buttons>
+  <!-- Main image panel -->
+  <div class="image-panel">
+    <div class="image-container">
+      <div class="image-display">
+        <img
+          [src]="imagePath"
+          alt="Image to be processed"
+          class="image"
+          (error)="onImageError()"
+          (load)="onImageLoad()"
+        />
       </div>
     </div>
-
-    <div class="image-display">
-      <img
-        [src]="imagePath"
-        alt="Image to be processed"
-        class="image"
-        (error)="onImageError()"
-        (load)="onImageLoad()"
-      />
-      <div
-        *ngIf="image?.appliedFilters !== null && image?.loaded"
-        class="undo-button-container"
-      >
-        <button mat-button (click)="undoFilter()" aria-label="Undo last filter">
-          <mat-icon class="undo-button">undo</mat-icon>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="save-button" *ngIf="image?.loaded">
-    <button
-      mat-button
-      (click)="downloadImage()"
-      aria-label="Download processed image"
-    >
-      <mat-icon>download</mat-icon>Download Image
-    </button>
   </div>
 </div>
 

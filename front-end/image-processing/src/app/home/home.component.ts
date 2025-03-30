@@ -51,8 +51,13 @@ export class HomeComponent {
    */
   onDragOver(event: DragEvent): void {
     event.preventDefault(); // Necessary to allow drop
-    const dropzone = event.target as HTMLElement;
-    dropzone.classList.add('dragging');
+    event.stopPropagation();
+
+    // Find the dropzone element
+    const dropzone = document.querySelector('.inner-box.dropzone');
+    if (dropzone) {
+      dropzone.classList.add('dragging');
+    }
   }
 
   /**
@@ -60,8 +65,23 @@ export class HomeComponent {
    * @param {DragEvent} event - The drag event.
    */
   onDragLeave(event: DragEvent): void {
-    const dropzone = event.target as HTMLElement;
-    dropzone.classList.remove('dragging');
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Check if the mouse has actually left the dropzone
+    // Only remove class if relatedTarget is not inside the dropzone
+    const dropzone = document.querySelector(
+      '.inner-box.dropzone'
+    ) as HTMLElement;
+    const relatedTarget = event.relatedTarget as Node;
+
+    if (
+      dropzone &&
+      !dropzone.contains(relatedTarget) &&
+      relatedTarget !== dropzone
+    ) {
+      dropzone.classList.remove('dragging');
+    }
   }
 
   /**
@@ -70,8 +90,13 @@ export class HomeComponent {
    */
   onDrop(event: DragEvent): void {
     event.preventDefault();
-    const dropzone = event.target as HTMLElement;
-    dropzone.classList.remove('dragging');
+    event.stopPropagation();
+
+    // Find the dropzone element and remove the dragging class
+    const dropzone = document.querySelector('.inner-box.dropzone');
+    if (dropzone) {
+      dropzone.classList.remove('dragging');
+    }
 
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {

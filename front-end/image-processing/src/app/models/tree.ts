@@ -7,15 +7,7 @@ export class Tree<T> {
    * The root node of the tree.
    * @type {TreeNode<T> | null}
    */
-  root: TreeNode<T> | null;
-
-  /**
-   * Constructor for the Tree class.
-   * Initializes the root to null.
-   */
-  constructor() {
-    this.root = null;
-  }
+  root: TreeNode<T> | null = null;
 
   /**
    * Sets the root node of the tree.
@@ -41,22 +33,21 @@ export class TreeNode<T> {
    * The children of the node.
    * @type {TreeNode<T>[]}
    */
-  children: TreeNode<T>[];
+  children: TreeNode<T>[] = [];
 
   /**
-   * Constructor for the TreeNode class.
+   * Creates a new tree node.
    * @param {T} value - The value to store in the node.
    */
   constructor(value: T) {
     this.value = value;
-    this.children = [];
   }
 
   /**
-   * Adds a child node to the current node.
-   * @param {TreeNode<T>} node - The node to add as a child.
+   * Adds a child node to this node.
+   * @param {TreeNode<T>} child - The child node to add.
    */
-  addChild(node: TreeNode<T>): void {
-    this.children.push(node);
+  addChild(child: TreeNode<T>): void {
+    this.children.push(child);
   }
 }
