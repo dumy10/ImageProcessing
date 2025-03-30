@@ -1,7 +1,10 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of, shareReplay, tap } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, shareReplay, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import { ImageModel } from '../models/ImageModel';
+import { CacheService } from './cache.service';
 
 /**
  * Service for handling image-related operations such as uploading and fetching images.
@@ -14,25 +17,17 @@ export class ImageService {
    * Base URL for the image API.
    * @type {string}
    */
-  baseURL: string = 'https://localhost:7156/Images';
-
-  /**
-   * Cache for storing images.
-   * @type {Observable<ImageModel[]> | null}
-   */
-  private imagesCache$: Observable<ImageModel[]> | null = null;
-
-  /**
-   * Cache for storing images.
-   * @type {Map<string, Observable<ImageModel>>}
-   */
-  private imageCache: Map<string, Observable<ImageModel>> = new Map();
+  baseURL: string = environment.apiUrl;
 
   /**
    * Constructor for ImageService.
    * @param {HttpClient} httpClient - The HTTP client for making requests.
+   * @param {CacheService} cacheService - The cache service for caching images.
    */
-  constructor(private httpClient: HttpClient) {}
+  constructor(
+    private httpClient: HttpClient,
+    private cacheService: CacheService
+  ) {}
 
   /**
    * Uploads an image to the server and clears the cache.
@@ -43,7 +38,8 @@ export class ImageService {
     const formData = new FormData();
     formData.append('image', image);
 
-    this.imagesCache$ = null;
+    // Clear all caches as the collection has changed
+    this.cacheService.clearAll();
 
     return this.httpClient.post<ImageModel>(`${this.baseURL}/upload`, formData);
   }
@@ -53,22 +49,41 @@ export class ImageService {
    * @returns {Observable<ImageModel[]>} - An observable containing an array of image data.
    */
   getImages(): Observable<ImageModel[]> {
-    if (!this.imagesCache$) {
-      this.imagesCache$ = this.httpClient
-        .get<ImageModel[]>(`${this.baseURL}`)
-        .pipe(
-          tap((images: ImageModel[]) => {
-            images.forEach((image: ImageModel) => {
-              if (!this.imageCache.has(image.id)) {
-                this.imageCache.set(image.id, of(image));
-              }
-            });
-          }),
-          shareReplay(1)
-        );
+    // Check if we have a cached response first
+    const cachedImages$ = this.cacheService.getImagesCache();
+    if (cachedImages$) {
+      return cachedImages$;
     }
 
-    return this.imagesCache$;
+    // If not cached, fetch from server and cache the result
+    const images$ = this.httpClient
+      .get<ImageModel[]>(`${this.baseURL}`, {
+        headers: new HttpHeaders({
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        }),
+      })
+      .pipe(
+        tap((images: ImageModel[]) => {
+          // Cache individual images for later retrieval
+          images.forEach((image: ImageModel) => {
+            if (!this.cacheService.hasImageCache(image.id)) {
+              // Use of() instead of deprecated Observable.create
+              this.cacheService.setImageCache(image.id, of(image));
+            }
+          });
+        }),
+        catchError((error) => {
+          return throwError(() => error);
+        }),
+        // Use shareReplay with a configuration object that allows resubscription when source completes
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+
+    // Store in cache
+    this.cacheService.setImagesCache(images$);
+
+    return images$;
   }
 
   /**
@@ -77,14 +92,32 @@ export class ImageService {
    * @returns {Observable<ImageModel>} - An observable containing the image data.
    */
   getImage(id: string): Observable<ImageModel> {
-    if (!this.imageCache.has(id)) {
-      const image$ = this.httpClient
-        .get<ImageModel>(`${this.baseURL}/${id}`)
-        .pipe(shareReplay(1));
-      this.imageCache.set(id, image$);
+    // Check if we have a cached response first
+    const cachedImage$ = this.cacheService.getImageCache(id);
+    if (cachedImage$) {
+      return cachedImage$;
     }
 
-    return this.imageCache.get(id)!;
+    // If not cached, fetch from server and cache the result
+    const image$ = this.httpClient
+      .get<ImageModel>(`${this.baseURL}/${id}`, {
+        headers: new HttpHeaders({
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        }),
+      })
+      .pipe(
+        catchError((error) => {
+          // If there's an error, don't cache
+          return throwError(() => error);
+        }),
+        shareReplay(1)
+      );
+
+    // Store in cache
+    this.cacheService.setImageCache(id, image$);
+
+    return image$;
   }
 
   /**
@@ -94,8 +127,10 @@ export class ImageService {
    * @returns {Observable<ImageModel>} - An observable containing the edited image data.
    */
   editImage(id: string, filter: string): Observable<ImageModel> {
-    this.imageCache.delete(id);
-    this.imagesCache$ = null;
+    // For edit operations, invalidate both the individual image cache
+    // and the collection cache since this changes an existing image
+    this.cacheService.invalidateImage(id);
+    this.cacheService.setImagesCache(null);
 
     return this.httpClient.put<ImageModel>(
       `${this.baseURL}/edit/${id}`,
@@ -107,14 +142,54 @@ export class ImageService {
       }
     );
   }
+
   /**
-   * Downloads an image from the server.
+   * Downloads an image from the server with caching.
    * @param {string} id - The ID of the image to download.
    * @returns {Observable<Blob>} - An observable containing the image data.
    */
   downloadImage(id: string): Observable<Blob> {
-    return this.httpClient.get(`${this.baseURL}/download/${id}`, {
-      responseType: 'blob',
+    // Check if we have a cached blob first
+    const cachedBlob$ = this.cacheService.getBlobCache(id);
+    if (cachedBlob$) {
+      return cachedBlob$;
+    }
+
+    // If not cached, fetch from server and cache the result
+    return this.httpClient
+      .get(`${this.baseURL}/download/${id}`, {
+        responseType: 'blob',
+        headers: new HttpHeaders({
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        }),
+      })
+      .pipe(
+        tap((blob) => {
+          // Store blob in cache
+          this.cacheService.setBlobCache(id, blob);
+        })
+      );
+  }
+
+  /**
+   * Preloads an image to improve user experience.
+   * @param {string} id - The ID of the image to preload.
+   */
+  preloadImage(id: string): void {
+    // If we already have the image in cache, don't reload it
+    if (this.cacheService.hasBlobCache(id)) {
+      return;
+    }
+
+    // Load the image in the background
+    this.downloadImage(id).subscribe({
+      // No need to do anything with the result, just cache it
+      next: () => {},
+      error: () => {
+        // If preloading fails, remove from cache to allow retry
+        this.cacheService.invalidateImage(id);
+      },
     });
   }
 }

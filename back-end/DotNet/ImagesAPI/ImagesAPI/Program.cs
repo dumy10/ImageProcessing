@@ -12,7 +12,7 @@ foreach (var variable in variables)
 {
     if(string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
     {
-        throw new Exception($"The {variable} environment variable is not set.");
+        throw new ArgumentNullException($"The {variable} environment variable is not set.");
     }
 }
 
@@ -27,9 +27,24 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add memory cache with a size limit
+builder.Services.AddMemoryCache(options =>
+{
+    // Set a size limit to prevent cache from consuming too much memory
+    options.SizeLimit = 50 * 1024 * 1024; // 50 MB limit
+});
+
+// Add response caching
+builder.Services.AddResponseCaching(options =>
+{
+    options.MaximumBodySize = 10 * 1024 * 1024; // 10 MB response size limit
+    options.UseCaseSensitivePaths = false;
+});
+
 // Add services to the container.
 builder.Services.AddSingleton<IImagesCollectionService, ImagesCollectionService>();
 builder.Services.AddSingleton<IDropboxService, DropboxService>();
+builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 
 // Configure settings
 builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection(nameof(MongoDBSettings)));
@@ -57,6 +72,22 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseCors("CorsPolicy");
+
+// Enable response caching middleware
+app.UseResponseCaching();
+
+// Add custom middleware to add cache control headers where needed
+app.Use(async (context, next) =>
+{
+    // Set cache control headers for static files and API responses
+    context.Response.GetTypedHeaders().CacheControl = new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
+        {
+            Public = true,
+            MaxAge = TimeSpan.FromHours(1)
+        };
+    
+    await next();
+});
 
 app.UseRouting();
 
