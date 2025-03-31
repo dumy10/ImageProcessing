@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { By } from '@angular/platform-browser';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ImageModel } from '../models/ImageModel';
 import { ImageHierarchyComponent } from './image-hierarchy.component';
 
@@ -40,7 +42,7 @@ describe('ImageHierarchyComponent', () => {
     ];
 
     await TestBed.configureTestingModule({
-      imports: [ImageHierarchyComponent],
+      imports: [ImageHierarchyComponent, NoopAnimationsModule, MatIconModule],
       providers: [
         {
           provide: MatDialogRef,
@@ -176,8 +178,8 @@ describe('ImageHierarchyComponent', () => {
       expect(img.attributes['aria-label']).toBe('Image');
     });
 
-    // Check close button has an aria-label
-    const closeButton = fixture.debugElement.query(By.css('button'));
+    // Check close button has an aria-label - use specific selector for close button
+    const closeButton = fixture.debugElement.query(By.css('.btn.btn-primary'));
     expect(closeButton.attributes['aria-label']).toBe('Close dialog');
   });
 
@@ -265,8 +267,8 @@ describe('ImageHierarchyComponent', () => {
   });
 
   it('should handle click on close button', () => {
-    // Get the close button and click it
-    const closeButton = fixture.debugElement.query(By.css('button'));
+    // Get the close button and click it - use specific selector for close button
+    const closeButton = fixture.debugElement.query(By.css('.btn.btn-primary'));
     closeButton.nativeElement.click();
 
     // Verify the dialog.close method was called
@@ -322,6 +324,8 @@ describe('ImageHierarchyComponent', () => {
     ];
 
     component.data = complexData;
+    // Initialize the display count to show all images
+    component.displayCount = complexData.length;
     fixture.detectChanges();
 
     // Should have 3 arrows between 4 images
@@ -392,5 +396,127 @@ describe('ImageHierarchyComponent', () => {
     // The label should have centered text alignment to display properly
     expect(filterLabel.attributes['text-anchor']).toBe('middle');
     expect(filterLabel.attributes['dominant-baseline']).toBe('middle');
+  });
+
+  it('should have mat-icon elements in control buttons', () => {
+    const buttons = fixture.debugElement.queryAll(
+      By.css('.imageDialogActions button')
+    );
+    expect(buttons.length).toBe(3); // Show Less, Close, Show More
+
+    // Check mat-icons are present
+    const buttonIcons = fixture.debugElement.queryAll(
+      By.css('.imageDialogActions button mat-icon')
+    );
+    expect(buttonIcons.length).toBe(2); // Both Show Less and Show More should have icons
+
+    // Verify the icons
+    expect(buttonIcons[0].nativeElement.textContent.trim()).toBe('remove');
+    expect(buttonIcons[1].nativeElement.textContent.trim()).toBe('add');
+  });
+
+  it('should enable/disable show more/less buttons based on current display count', () => {
+    // Test with enough data to show more
+    const moreData: ImageModel[] = Array(5)
+      .fill(null)
+      .map((_, index) => ({
+        id: String(index + 1),
+        name: `Image ${index + 1}`,
+        url: `image${index + 1}.jpg`,
+        parentId: index > 0 ? String(index) : undefined,
+        parentUrl: index > 0 ? `image${index}.jpg` : undefined,
+        width: 100,
+        height: 100,
+        appliedFilters: index > 0 ? [`Filter${index}`] : [],
+        loaded: true,
+      }));
+
+    component.data = moreData;
+    component.displayCount = 3; // Set to show only 3 of 5 images
+    fixture.detectChanges();
+
+    const showLessButton = fixture.debugElement.query(
+      By.css('button[aria-label="Show less images"]')
+    );
+    const showMoreButton = fixture.debugElement.query(
+      By.css('button[aria-label="Show more images"]')
+    );
+
+    // Should be able to show less since displayCount > 1
+    expect(showLessButton.attributes['disabled']).not.toBeDefined();
+
+    // Should be able to show more since displayCount < data.length
+    expect(showMoreButton.attributes['disabled']).not.toBeDefined();
+
+    // Test when displayCount = 1 (min)
+    component.displayCount = 1;
+    fixture.detectChanges();
+    expect(
+      fixture.debugElement.query(
+        By.css('button[aria-label="Show less images"]')
+      ).attributes['disabled']
+    ).toBeDefined();
+
+    // Test when displayCount = data.length (max)
+    component.displayCount = moreData.length;
+    fixture.detectChanges();
+    expect(
+      fixture.debugElement.query(
+        By.css('button[aria-label="Show more images"]')
+      ).attributes['disabled']
+    ).toBeDefined();
+  });
+
+  it('should update display count when show more/less buttons are clicked', () => {
+    // Setup data with multiple images
+    const moreData: ImageModel[] = Array(5)
+      .fill(null)
+      .map((_, index) => ({
+        id: String(index + 1),
+        name: `Image ${index + 1}`,
+        url: `image${index + 1}.jpg`,
+        parentId: index > 0 ? String(index) : undefined,
+        parentUrl: index > 0 ? `image${index}.jpg` : undefined,
+        width: 100,
+        height: 100,
+        appliedFilters: index > 0 ? [`Filter${index}`] : [],
+        loaded: true,
+      }));
+
+    component.data = moreData;
+    component.displayCount = 3; // Set to show only 3 of 5 images
+    fixture.detectChanges();
+
+    // Initial state check
+    expect(component.displayCount).toBe(3);
+    expect(
+      fixture.debugElement.queryAll(By.css('.imageContainer')).length
+    ).toBe(3);
+
+    // Click Show More
+    const showMoreButton = fixture.debugElement.query(
+      By.css('button[aria-label="Show more images"]')
+    );
+    showMoreButton.nativeElement.click();
+    fixture.detectChanges();
+
+    // Should show 5 images now (min(3+2, 5))
+    expect(component.displayCount).toBe(5);
+    expect(
+      fixture.debugElement.queryAll(By.css('.imageContainer')).length
+    ).toBe(5);
+
+    // Click Show Less
+    const showLessButton = fixture.debugElement.query(
+      By.css('button[aria-label="Show less images"]')
+    );
+    showLessButton.nativeElement.click();
+    fixture.detectChanges();
+
+    // Should show 3 images now (max(5-2, 1))
+    expect(component.displayCount).toBe(3);
+    expect(
+      fixture.debugElement.queryAll(By.css('.imageContainer')).length
+    ).toBe(3);
   });
 });

@@ -1,10 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatButtonModule } from '@angular/material/button';
 import {
   MatDialog,
   MatDialogConfig,
   MatDialogRef,
 } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { By } from '@angular/platform-browser';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { ImageModel } from '../models/ImageModel';
 import { TreeNode } from '../models/tree';
@@ -23,7 +26,12 @@ describe('ImageTreeComponent', () => {
     dialogSpy.open.and.returnValue(dialogRefSpy);
 
     await TestBed.configureTestingModule({
-      imports: [ImageTreeComponent],
+      imports: [
+        ImageTreeComponent,
+        MatButtonModule,
+        MatIconModule,
+        NoopAnimationsModule,
+      ],
       providers: [{ provide: MatDialog, useValue: dialogSpy }],
     }).compileComponents();
 
@@ -496,5 +504,288 @@ describe('ImageTreeComponent', () => {
     } else {
       fail('Dialog was not opened');
     }
+  });
+
+  it('should limit displayed children based on horizontalDisplayCount', () => {
+    // Create parent with more children than the display limit
+    const parentImage: ImageModel = {
+      id: '1',
+      name: 'Parent',
+      url: 'parent.jpg',
+      parentId: undefined,
+      parentUrl: undefined,
+      width: 100,
+      height: 100,
+      appliedFilters: [],
+      loaded: true,
+    };
+
+    // Create 5 children
+    const children = Array(5)
+      .fill(null)
+      .map((_, i) => {
+        const child = new TreeNode<ImageModel>({
+          id: `child-${i + 1}`,
+          name: `Child ${i + 1}`,
+          url: `child-${i + 1}.jpg`,
+          parentId: '1',
+          parentUrl: 'parent.jpg',
+          width: 100,
+          height: 100,
+          appliedFilters: [`Filter${i + 1}`],
+          loaded: true,
+        });
+        return child;
+      });
+
+    // Set up the parent node with children
+    const parentNode = new TreeNode<ImageModel>(parentImage);
+    parentNode.children = children;
+
+    // Set horizontalDisplayCount to 3 (should show only 3 of 5 children)
+    component.node = parentNode;
+    component.horizontalDisplayCount = 3;
+    fixture.detectChanges();
+
+    // Check that only 3 child nodes are rendered
+    expect(component.getDisplayedChildren().length).toBe(3);
+
+    // The hidden children count should be 2
+    expect(component.getHiddenChildrenCount()).toBe(2);
+  });
+
+  it('should display indicator when some children are hidden', () => {
+    // Setup parent with more children than display limit
+    const parentImage: ImageModel = {
+      id: '1',
+      name: 'Parent',
+      url: 'parent.jpg',
+      parentId: undefined,
+      parentUrl: undefined,
+      width: 100,
+      height: 100,
+      appliedFilters: [],
+      loaded: true,
+    };
+
+    // Create 5 children
+    const children = Array(5)
+      .fill(null)
+      .map((_, i) => {
+        const child = new TreeNode<ImageModel>({
+          id: `child-${i + 1}`,
+          name: `Child ${i + 1}`,
+          url: `child-${i + 1}.jpg`,
+          parentId: '1',
+          parentUrl: 'parent.jpg',
+          width: 100,
+          height: 100,
+          appliedFilters: [`Filter${i + 1}`],
+          loaded: true,
+        });
+        return child;
+      });
+
+    // Set up the parent node
+    const parentNode = new TreeNode<ImageModel>(parentImage);
+    parentNode.children = children;
+
+    // Set horizontalDisplayCount to 3 (should hide 2 children)
+    component.node = parentNode;
+    component.horizontalDisplayCount = 3;
+    fixture.detectChanges();
+
+    // Check if the hidden children indicator is displayed
+    const hiddenIndicator = fixture.debugElement.query(
+      By.css('.hiddenChildrenIndicator')
+    );
+    expect(hiddenIndicator).toBeTruthy();
+    expect(hiddenIndicator.nativeElement.textContent).toContain(
+      '+ 2 more filtered images'
+    );
+  });
+
+  it('should respect maxDepth parameter and not display children beyond the limit', () => {
+    // Create a three-level deep tree structure
+    const rootImage: ImageModel = {
+      id: '1',
+      name: 'Root',
+      url: 'root.jpg',
+      parentId: undefined,
+      parentUrl: undefined,
+      width: 100,
+      height: 100,
+      appliedFilters: [],
+      loaded: true,
+    };
+
+    const level1Image: ImageModel = {
+      id: '2',
+      name: 'Level 1',
+      url: 'level1.jpg',
+      parentId: '1',
+      parentUrl: 'root.jpg',
+      width: 100,
+      height: 100,
+      appliedFilters: ['Filter1'],
+      loaded: true,
+    };
+
+    const level2Image: ImageModel = {
+      id: '3',
+      name: 'Level 2',
+      url: 'level2.jpg',
+      parentId: '2',
+      parentUrl: 'level1.jpg',
+      width: 100,
+      height: 100,
+      appliedFilters: ['Filter2'],
+      loaded: true,
+    };
+
+    // Create the tree nodes
+    const level2Node = new TreeNode<ImageModel>(level2Image);
+    const level1Node = new TreeNode<ImageModel>(level1Image);
+    level1Node.children = [level2Node];
+    const rootNode = new TreeNode<ImageModel>(rootImage);
+    rootNode.children = [level1Node];
+
+    // Set root node with maxDepth = 1 (should only show root and level 1)
+    component.node = rootNode;
+    component.maxDepth = 1;
+    component.currentDepth = 0;
+    fixture.detectChanges();
+
+    // Check if root is displayed
+    const rootImg = fixture.debugElement.query(By.css('.treeNodeImage'));
+    expect(rootImg).toBeTruthy();
+
+    // Check if level 1 is displayed (children of root)
+    const childrenContainer = fixture.debugElement.query(
+      By.css('.treeNodeChildren')
+    );
+    expect(childrenContainer).toBeTruthy();
+
+    // There should be no level 2 nodes (grandchildren)
+    // We need to check if app-image-tree components are correctly limited by depth
+    const recursiveImageTrees = fixture.debugElement.queryAll(
+      By.css('app-image-tree app-image-tree')
+    );
+    expect(recursiveImageTrees.length).toBe(0);
+  });
+
+  it('should properly determine if children should be displayed based on currentDepth and maxDepth', () => {
+    // Test the shouldDisplayChildren method
+
+    // Case 1: currentDepth < maxDepth
+    component.currentDepth = 1;
+    component.maxDepth = 2;
+    expect(component.shouldDisplayChildren()).toBeTrue();
+
+    // Case 2: currentDepth = maxDepth
+    component.currentDepth = 2;
+    component.maxDepth = 2;
+    expect(component.shouldDisplayChildren()).toBeFalse();
+
+    // Case 3: currentDepth > maxDepth
+    component.currentDepth = 3;
+    component.maxDepth = 2;
+    expect(component.shouldDisplayChildren()).toBeFalse();
+  });
+
+  it('should handle image accessibility attributes correctly', () => {
+    // Create a simple node
+    const image: ImageModel = {
+      id: '1',
+      name: 'Test Image',
+      url: 'test.jpg',
+      parentId: undefined,
+      parentUrl: undefined,
+      width: 100,
+      height: 100,
+      appliedFilters: [],
+      loaded: true,
+    };
+
+    const node = new TreeNode<ImageModel>(image);
+    component.node = node;
+    fixture.detectChanges();
+
+    // Check accessibility attributes on the image
+    const imgElement = fixture.debugElement.query(By.css('.treeNodeImage'));
+    expect(imgElement.attributes['alt']).toBe('Image');
+    expect(imgElement.attributes['loading']).toBe('lazy');
+    expect(imgElement.attributes['role']).toBe('button');
+    expect(imgElement.attributes['aria-label']).toBe('Open image dialog');
+  });
+
+  it('should dynamically adjust SVG dimensions based on number of displayed children', () => {
+    // Create a parent with varying numbers of children
+    const parentImage: ImageModel = {
+      id: '1',
+      name: 'Parent',
+      url: 'parent.jpg',
+      parentId: undefined,
+      parentUrl: undefined,
+      width: 100,
+      height: 100,
+      appliedFilters: [],
+      loaded: true,
+    };
+
+    // Test with 2 children
+    const twoChildren = Array(2)
+      .fill(null)
+      .map((_, i) => {
+        return new TreeNode<ImageModel>({
+          id: `child-${i}`,
+          name: `Child ${i}`,
+          url: `child-${i}.jpg`,
+          parentId: '1',
+          parentUrl: 'parent.jpg',
+          width: 100,
+          height: 100,
+          appliedFilters: [],
+          loaded: true,
+        });
+      });
+
+    const parentNode = new TreeNode<ImageModel>(parentImage);
+    parentNode.children = twoChildren;
+    component.node = parentNode;
+    component.horizontalDisplayCount = 2;
+    fixture.detectChanges();
+
+    // Check SVG dimensions for 2 children
+    let svg = fixture.debugElement.query(By.css('.treeArrowsSvg'));
+    expect(svg.attributes['width']).toBe('400'); // 2 children * 200px
+    expect(svg.attributes['viewBox']).toBe('0 0 400 80');
+
+    // Test with 4 children but horizontalDisplayCount = 3
+    const fourChildren = Array(4)
+      .fill(null)
+      .map((_, i) => {
+        return new TreeNode<ImageModel>({
+          id: `child-${i}`,
+          name: `Child ${i}`,
+          url: `child-${i}.jpg`,
+          parentId: '1',
+          parentUrl: 'parent.jpg',
+          width: 100,
+          height: 100,
+          appliedFilters: [],
+          loaded: true,
+        });
+      });
+
+    parentNode.children = fourChildren;
+    component.node = parentNode;
+    component.horizontalDisplayCount = 3;
+    fixture.detectChanges();
+
+    // Check SVG dimensions for 3 displayed children (out of 4)
+    svg = fixture.debugElement.query(By.css('.treeArrowsSvg'));
+    expect(svg.attributes['width']).toBe('600'); // 3 children * 200px
+    expect(svg.attributes['viewBox']).toBe('0 0 600 80');
   });
 });

@@ -6,10 +6,41 @@
   role="document"
   aria-labelledby="dialogTitle"
 >
-  <div class="imageTreeContainer">
+  <div class="horizontalControlsContainer">
+    <button
+      mat-button
+      class="btn btn-secondary"
+      (click)="showLessHorizontalImages()"
+      [disabled]="horizontalDisplayCount <= 1"
+      aria-label="Show fewer images horizontally"
+    >
+      Horizontal <mat-icon>remove</mat-icon>
+    </button>
+    <div class="controlSpacer"></div>
+    <button
+      mat-button
+      class="btn btn-secondary"
+      (click)="showMoreHorizontalImages()"
+      [disabled]="horizontalDisplayCount >= maxHorizontalCount"
+      aria-label="Show more images horizontally"
+    >
+      Horizontal <mat-icon>add</mat-icon>
+    </button>
+  </div>
+
+  <div
+    #treeContainer
+    class="imageTreeContainer"
+    [ngClass]="{
+      'center-aligned': horizontalDisplayCount <= 8,
+      'left-aligned': horizontalDisplayCount > 8
+    }"
+  >
     <app-image-tree
       [node]="data.tree.root"
       [imagePairs]="data.imagePairs"
+      [maxDepth]="displayLevel"
+      [horizontalDisplayCount]="horizontalDisplayCount"
       class="imageTree"
       role="tree"
       aria-label="Image Tree"
@@ -19,10 +50,28 @@
 <mat-dialog-actions id="imageDialogActions" class="imageDialogActions">
   <button
     mat-button
+    class="btn btn-secondary"
+    (click)="showLessLevels()"
+    [disabled]="displayLevel <= 1"
+    aria-label="Show fewer levels vertically"
+  >
+    Vertical <mat-icon>remove</mat-icon>
+  </button>
+  <button
+    mat-button
     class="btn btn-primary"
     (click)="closeDialog()"
     aria-label="Close Dialog"
   >
     Close
+  </button>
+  <button
+    mat-button
+    class="btn btn-secondary"
+    (click)="showMoreLevels()"
+    [disabled]="displayLevel >= maxLevel"
+    aria-label="Show more levels vertically"
+  >
+    Vertical <mat-icon>add</mat-icon>
   </button>
 </mat-dialog-actions>

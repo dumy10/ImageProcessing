@@ -10,21 +10,72 @@
   overflow-x: hidden;
   padding: 1rem;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.horizontalControlsContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.controlSpacer {
+  width: 1rem;
 }
 
 .imageTreeContainer {
   width: 100%;
   overflow-x: auto;
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
+  align-items: center;
   padding: 0.5rem;
+  position: relative;
+  scroll-behavior: smooth;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.imageTreeContainer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.imageTreeContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.imageTreeContainer::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.imageTreeContainer::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.imageTreeContainer.center-aligned {
+  justify-content: center;
+}
+
+.imageTreeContainer.left-aligned {
+  justify-content: flex-start;
 }
 
 .imageTree {
   min-width: fit-content;
   display: block;
-  margin: 0;
+  margin: 0 auto;
+  transform-origin: top center;
+  position: relative;
+  /* Root node is always centered regardless of scroll position */
+  > .treeNodeContainer > .treeNode {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 .imageDialogActions {
@@ -41,6 +92,11 @@
   .imageDialogContent {
     padding: 0.5rem;
   }
+
+  .imageTreeContainer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -50,5 +106,10 @@
 
   .imageDialogContent {
     padding: 0.25rem;
+  }
+
+  .imageTreeContainer {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }

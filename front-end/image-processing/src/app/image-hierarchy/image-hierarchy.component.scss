@@ -81,6 +81,16 @@
   max-height: 20rem;
 }
 
+.moreImagesIndicator {
+  text-align: center;
+  background-color: #e9ecef;
+  border-radius: 0.5rem;
+  padding: 0.625rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+  color: #495057;
+}
+
 @media (max-width: 768px) {
   .dialogTitle {
     font-size: 1.25rem;

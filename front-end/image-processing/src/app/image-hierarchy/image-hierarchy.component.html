@@ -1,10 +1,10 @@
 <h2 mat-dialog-title class="dialogTitle" aria-label="Image title">
-  Image: {{ data.length ? data[data.length - 1].name : 'Unknown' }}
+  Image: {{ data.length ? data[data.length - 1].name : "Unknown" }}
 </h2>
 <mat-dialog-content class="imageDialogContent">
   <div class="imagesColumn">
-    <!-- Loop through each image and add SVG arrows between them -->
-    <ng-container *ngFor="let imageModel of data; let i = index">
+    <!-- Loop through each displayed image and add SVG arrows between them -->
+    <ng-container *ngFor="let imageModel of displayImages; let i = index">
       <!-- Add SVG arrow if this isn't the first image -->
       <div *ngIf="i > 0" class="arrowContainer">
         <svg
@@ -14,31 +14,26 @@
           height="60"
         >
           <!-- Arrow line -->
-          <line
-            x1="50"
-            y1="0"
-            x2="50"
-            y2="40"
-            class="arrowLine"
-          ></line>
-          
+          <line x1="50" y1="0" x2="50" y2="40" class="arrowLine"></line>
+
           <!-- Filter name on the line -->
           <text
-            *ngIf="imageModel.appliedFilters && imageModel.appliedFilters.length"
+            *ngIf="
+              imageModel.appliedFilters && imageModel.appliedFilters.length
+            "
             x="50"
             y="30"
             class="filterLabel"
             text-anchor="middle"
             dominant-baseline="middle"
           >
-            {{ imageModel.appliedFilters[imageModel.appliedFilters.length - 1] }}
+            {{
+              imageModel.appliedFilters[imageModel.appliedFilters.length - 1]
+            }}
           </text>
-          
+
           <!-- Arrow head -->
-          <polygon
-            points="45 40, 50 50, 55 40"
-            class="arrowHead"
-          ></polygon>
+          <polygon points="45 40, 50 50, 55 40" class="arrowHead"></polygon>
         </svg>
       </div>
 
@@ -54,10 +49,29 @@
         />
       </div>
     </ng-container>
+
+    <!-- Show indication if more images are available but not shown -->
+    <div *ngIf="displayCount < data.length" class="moreImagesIndicator">
+      <p>
+        + {{ data.length - displayCount }} more image{{
+          data.length - displayCount > 1 ? "s" : ""
+        }}
+        in hierarchy
+      </p>
+    </div>
   </div>
 </mat-dialog-content>
 
 <mat-dialog-actions id="imageDialogActions" class="imageDialogActions">
+  <button
+    mat-button
+    class="btn btn-secondary"
+    (click)="showLessImages()"
+    [disabled]="!canShowLess()"
+    aria-label="Show less images"
+  >
+    Show Less <mat-icon>remove</mat-icon>
+  </button>
   <button
     mat-button
     class="btn btn-primary"
@@ -65,5 +79,14 @@
     aria-label="Close dialog"
   >
     Close
+  </button>
+  <button
+    mat-button
+    class="btn btn-secondary"
+    (click)="showMoreImages()"
+    [disabled]="!canShowMore()"
+    aria-label="Show more images"
+  >
+    Show More <mat-icon>add</mat-icon>
   </button>
 </mat-dialog-actions>

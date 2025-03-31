@@ -38,15 +38,25 @@ export class ImageTreeComponent {
   }> = [];
 
   /**
-   * Constructor for ImageTreeComponent.
-   * @param {MatDialog} dialog - The dialog service for opening dialogs.
+   * Maximum depth of nodes to display in the tree
+   * @type {number}
    */
-  constructor(private dialog: MatDialog) {}
+  @Input() maxDepth: number = Infinity;
 
   /**
-   * Opens a dialog to display the hierarchy of the given image.
-   * @param {ImageModel} image - The image for which to display the hierarchy.
+   * Current depth level of this component instance in the tree
+   * @type {number}
    */
+  @Input() currentDepth: number = 1;
+
+  /**
+   * Total number of children to display horizontally
+   * @type {number}
+   */
+  @Input() horizontalDisplayCount: number = 3;
+
+  constructor(private dialog: MatDialog) {}
+
   openDialog(image: ImageModel): void {
     const dialogRef = this.dialog.open(ImageHierarchyComponent, {
       data: this.getImageHierarchy(image),
@@ -59,15 +69,22 @@ export class ImageTreeComponent {
 
   /**
    * Retrieves the hierarchy of the given image, including its parent images.
+   * Uses an iterative approach for better performance.
    * @param {ImageModel} image - The image for which to retrieve the hierarchy.
    * @returns {ImageModel[]} - An array of images representing the hierarchy.
    */
   getImageHierarchy(image: ImageModel): ImageModel[] {
     const imageHierarchy: ImageModel[] = [];
-
     let currentImage = image;
-    imageHierarchy.unshift(currentImage);
-    while (currentImage.parentId) {
+
+    // Keep adding parents to the hierarchy until we reach the root
+    while (true) {
+      imageHierarchy.unshift(currentImage);
+
+      if (!currentImage.parentId) {
+        break;
+      }
+
       const parentImage = this.imagePairs.find(
         (imgPair) => imgPair.originalImage.id === currentImage.parentId
       )?.originalImage;
@@ -76,17 +93,74 @@ export class ImageTreeComponent {
         break;
       }
 
-      imageHierarchy.unshift(parentImage);
       currentImage = parentImage;
     }
+
     return imageHierarchy;
   }
 
-  /**
-   * Handles the image error event.
-   * @param {ImageModel} image - The image that encountered an error.
-   */
   onImageError(image: ImageModel): void {
     image.url = 'assets/images/notfound.jpg';
+  }
+
+  shouldDisplayChildren(): boolean {
+    return this.currentDepth < this.maxDepth;
+  }
+
+  /**
+   * Returns the array of children to display, centered around the mid-point
+   * @returns {TreeNode<ImageModel>[]} - The array of child nodes to display
+   */
+  getDisplayedChildren(): TreeNode<ImageModel>[] {
+    if (!this.node?.children?.length) return [];
+
+    const totalChildren = this.node.children.length;
+    const childrenToShow = Math.min(totalChildren, this.horizontalDisplayCount);
+
+    // If we have fewer children than the display count or odd number to display
+    if (
+      totalChildren <= this.horizontalDisplayCount ||
+      childrenToShow % 2 === 1
+    ) {
+      // Calculate the start index to center the children
+      const startIndex = Math.max(
+        0,
+        Math.floor((totalChildren - childrenToShow) / 2)
+      );
+      return this.node.children.slice(startIndex, startIndex + childrenToShow);
+    } else {
+      // For even number of children, center them around the parent
+      const halfPoint = Math.floor(totalChildren / 2);
+      const halfToShow = childrenToShow / 2;
+
+      // Take half from left of center and half from right of center
+      const leftIndex = Math.max(0, halfPoint - halfToShow);
+      return this.node.children.slice(leftIndex, leftIndex + childrenToShow);
+    }
+  }
+
+  /**
+   * Gets the number of hidden children.
+   * @returns {number} - The number of hidden children.
+   */
+  getHiddenChildrenCount(): number {
+    if (!this.node?.children) return 0;
+    return Math.max(0, this.node.children.length - this.horizontalDisplayCount);
+  }
+
+  /**
+   * Gets the SVG viewBox width based on the number of displayed children
+   * @returns {number} - The width of the SVG viewBox
+   */
+  getSvgViewBoxWidth(): number {
+    return this.getDisplayedChildren().length * 200;
+  }
+
+  /**
+   * Gets the horizontal center point of the SVG viewBox
+   * @returns {number} - The horizontal center point
+   */
+  getSvgCenterX(): number {
+    return this.getSvgViewBoxWidth() / 2;
   }
 }
