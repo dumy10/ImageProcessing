@@ -1,33 +1,52 @@
 <div class="photo-editor-container">
-  <div
-    class="dropzone"
-    (dragover)="onDragOver($event)"
-    (dragleave)="onDragLeave($event)"
-    (drop)="onDrop($event)"
-    aria-label="Image drop zone"
-  >
-    <div class="editor-content">
+  <div class="outer-box">
+    <div class="outer-box-content">
       <h1>Image Processing</h1>
-      <p>Upload an image and apply filters to it.</p>
-      <p>Drag & Drop your image here or</p>
-      <button
-        mat-button
-        class="upload-button"
-        (click)="onUploadClick()"
-        aria-label="Upload your image"
-      >
-        <mat-icon>cloud_upload</mat-icon> Upload your image
-      </button>
-    </div>
+      <p>Upload an image and apply various filters to transform your photos.</p>
 
-    <input
-      type="file"
-      id="imageUpload"
-      (change)="onImageSelected($event)"
-      accept="image/png, image/jpeg"
-      style="display: none"
-      aria-label="Image upload input"
-    />
+      <div
+        class="inner-box dropzone"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        aria-label="Image drop zone"
+      >
+        <div
+          class="editor-content"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+        >
+          <mat-icon
+            class="photo-icon"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            >add_photo_alternate</mat-icon
+          >
+          <p>Drag & Drop your image here or</p>
+          <button
+            mat-button
+            class="upload-button"
+            (click)="onUploadClick()"
+            aria-label="Upload your image"
+          >
+            <mat-icon class="button-icon">cloud_upload</mat-icon>
+            Upload your image
+          </button>
+          <p class="supported-formats">Supported formats: JPG, JPEG, PNG</p>
+        </div>
+
+        <input
+          type="file"
+          id="imageUpload"
+          (change)="onImageSelected($event)"
+          accept="image/png, image/jpeg"
+          style="display: none"
+          aria-label="Image upload input"
+        />
+      </div>
+    </div>
   </div>
 </div>
 

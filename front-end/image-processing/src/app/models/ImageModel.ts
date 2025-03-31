@@ -48,10 +48,11 @@ export interface ImageModel {
    * List of filters applied to the image.
    * @type {string[] | undefined}
    */
-  appliedFilters: string[] | undefined;
+  appliedFilters?: string[];
 
   /**
-   * Flag indicating whether the image has been loaded in the gallery.
+   * Flag indicating if the image has been loaded.
+   * @type {boolean | undefined}
    */
-  loaded: boolean;
+  loaded?: boolean;
 }

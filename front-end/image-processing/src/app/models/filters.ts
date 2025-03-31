@@ -4,7 +4,7 @@
 export enum Filters {
   /**
    * Grayscale filter.
-   * Converts the image to shades of gray.
+   * Converts the image to grayscale.
    */
   GrayScale = 'grayscale',
 
@@ -22,25 +22,25 @@ export enum Filters {
 
   /**
    * Sobel filter.
-   * Applies the Sobel edge detection filter to the image.
+   * Applies a Sobel edge detection to the image.
    */
   Sobel = 'sobel',
 
   /**
    * Canny filter.
-   * Applies the Canny edge detection filter to the image.
+   * Applies a Canny edge detection to the image.
    */
   Canny = 'canny',
 
   /**
    * Flip horizontal filter.
-   * Flips the image horizontally
+   * Flips the image horizontally.
    */
   FlipHorizontal = 'flip horizontal',
 
   /**
    * Flip vertical filter.
-   * Flips the image vertically
+   * Flips the image vertically.
    */
   FlipVertical = 'flip vertical',
 

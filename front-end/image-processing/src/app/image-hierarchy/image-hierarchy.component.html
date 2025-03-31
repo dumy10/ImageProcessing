@@ -3,21 +3,57 @@
 </h2>
 <mat-dialog-content class="imageDialogContent">
   <div class="imagesColumn">
-    <div *ngFor="let imageModel of data" class="imageContainer">
-      <div *ngIf="imageModel.appliedFilters" class="filtersContainer">
-        <span class="imageDetails">
-          {{ imageModel.appliedFilters[imageModel.appliedFilters.length - 1] }}
-        </span>
+    <!-- Loop through each image and add SVG arrows between them -->
+    <ng-container *ngFor="let imageModel of data; let i = index">
+      <!-- Add SVG arrow if this isn't the first image -->
+      <div *ngIf="i > 0" class="arrowContainer">
+        <svg
+          class="hierarchyArrowSvg"
+          viewBox="0 0 100 60"
+          width="100"
+          height="60"
+        >
+          <!-- Arrow line -->
+          <line
+            x1="50"
+            y1="0"
+            x2="50"
+            y2="40"
+            class="arrowLine"
+          ></line>
+          
+          <!-- Filter name on the line -->
+          <text
+            *ngIf="imageModel.appliedFilters && imageModel.appliedFilters.length"
+            x="50"
+            y="30"
+            class="filterLabel"
+            text-anchor="middle"
+            dominant-baseline="middle"
+          >
+            {{ imageModel.appliedFilters[imageModel.appliedFilters.length - 1] }}
+          </text>
+          
+          <!-- Arrow head -->
+          <polygon
+            points="45 40, 50 50, 55 40"
+            class="arrowHead"
+          ></polygon>
+        </svg>
       </div>
-      <img
-        [src]="imageModel.url"
-        alt="Image"
-        class="image"
-        loading="lazy"
-        (error)="onImageError(imageModel)"
-        aria-label="Image"
-      />
-    </div>
+
+      <!-- Image container -->
+      <div class="imageContainer">
+        <img
+          [src]="imageModel.url"
+          alt="Image"
+          class="image"
+          loading="lazy"
+          (error)="onImageError(imageModel)"
+          aria-label="Image"
+        />
+      </div>
+    </ng-container>
   </div>
 </mat-dialog-content>
 

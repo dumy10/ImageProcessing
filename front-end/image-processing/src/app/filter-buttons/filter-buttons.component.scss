@@ -6,6 +6,11 @@
 
   @media (max-width: 768px) {
     flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  @media (max-width: 480px) {
+    gap: 0.2rem;
   }
 
   button {
@@ -24,6 +29,20 @@
     &:hover {
       background-color: #732d91;
       transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      padding: 0.25rem 0.4rem;
+      font-size: 0.8rem;
+      min-height: 0;
+      line-height: 1;
+      width: 100%;
+    }
+
+    @media (max-width: 480px) {
+      padding: 0.15rem 0.3rem;
+      font-size: 0.7rem;
+      border-radius: 0.25rem;
     }
   }
 }

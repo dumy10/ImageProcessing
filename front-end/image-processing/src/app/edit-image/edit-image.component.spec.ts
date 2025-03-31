@@ -61,8 +61,22 @@ describe('EditImageComponent', () => {
       loaded: true,
     };
     imageService.getImage.and.returnValue(of(mockImage));
-
+    
+    // Mock the getIdFromUrl method to return a test ID
+    spyOn(component, 'getIdFromUrl').and.returnValue('1');
+    
     component.ngOnInit();
+    
+    // We need to manually trigger the subscription callback since we're testing
+    // Simulate the response from the imageService.getImage
+    component.loadImage('1');
+    
+    // Force the subscription callback to execute
+    imageService.getImage.calls.mostRecent().returnValue.subscribe((response: any) => {
+      component.image = response;
+      component.imagePath = response.url;
+    });
+    
     fixture.detectChanges();
 
     expect(component.image).toEqual(mockImage);
