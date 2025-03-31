@@ -16,8 +16,41 @@
 .imagesColumn {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.5rem;
   width: 100%;
+}
+
+.arrowContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  height: 60px;
+  margin: 0.5rem 0;
+}
+
+.hierarchyArrowSvg {
+  overflow: visible;
+}
+
+.arrowLine {
+  stroke: #6c757d;
+  stroke-width: 2;
+  fill: none;
+}
+
+.arrowHead {
+  fill: #6c757d;
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  fill: #fff;
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: #495057;
+  stroke-width: 5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .imageContainer {

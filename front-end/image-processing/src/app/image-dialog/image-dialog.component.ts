@@ -62,6 +62,12 @@ export class ImageDialogComponent {
     }
   ) {
     this.imagePairs = data.imagePairs;
+
+    // Set the dialog width to better accommodate the tree
+    // Only call updateSize if it exists (for testing compatibility)
+    if (dialogRef && typeof dialogRef.updateSize === 'function') {
+      dialogRef.updateSize('80vw', 'auto');
+    }
   }
 
   /**

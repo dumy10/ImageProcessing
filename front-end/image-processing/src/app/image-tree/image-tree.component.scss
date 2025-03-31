@@ -3,6 +3,7 @@
   flex-direction: column;
   align-items: center;
   margin: 1.25rem 0;
+  width: 100%;
 }
 
 .treeNode {
@@ -42,13 +43,57 @@
   color: #ffffff;
 }
 
+.treeNodeChildrenContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.treeArrowsSvg {
+  margin-bottom: 1rem;
+  overflow: visible;
+  align-self: flex-start;
+}
+
+.treeArrow {
+  stroke: #6c757d;
+  stroke-width: 2;
+  fill: none;
+}
+
+.arrowHead {
+  fill: #6c757d;
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  fill: #fff;
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: #495057;
+  stroke-width: 5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .treeNodeChildren {
   display: flex;
-  flex-direction: row; 
-  flex-wrap: nowrap; 
-  justify-content: flex-start; 
-  gap: 0.9375rem;
-  margin-top: 0.625rem;
+  flex-direction: row;
+  justify-content: flex-start;
   width: 100%;
-  overflow-x: auto; 
+  overflow-x: auto;
+  padding-left: 0;
+}
+
+.childNodeWrapper {
+  width: 200px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.childTreeNode {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
 }
