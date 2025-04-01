@@ -1,3 +1,5 @@
+@use "../../assets/themes/theme-mixins.scss" as theme-mixins;
+
 .filter-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -15,8 +17,8 @@
 
   button {
     padding: 0.5rem 1rem;
-    background-color: #6b46bd;
-    color: #fff;
+    background-color: var(--primary-color);
+    color: white;
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
@@ -27,8 +29,17 @@
     transition: background-color 0.3s ease, transform 0.3s ease;
 
     &:hover {
-      background-color: #732d91;
+      background-color: var(--accent-color);
       transform: scale(1.05);
+    }
+
+    .dark-theme & {
+      background-color: var(--primary-color);
+      color: white;
+
+      &:hover {
+        background-color: var(--accent-color);
+      }
     }
 
     @media (max-width: 768px) {

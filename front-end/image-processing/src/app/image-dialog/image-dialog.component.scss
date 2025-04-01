@@ -1,10 +1,12 @@
+@use "../../assets/themes/theme-mixins.scss" as theme-mixins;
+
 .dialogTitle {
   font-size: 1.5rem;
   text-align: center;
   margin-bottom: 0.625rem;
   position: sticky;
   top: 0;
-  background: white;
+  @include theme-mixins.themed-card-background;
   z-index: 10;
   padding: 0.5rem 0;
 }
@@ -19,26 +21,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  scrollbar-width: thin;
-  scrollbar-color: #888 #f1f1f1;
-}
-
-.imageDialogContent::-webkit-scrollbar {
-  width: 8px;
-}
-
-.imageDialogContent::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.imageDialogContent::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.imageDialogContent::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  @include theme-mixins.themed-scrollbar;
 }
 
 .horizontalControlsContainer {
@@ -48,11 +31,15 @@
   gap: 1rem;
   position: sticky;
   top: 50px;
-  background: white;
+  @include theme-mixins.themed-card-background;
   z-index: 20;
   padding: 0.5rem 0;
   width: 100%;
   box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  .dark-theme & {
+    box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .controlSpacer {
@@ -73,24 +60,7 @@
   min-height: 0;
   margin-top: 1rem;
   box-sizing: border-box;
-}
-
-.imageTreeContainer::-webkit-scrollbar {
-  height: 8px;
-}
-
-.imageTreeContainer::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.imageTreeContainer::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.imageTreeContainer::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  @include theme-mixins.themed-scrollbar(8px);
 }
 
 .imageTreeContainer.center-aligned {
@@ -135,9 +105,9 @@
   padding: 0.625rem 0;
   position: sticky;
   bottom: 0;
-  background: white;
+  @include theme-mixins.themed-card-background;
   z-index: 10;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--divider-color);
   width: 100%;
 }
 

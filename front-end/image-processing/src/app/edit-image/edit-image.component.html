@@ -4,6 +4,14 @@
   [class.error-state]="errorState && !image?.loaded"
   [class.loading-state]="imageLoadTimeout && !image?.loaded"
 >
+  <app-error-banner
+    *ngIf="errorState && !image?.loaded"
+    [showBanner]="errorState"
+    [errorMessage]="errorMessage"
+    [actions]="errorActions"
+    (dismiss)="dismissError()"
+  ></app-error-banner>
+
   <!-- Filter sidebar component -->
   <app-filter-sidebar
     *ngIf="image?.loaded"
@@ -25,14 +33,6 @@
     [class.full-page]="errorState && !image?.loaded"
     [class.loading]="imageLoadTimeout && !image?.loaded"
   >
-    <!-- Error banner -->
-    <app-error-banner
-      [showBanner]="errorState"
-      [errorMessage]="errorMessage"
-      [actions]="errorActions"
-      (dismiss)="dismissError()"
-    ></app-error-banner>
-
     <!-- Image display area with loading indicator -->
     <div
       class="image-container"

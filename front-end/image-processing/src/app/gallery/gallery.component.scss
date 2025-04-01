@@ -1,3 +1,5 @@
+@use "../../assets/themes/theme-mixins.scss" as mixins;
+
 .gallery {
   display: flex;
   flex-wrap: wrap;
@@ -10,16 +12,17 @@
   flex: 1 1 calc(50% - 1.25rem);
   max-width: calc(50% - 1.25rem);
   justify-content: space-between;
-  border: 1px solid #ccc;
+  @include mixins.themed-border;
   border-radius: 0.25rem;
   padding: 0.625rem;
   box-sizing: border-box;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  @include mixins.themed-card-background;
 }
 
 .pair:hover {
   transform: scale(1.02);
-  box-shadow: 0 0.25rem 0.625rem rgba(0, 0, 0, 0.15);
+  @include mixins.themed-shadow(2);
 }
 
 .image-container {
@@ -29,7 +32,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f0f0f0;
+  background-color: var(--background-color);
+
+  .dark-theme & {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
 }
 
 .image-container img {
@@ -70,11 +77,41 @@
 
 .download-button:hover,
 .edit-button:hover {
-  color: #ffcc00;
+  color: var(--accent-color);
 }
 
 mat-paginator {
   margin-top: 1rem;
+
+  ::ng-deep .mat-mdc-paginator-container {
+    color: var(--text-color);
+
+    .mat-mdc-paginator-range-label,
+    .mat-mdc-paginator-page-size-label {
+      color: var(--text-color);
+    }
+
+    .mat-mdc-select-value-text {
+      color: var(--text-color);
+    }
+
+    .mat-mdc-icon-button {
+      color: var(--text-color);
+
+      &.mat-mdc-button-disabled {
+        color: var(--disabled-text-color);
+      }
+    }
+
+    .mat-mdc-paginator-page-size-select {
+      .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+        .mdc-floating-label,
+      .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+        .mdc-text-field__input {
+        color: var(--text-color);
+      }
+    }
+  }
 }
 
 @media (max-width: 768px) {

@@ -1,3 +1,5 @@
+@use "../../assets/themes/theme-mixins.scss" as mixins;
+
 .photo-editor-container {
   display: flex;
   justify-content: center;
@@ -9,12 +11,15 @@
 }
 
 .outer-box {
-  background-color: #ffffff;
+  @include mixins.themed-card-background;
   border-radius: 1rem;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-  width: 90%;
-  max-width: 75rem;
-  padding: 2rem;
+  @include mixins.themed-shadow(2);
+
+  & {
+    width: 90%;
+    max-width: 75rem;
+    padding: 2rem;
+  }
 }
 
 .outer-box-content {
@@ -22,24 +27,24 @@
 }
 
 .outer-box h1 {
-  color: #333;
+  color: var(--text-color);
   margin-bottom: 1rem;
   font-size: 2rem;
 }
 
 .outer-box > .outer-box-content > p {
-  color: #666;
+  color: var(--secondary-text-color);
   margin-bottom: 2rem;
   font-size: 1.1rem;
 }
 
 .inner-box {
   margin: 0 auto;
-  border: 2px dashed #8e44ad;
+  border: 2px dashed var(--primary-color);
   border-radius: 0.625rem;
   width: 90%;
   max-width: 65rem;
-  background-color: #fafafa;
+  background-color: var(--background-color);
   padding: 3rem 1.25rem;
   transition: background-color 0.3s ease;
   display: flex;
@@ -60,7 +65,7 @@
   font-size: 4rem;
   height: 4rem;
   width: 4rem;
-  color: #8e44ad;
+  color: var(--primary-color);
   margin-bottom: 1rem;
 }
 
@@ -68,33 +73,41 @@
   font-size: 3.5rem;
   height: 3.5rem;
   width: 3.5rem;
-  color: #8e44ad;
+  color: var(--primary-color);
   margin-bottom: 1rem;
 }
 
 .dropzone p {
   font-size: 1rem;
-  color: #666;
+  color: var(--secondary-text-color);
   margin-bottom: 0.625rem;
 }
 
 .supported-formats {
   font-size: 0.85rem !important;
-  color: #888 !important;
+  color: var(--secondary-text-color) !important;
   margin-top: 1rem !important;
 }
 
 .dropzone.dragging {
-  background-color: #f0e6f6;
-  border-color: #6b46bd;
+  background-color: rgba(var(--primary-color), 0.1);
+  border-color: var(--primary-color);
+
+  .dark-theme & {
+    background-color: rgba(121, 134, 203, 0.2);
+  }
 }
 
 .dropzone:hover {
-  background-color: #f7f7f7;
+  background-color: var(--background-color);
+
+  .dark-theme & {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
 }
 
 .upload-button {
-  background-color: #6b46bd;
+  background-color: var(--primary-color);
   color: #fff;
   padding: 0.625rem 1.25rem;
   font-size: 0.8125rem;
@@ -116,5 +129,5 @@
 }
 
 .upload-button:hover {
-  background-color: #732d91;
+  background-color: var(--accent-color);
 }
