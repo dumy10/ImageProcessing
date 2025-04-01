@@ -80,6 +80,15 @@
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 // Main container
 .container {
   display: grid;
@@ -93,7 +102,7 @@
   box-sizing: border-box;
   position: relative;
   transition: grid-template-columns 0.3s ease;
-  
+
   &.sidebar-collapsed {
     grid-template-columns: 30px 1fr;
 
@@ -289,6 +298,50 @@
     color: #555;
     font-size: 14px;
   }
+}
+
+// Filter operation overlay
+.filter-operation-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  @include full-dimensions;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(107, 70, 189, 0.2);
+  z-index: 6;
+  animation: fade-in 0.2s ease-out;
+  backdrop-filter: blur(2px);
+}
+
+.filter-operation-container {
+  padding: 16px 24px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.filter-operation-spinner {
+  margin-bottom: 12px;
+
+  .rotating {
+    animation: rotating 1.5s linear infinite;
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #6b46bd;
+  }
+}
+
+.filter-operation-text {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 // Image display

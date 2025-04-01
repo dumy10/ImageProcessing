@@ -2,7 +2,7 @@
   class="container"
   [class.sidebar-collapsed]="sidebarCollapsed"
   [class.error-state]="errorState && !image?.loaded"
-  [class.loading-state]="imageLoadTimeout || loading"
+  [class.loading-state]="imageLoadTimeout && !image?.loaded"
 >
   <!-- Filter sidebar component -->
   <app-filter-sidebar
@@ -23,7 +23,7 @@
   <div
     class="image-panel"
     [class.full-page]="errorState && !image?.loaded"
-    [class.loading]="imageLoadTimeout || loading"
+    [class.loading]="imageLoadTimeout && !image?.loaded"
   >
     <!-- Error banner -->
     <app-error-banner
@@ -36,10 +36,13 @@
     <!-- Image display area with loading indicator -->
     <div
       class="image-container"
-      [class.full-page]="!image?.loaded || imageLoadTimeout || loading"
+      [class.full-page]="!image?.loaded || (imageLoadTimeout && !image?.loaded)"
     >
       <!-- Loading indicator shows during the delay period -->
-      <div class="image-loading-container" *ngIf="imageLoadTimeout">
+      <div
+        class="image-loading-container"
+        *ngIf="imageLoadTimeout && !image?.loaded"
+      >
         <div class="image-loading-spinner">
           <mat-icon class="rotating">sync</mat-icon>
         </div>
@@ -48,15 +51,29 @@
 
       <div class="image-display">
         <img
+          #imageElement
           [src]="imagePath"
           alt="Image to be processed"
           class="image"
           (error)="onImageError()"
           (load)="onImageLoad()"
         />
+        <!-- Filter operation overlay - show only during filter operations -->
+        <div class="filter-operation-overlay" *ngIf="loading && image?.loaded">
+          <div class="filter-operation-container">
+            <div class="filter-operation-spinner">
+              <mat-icon class="rotating">sync</mat-icon>
+            </div>
+            <span class="filter-operation-text">{{ loadingMessage }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<app-loading *ngIf="loading" [loading]="loading" [message]="loadingMessage" />
+<app-loading
+  *ngIf="loading && !image?.loaded"
+  [loading]="loading"
+  [message]="loadingMessage"
+/>

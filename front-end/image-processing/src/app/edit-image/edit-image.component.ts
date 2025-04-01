@@ -1,6 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, HostListener, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -37,7 +45,9 @@ import {
   templateUrl: './edit-image.component.html',
   styleUrl: './edit-image.component.scss',
 })
-export class EditImageComponent implements OnInit {
+export class EditImageComponent implements OnInit, AfterViewInit {
+  @ViewChild('imageElement') imageElement: ElementRef | undefined;
+
   loading = false;
   loadingMessage = 'Loading the image...';
   image: ImageModel | undefined;
@@ -54,11 +64,14 @@ export class EditImageComponent implements OnInit {
   errorActions: ErrorAction[] = [];
   imageLoadTimeout: any = null;
   imageLoadDelayMs = 3000; // 3 seconds delay before showing error
+  isFilterOperation = false; // Flag to distinguish between initial load and filter operation
+  imageLoaded = false; // Track image loaded state separately
 
   constructor(
     private router: Router,
     private imageService: ImageService,
-    private errorHandling: ErrorHandlingService
+    private errorHandling: ErrorHandlingService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -86,6 +99,33 @@ export class EditImageComponent implements OnInit {
       });
   }
 
+  ngAfterViewInit(): void {
+    // Check if image is already loaded (from cache)
+    this.checkImageLoadedStatus();
+  }
+
+  // Check if the image is already loaded (cached)
+  private checkImageLoadedStatus(): void {
+    setTimeout(() => {
+      // First try using ViewChild reference
+      if (this.imageElement) {
+        const imgEl = this.imageElement.nativeElement as HTMLImageElement;
+        if (imgEl && imgEl.complete && imgEl.naturalHeight !== 0) {
+          this.onImageLoad();
+          this.cdr.detectChanges();
+          return;
+        }
+      }
+
+      // Fallback to querySelector if ViewChild is not available yet
+      const img = document.querySelector('.image') as HTMLImageElement;
+      if (img && img.complete && img.naturalHeight !== 0) {
+        this.onImageLoad();
+        this.cdr.detectChanges();
+      }
+    }, 0);
+  }
+
   getIdFromUrl(): string | undefined {
     const url = window.location.href;
     const editIndex = url.indexOf('/edit/');
@@ -96,9 +136,11 @@ export class EditImageComponent implements OnInit {
 
   loadImage(id: string): void {
     this.loading = true;
+    this.isFilterOperation = false;
     this.errorState = false;
     this.errorMessage = '';
     this.errorActions = [];
+    this.imageLoaded = false; // Reset image loaded state
 
     // Clear any existing timeout
     if (this.imageLoadTimeout) {
@@ -114,6 +156,10 @@ export class EditImageComponent implements OnInit {
           this.image = response as ImageModel;
           this.lastSuccessfulOperation = this.cloneImageModel(this.image);
           this.imagePath = this.image.url;
+
+          // Handle the case where image might be loaded from cache
+          // Set a small timeout to allow the browser to process the image
+          setTimeout(() => this.checkImageLoadedStatus(), 50);
         },
         error: (error: HttpErrorResponse) => {
           // Set a timeout before showing the error state
@@ -156,6 +202,7 @@ export class EditImageComponent implements OnInit {
     }
 
     this.loading = true;
+    this.isFilterOperation = true; // Mark this as a filter operation
     this.loadingMessage = `Applying filter: ${filter}...`;
     this.errorState = false;
     this.errorMessage = '';
@@ -174,7 +221,10 @@ export class EditImageComponent implements OnInit {
     this.imageService
       .editImage(this.image.id, filter.toString().toLowerCase())
       .pipe(
-        finalize(() => (this.loading = false)),
+        finalize(() => {
+          this.loading = false;
+          this.isFilterOperation = false;
+        }),
         catchError((error: HttpErrorResponse) => {
           this.errorState = true;
           this.handleFilterError(error, filter);
@@ -185,9 +235,11 @@ export class EditImageComponent implements OnInit {
         next: (response) => {
           if (response) {
             this.image = response as ImageModel;
+            this.image.loaded = true; // Set loaded to true immediately for filtered images
+            this.imageLoaded = true; // Also set component-level flag
             this.lastSuccessfulOperation = this.cloneImageModel(this.image);
             this.imagePath = this.image.url;
-            this.router.navigate(['/edit', response.id]);
+            this.router.navigate(['/edit', response.id], { replaceUrl: true });
           }
         },
       });
@@ -246,6 +298,7 @@ export class EditImageComponent implements OnInit {
     }
 
     this.loading = true;
+    this.isFilterOperation = true; // Use the overlay for downloads too
     this.loadingMessage = 'Downloading the image...';
     this.errorState = false;
     this.errorMessage = '';
@@ -253,7 +306,12 @@ export class EditImageComponent implements OnInit {
 
     this.imageService
       .downloadImage(this.image.id)
-      .pipe(finalize(() => (this.loading = false)))
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.isFilterOperation = false;
+        })
+      )
       .subscribe({
         next: (response) => {
           const url = window.URL.createObjectURL(response);
@@ -312,6 +370,9 @@ export class EditImageComponent implements OnInit {
       this.imageLoadTimeout = null;
     }
 
+    // Set both component-level and model-level loaded flags
+    this.imageLoaded = true;
+
     if (this.image) {
       this.image.loaded = true;
     }
@@ -367,20 +428,30 @@ export class EditImageComponent implements OnInit {
 
   private navigateToImage(imageId: string): void {
     this.loading = true;
+    this.isFilterOperation = true; // Use overlay for navigation
     this.loadingMessage = 'Loading image...';
     this.errorState = false;
     this.errorMessage = '';
     this.errorActions = [];
+    this.imageLoaded = false; // Reset image loaded state
 
     this.imageService
       .getImage(imageId)
-      .pipe(finalize(() => (this.loading = false)))
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.isFilterOperation = false;
+        })
+      )
       .subscribe({
         next: (response) => {
           this.image = response as ImageModel;
           this.lastSuccessfulOperation = this.cloneImageModel(this.image);
           this.imagePath = this.image.url;
-          this.router.navigate(['/edit', response.id]);
+          this.router.navigate(['/edit', response.id], { replaceUrl: true });
+
+          // Check if image is already loaded (from cache)
+          setTimeout(() => this.checkImageLoadedStatus(), 50);
         },
         error: (error: HttpErrorResponse) => {
           this.errorState = true;

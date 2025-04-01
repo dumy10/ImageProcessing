@@ -341,6 +341,7 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ResponseCache(NoStore = true)]
         public async Task<IActionResult> DeleteImage(string id)
         {
             Logging.Instance.LogMessage($"Deleting image with ID {id}...");
