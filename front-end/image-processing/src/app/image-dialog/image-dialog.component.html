@@ -2,6 +2,7 @@
   Tree of Image: {{ data.tree.root?.value?.name }}
 </h2>
 <mat-dialog-content
+  #dialogContent
   class="imageDialogContent"
   role="document"
   aria-labelledby="dialogTitle"
@@ -32,8 +33,8 @@
     #treeContainer
     class="imageTreeContainer"
     [ngClass]="{
-      'center-aligned': horizontalDisplayCount <= 8,
-      'left-aligned': horizontalDisplayCount > 8
+      'center-aligned': horizontalDisplayCount <= 7,
+      'left-aligned': horizontalDisplayCount > 7
     }"
   >
     <app-image-tree

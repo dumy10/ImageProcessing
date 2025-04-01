@@ -2,10 +2,16 @@
   font-size: 1.5rem;
   text-align: center;
   margin-bottom: 0.625rem;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  padding: 0.5rem 0;
 }
 
 .imageDialogContent {
   max-height: 80vh;
+  height: 80vh;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 1rem;
@@ -13,6 +19,26 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.imageDialogContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.imageDialogContent::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.imageDialogContent::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.imageDialogContent::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .horizontalControlsContainer {
@@ -20,6 +46,13 @@
   justify-content: center;
   margin-bottom: 1rem;
   gap: 1rem;
+  position: sticky;
+  top: 50px;
+  background: white;
+  z-index: 20;
+  padding: 0.5rem 0;
+  width: 100%;
+  box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .controlSpacer {
@@ -30,12 +63,16 @@
   width: 100%;
   overflow-x: auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 0.5rem;
   position: relative;
   scroll-behavior: smooth;
   padding-left: 2rem;
   padding-right: 2rem;
+  flex-grow: 1;
+  min-height: 0;
+  margin-top: 1rem;
+  box-sizing: border-box;
 }
 
 .imageTreeContainer::-webkit-scrollbar {
@@ -70,11 +107,25 @@
   margin: 0 auto;
   transform-origin: top center;
   position: relative;
+  flex-grow: 1;
   /* Root node is always centered regardless of scroll position */
-  > .treeNodeContainer > .treeNode {
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
+  > .treeNodeContainer {
+    padding-right: 0;
+    padding-left: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Ensure root node is always visible */
+    > .treeNode {
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
   }
 }
 
@@ -82,6 +133,16 @@
   display: flex;
   justify-content: center;
   padding: 0.625rem 0;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  z-index: 10;
+  border-top: 1px solid #eee;
+  width: 100%;
+}
+
+.mat-mdc-dialog-content {
+  overflow-x: hidden !important;
 }
 
 @media (max-width: 768px) {
@@ -91,6 +152,8 @@
 
   .imageDialogContent {
     padding: 0.5rem;
+    max-height: 85vh; /* Slightly more height for mobile */
+    height: 85vh;
   }
 
   .imageTreeContainer {

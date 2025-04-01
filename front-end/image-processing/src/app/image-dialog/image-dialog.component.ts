@@ -50,6 +50,11 @@ export class ImageDialogComponent implements AfterViewInit {
   @ViewChild('treeContainer') treeContainer: ElementRef | undefined;
 
   /**
+   * Reference to the dialog content element
+   */
+  @ViewChild('dialogContent') dialogContent: ElementRef | undefined;
+
+  /**
    * Array of image pairs, each containing an original image and its filtered version.
    */
   imagePairs: Array<{
@@ -78,6 +83,11 @@ export class ImageDialogComponent implements AfterViewInit {
    */
   maxHorizontalCount: number = 0;
 
+  /**
+   * Previous tree height to calculate how much to scroll
+   */
+  private previousTreeHeight: number = 0;
+
   constructor(
     public dialogRef: MatDialogRef<ImageDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -103,6 +113,10 @@ export class ImageDialogComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.adjustTreeView();
+    // Store initial tree height after the tree is rendered
+    if (this.treeContainer) {
+      this.previousTreeHeight = this.treeContainer.nativeElement.scrollHeight;
+    }
   }
 
   /**
@@ -115,11 +129,37 @@ export class ImageDialogComponent implements AfterViewInit {
 
   /**
    * Centers the tree horizontally within the viewport container
+   * and ensures the root node remains visible
    */
   centerTreeInViewport(): void {
-    if (this.treeContainer) {
-      const container = this.treeContainer.nativeElement;
+    if (!this.treeContainer) return;
 
+    const container = this.treeContainer.nativeElement;
+
+    // First ensure we have rendered content
+    if (!container.scrollWidth || !container.clientWidth) return;
+
+    // Find the root node element (if available)
+    const rootNodeEl = container.querySelector(
+      '.imageTree > .treeNodeContainer > .treeNode'
+    );
+
+    if (rootNodeEl) {
+      // Get the position and dimensions
+      const rootNodeRect = rootNodeEl.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+
+      // Calculate the center position of the root node
+      const rootNodeCenter = rootNodeRect.left + rootNodeRect.width / 2;
+      const containerCenter = containerRect.left + containerRect.width / 2;
+
+      // Calculate the offset to center the root node in the container
+      const offset = rootNodeCenter - containerCenter;
+
+      // Apply the scrolling adjustment
+      container.scrollLeft += offset;
+    } else {
+      // Fallback to the previous centering logic if root node not found
       if (container.scrollWidth > container.clientWidth) {
         const scrollOffset =
           (container.scrollWidth - container.clientWidth) / 2;
@@ -140,6 +180,10 @@ export class ImageDialogComponent implements AfterViewInit {
    */
   showMoreLevels(): void {
     if (this.displayLevel < this.maxLevel) {
+      // Store the current height before changing the level
+      if (this.treeContainer) {
+        this.previousTreeHeight = this.treeContainer.nativeElement.scrollHeight;
+      }
       this.displayLevel++;
       this.adjustTreeView();
     }
@@ -150,6 +194,10 @@ export class ImageDialogComponent implements AfterViewInit {
    */
   showLessLevels(): void {
     if (this.displayLevel > 1) {
+      // Store the current height before changing the level
+      if (this.treeContainer) {
+        this.previousTreeHeight = this.treeContainer.nativeElement.scrollHeight;
+      }
       this.displayLevel--;
       this.adjustTreeView();
     }
@@ -185,10 +233,50 @@ export class ImageDialogComponent implements AfterViewInit {
 
   /**
    * Adjusts the tree view after display settings change
+   * - Centers the tree horizontally
+   * - Adjusts vertical scroll position to keep all nodes in viewport
    */
   private adjustTreeView(): void {
     setTimeout(() => {
       this.centerTreeInViewport();
+
+      // Handle vertical scrolling to ensure all of the tree is visible
+      if (this.treeContainer && this.dialogContent) {
+        const container = this.treeContainer.nativeElement;
+        const dialogContentEl = this.dialogContent.nativeElement;
+
+        // Get current tree height and calculate height difference
+        const currentHeight = container.scrollHeight;
+        const heightDiff = currentHeight - this.previousTreeHeight;
+
+        // Only scroll if we're showing more levels (height increased)
+        if (heightDiff > 0) {
+          // Calculate how much to scroll to keep everything visible
+          // Adjust by half the height difference to center the view
+          const scrollAdjustment = dialogContentEl.scrollTop + heightDiff / 2;
+
+          // Smooth scroll to the adjusted position
+          dialogContentEl.scrollTo({
+            top: scrollAdjustment,
+            behavior: 'smooth',
+          });
+        } else if (heightDiff < 0 && this.displayLevel <= 2) {
+          // If removing levels and back to initial view, scroll to top
+          dialogContentEl.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+          });
+        }
+
+        // Update previous height for next comparison
+        this.previousTreeHeight = currentHeight;
+
+        // If adding levels or changing horizontal display count,
+        // do another centering after a short delay to account for layout changes
+        if (heightDiff > 0) {
+          setTimeout(() => this.centerTreeInViewport(), 300);
+        }
+      }
     }, 100);
   }
 
