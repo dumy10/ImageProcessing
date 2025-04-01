@@ -10,12 +10,14 @@ import {
   tick,
 } from '@angular/core/testing';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { ImageModel } from '../models/ImageModel';
 import { CacheService } from '../services/cache.service';
+import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
 import { GalleryComponent } from './gallery.component';
 
@@ -24,13 +26,27 @@ describe('GalleryComponent', () => {
   let fixture: ComponentFixture<GalleryComponent>;
   let imageService: ImageService;
   let cacheService: CacheService;
+  let errorHandlingService: jasmine.SpyObj<ErrorHandlingService>;
+  let matSnackBar: jasmine.SpyObj<MatSnackBar>;
 
   beforeEach(async () => {
+    // Create spy objects for ErrorHandlingService and MatSnackBar
+    const errorHandlingSpy = jasmine.createSpyObj('ErrorHandlingService', [
+      'showErrorWithRetry',
+      'showErrorWithActions',
+      'getReadableErrorMessage',
+      'getErrorMessageByStatus',
+    ]);
+
+    const snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+
     await TestBed.configureTestingModule({
       imports: [GalleryComponent, MatDialogModule, RouterModule.forRoot([])],
       providers: [
         ImageService,
         CacheService,
+        { provide: ErrorHandlingService, useValue: errorHandlingSpy },
+        { provide: MatSnackBar, useValue: snackBarSpy },
         provideHttpClientTesting(),
         provideHttpClient(withInterceptorsFromDi()),
         provideAnimationsAsync(),
@@ -41,6 +57,19 @@ describe('GalleryComponent', () => {
     component = fixture.componentInstance;
     imageService = TestBed.inject(ImageService);
     cacheService = TestBed.inject(CacheService);
+    errorHandlingService = TestBed.inject(
+      ErrorHandlingService
+    ) as jasmine.SpyObj<ErrorHandlingService>;
+    matSnackBar = TestBed.inject(MatSnackBar) as jasmine.SpyObj<MatSnackBar>;
+
+    // Setup default return values for error handling methods
+    errorHandlingService.getReadableErrorMessage.and.returnValue(
+      'Error message'
+    );
+    errorHandlingService.getErrorMessageByStatus.and.returnValue(
+      'Error by status'
+    );
+
     fixture.detectChanges();
   });
 
@@ -90,12 +119,12 @@ describe('GalleryComponent', () => {
     spyOn(imageService, 'downloadImage').and.returnValue(
       throwError(() => new Error('error'))
     );
-    spyOn(window, 'alert');
 
     component.downloadImage(image);
 
     expect(imageService.downloadImage).toHaveBeenCalledWith('1');
-    expect(window.alert).toHaveBeenCalledWith('error');
+    expect(errorHandlingService.showErrorWithRetry).toHaveBeenCalled();
+    expect(component.errorState).toBeTrue();
     expect(component.loading).toBeFalse();
   });
 
@@ -174,26 +203,23 @@ describe('GalleryComponent', () => {
 
   it('should handle no images found', () => {
     spyOn(imageService, 'getImages').and.returnValue(of([]));
-    spyOn(window, 'alert');
 
     component.loadImages();
 
     expect(component.imagePairs.length).toBe(0);
-    expect(window.alert).toHaveBeenCalledWith('No filtered images found');
+    expect(component.errorState).toBeTrue();
+    expect(component.errorMessage).toBe('No filtered images found');
     expect(component.loading).toBeFalse();
   });
 
   it('should handle error while fetching images', () => {
-    spyOn(imageService, 'getImages').and.returnValue(
-      throwError(() => new Error('An error occurred while fetching images.'))
-    );
-    spyOn(window, 'alert');
+    const error = new Error('An error occurred while fetching images.');
+    spyOn(imageService, 'getImages').and.returnValue(throwError(() => error));
 
     component.loadImages();
 
-    expect(window.alert).toHaveBeenCalledWith(
-      'An error occurred while fetching images.'
-    );
+    expect(errorHandlingService.showErrorWithRetry).toHaveBeenCalled();
+    expect(component.errorState).toBeTrue();
     expect(component.loading).toBeFalse();
   });
 

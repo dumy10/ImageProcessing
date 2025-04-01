@@ -1,0 +1,15 @@
+<div *ngIf="showBanner" class="error-banner">
+  <div class="error-content">
+    <mat-icon class="error-icon">error</mat-icon>
+    <span>{{ errorMessage || "An error occurred" }}</span>
+  </div>
+  <div class="error-actions">
+    <button *ngFor="let action of actions" (click)="action.action()" mat-button>
+      <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
+      {{ action.label }}
+    </button>
+    <button (click)="onDismiss()" mat-button>
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>

@@ -3,13 +3,20 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, HostListener, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { NavigationEnd, Router } from '@angular/router';
-import { filter, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { catchError, filter, finalize } from 'rxjs/operators';
 import { FilterSidebarComponent } from '../filter-sidebar/filter-sidebar.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { Filters } from '../models/filters';
 import { ImageModel } from '../models/ImageModel';
+import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
+import {
+  ErrorAction,
+  ErrorBannerComponent,
+} from '../shared/error-banner/error-banner.component';
 
 /**
  * EditImageComponent is a component that allows users to edit an image by applying various filters.
@@ -17,12 +24,15 @@ import { ImageService } from '../services/image.service';
  */
 @Component({
   selector: 'app-edit-image',
+  standalone: true,
   imports: [
     MatButtonModule,
+    MatSnackBarModule,
     LoadingComponent,
     CommonModule,
     MatIconModule,
     FilterSidebarComponent,
+    ErrorBannerComponent,
   ],
   templateUrl: './edit-image.component.html',
   styleUrl: './edit-image.component.scss',
@@ -37,8 +47,19 @@ export class EditImageComponent implements OnInit {
   undoStack: string[] = [];
   redoStack: string[] = [];
   sidebarCollapsed = false;
+  lastAppliedFilter: Filters | null = null;
+  lastSuccessfulOperation: ImageModel | undefined;
+  errorState = false;
+  errorMessage = '';
+  errorActions: ErrorAction[] = [];
+  imageLoadTimeout: any = null;
+  imageLoadDelayMs = 3000; // 3 seconds delay before showing error
 
-  constructor(private router: Router, private imageService: ImageService) {}
+  constructor(
+    private router: Router,
+    private imageService: ImageService,
+    private errorHandling: ErrorHandlingService
+  ) {}
 
   ngOnInit(): void {
     this.checkScreenSize();
@@ -75,17 +96,55 @@ export class EditImageComponent implements OnInit {
 
   loadImage(id: string): void {
     this.loading = true;
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
+
+    // Clear any existing timeout
+    if (this.imageLoadTimeout) {
+      clearTimeout(this.imageLoadTimeout);
+      this.imageLoadTimeout = null;
+    }
+
     this.imageService
       .getImage(id)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (response) => {
           this.image = response as ImageModel;
+          this.lastSuccessfulOperation = this.cloneImageModel(this.image);
           this.imagePath = this.image.url;
         },
         error: (error: HttpErrorResponse) => {
-          console.error('Failed to fetch image', error);
-          alert(error.message);
+          // Set a timeout before showing the error state
+          this.imageLoadTimeout = setTimeout(() => {
+            this.errorState = true;
+
+            if (error.status === 404) {
+              this.errorMessage = `Image not found. The requested image may have been deleted or is unavailable.`;
+            } else {
+              this.errorMessage = `Failed to load image: ${this.errorHandling.getReadableErrorMessage(
+                error
+              )}`;
+            }
+
+            console.error('Failed to fetch image', error);
+            this.errorActions = [
+              {
+                label: 'Retry',
+                icon: 'refresh',
+                action: () => this.loadImage(id),
+              },
+            ];
+
+            this.errorHandling.showErrorWithRetry(
+              'Failed to load image',
+              this.errorHandling.getReadableErrorMessage(error),
+              () => this.loadImage(id)
+            );
+
+            this.imageLoadTimeout = null;
+          }, this.imageLoadDelayMs);
         },
       });
   }
@@ -98,27 +157,86 @@ export class EditImageComponent implements OnInit {
 
     this.loading = true;
     this.loadingMessage = `Applying filter: ${filter}...`;
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
+    this.lastAppliedFilter = filter;
 
     // Store the current image ID in the undo stack before applying a new filter
     if (this.image.id) {
       this.undoStack.push(this.image.id);
       this.redoStack = []; // Clear redo stack when a new filter is applied
+
+      // Save current state for recovery if needed
+      this.lastSuccessfulOperation = this.cloneImageModel(this.image);
     }
 
     this.imageService
       .editImage(this.image.id, filter.toString().toLowerCase())
-      .pipe(finalize(() => (this.loading = false)))
+      .pipe(
+        finalize(() => (this.loading = false)),
+        catchError((error: HttpErrorResponse) => {
+          this.errorState = true;
+          this.handleFilterError(error, filter);
+          return of(null);
+        })
+      )
       .subscribe({
         next: (response) => {
-          this.image = response as ImageModel;
-          this.imagePath = this.image.url;
-          this.router.navigate(['/edit', response.id]);
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Failed to edit image', error);
-          alert(error.message);
+          if (response) {
+            this.image = response as ImageModel;
+            this.lastSuccessfulOperation = this.cloneImageModel(this.image);
+            this.imagePath = this.image.url;
+            this.router.navigate(['/edit', response.id]);
+          }
         },
       });
+  }
+
+  private handleFilterError(error: HttpErrorResponse, filter: Filters): void {
+    console.error(
+      `Failed to apply ${filter.toString().toLowerCase()} filter`,
+      error
+    );
+
+    // Set error message for the banner
+    this.errorMessage = this.errorHandling.getErrorMessageByStatus(
+      error,
+      `${filter} filter`
+    );
+
+    // Set up error actions
+    this.errorActions = [
+      {
+        label: 'Retry',
+        icon: 'refresh',
+        action: () => this.filterImage(filter),
+      },
+      {
+        label: 'Restore',
+        icon: 'restore',
+        action: () => this.restoreLastSuccessfulState(),
+      },
+    ];
+
+    this.errorHandling.showErrorWithActions(
+      this.errorMessage,
+      this.errorHandling.getReadableErrorMessage(error),
+      this.errorActions
+    );
+  }
+
+  restoreLastSuccessfulState(): void {
+    if (this.lastSuccessfulOperation) {
+      this.image = this.cloneImageModel(this.lastSuccessfulOperation);
+      this.imagePath = this.image.url;
+      this.errorState = false;
+      this.errorMessage = '';
+      this.errorActions = [];
+    } else {
+      // If we don't have a saved state, try to undo
+      this.undoFilter();
+    }
   }
 
   downloadImage(): void {
@@ -129,6 +247,9 @@ export class EditImageComponent implements OnInit {
 
     this.loading = true;
     this.loadingMessage = 'Downloading the image...';
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
 
     this.imageService
       .downloadImage(this.image.id)
@@ -145,14 +266,55 @@ export class EditImageComponent implements OnInit {
           document.body.removeChild(a);
         },
         error: (error: HttpErrorResponse) => {
+          this.errorState = true;
+          this.errorMessage = `Failed to download image: ${this.errorHandling.getReadableErrorMessage(
+            error
+          )}`;
           console.error('Failed to download image', error);
-          alert(error.message);
+
+          this.errorActions = [
+            {
+              label: 'Retry',
+              icon: 'refresh',
+              action: () => this.downloadImage(),
+            },
+          ];
+
+          this.errorHandling.showErrorWithRetry(
+            'Download failed',
+            this.errorHandling.getReadableErrorMessage(error),
+            () => this.downloadImage()
+          );
         },
       });
   }
 
   onImageError(): void {
-    this.imagePath = 'assets/images/notfound.jpg';
+    // Clear any previous timeout
+    if (this.imageLoadTimeout) {
+      clearTimeout(this.imageLoadTimeout);
+    }
+
+    // Set a timeout to delay showing the error state
+    this.imageLoadTimeout = setTimeout(() => {
+      this.imagePath = 'assets/images/notfound.jpg';
+      this.errorState = true;
+      this.errorMessage = 'Failed to load image. Using placeholder instead.';
+      this.errorActions = [];
+      this.imageLoadTimeout = null;
+    }, this.imageLoadDelayMs);
+  }
+
+  onImageLoad(): void {
+    // Clear any pending error timeout since the image loaded successfully
+    if (this.imageLoadTimeout) {
+      clearTimeout(this.imageLoadTimeout);
+      this.imageLoadTimeout = null;
+    }
+
+    if (this.image) {
+      this.image.loaded = true;
+    }
   }
 
   undoFilter(): void {
@@ -164,7 +326,11 @@ export class EditImageComponent implements OnInit {
     if (this.undoStack.length === 0) {
       // If no items in undo stack but image has a parent, use it (for initial state)
       if (!this.image.parentId) {
-        alert("The image hasn't been edited yet");
+        this.errorHandling.showErrorWithRetry(
+          'Cannot undo',
+          "The image hasn't been edited yet",
+          () => {}
+        );
         return;
       }
 
@@ -202,6 +368,9 @@ export class EditImageComponent implements OnInit {
   private navigateToImage(imageId: string): void {
     this.loading = true;
     this.loadingMessage = 'Loading image...';
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
 
     this.imageService
       .getImage(imageId)
@@ -209,14 +378,41 @@ export class EditImageComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.image = response as ImageModel;
+          this.lastSuccessfulOperation = this.cloneImageModel(this.image);
           this.imagePath = this.image.url;
           this.router.navigate(['/edit', response.id]);
         },
         error: (error: HttpErrorResponse) => {
+          this.errorState = true;
+
+          this.errorMessage = this.errorHandling.getErrorMessageByStatus(
+            error,
+            'image'
+          );
+
           console.error('Failed to fetch image', error);
-          alert(error.message);
+
+          this.errorActions = [
+            {
+              label: 'Retry',
+              icon: 'refresh',
+              action: () => this.navigateToImage(imageId),
+            },
+          ];
+
+          this.errorHandling.showErrorWithRetry(
+            'Failed to load image',
+            this.errorHandling.getReadableErrorMessage(error),
+            () => this.navigateToImage(imageId)
+          );
         },
       });
+  }
+
+  dismissError(): void {
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
   }
 
   hasAppliedFilters(): boolean {
@@ -245,9 +441,18 @@ export class EditImageComponent implements OnInit {
     this.isMobileView = window.innerWidth <= 768;
   }
 
-  onImageLoad(): void {
-    if (this.image) {
-      this.image.loaded = true;
+  // Helper to create a deep copy of an ImageModel for state recovery
+  private cloneImageModel(image: ImageModel): ImageModel {
+    return {
+      ...image,
+      appliedFilters: [...(image.appliedFilters || [])],
+    };
+  }
+
+  ngOnDestroy(): void {
+    // Clean up any pending timeouts when component is destroyed
+    if (this.imageLoadTimeout) {
+      clearTimeout(this.imageLoadTimeout);
     }
   }
 }

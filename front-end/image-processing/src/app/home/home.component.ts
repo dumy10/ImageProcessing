@@ -6,7 +6,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageModel } from '../models/ImageModel';
+import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
+import {
+  ErrorAction,
+  ErrorBannerComponent,
+} from '../shared/error-banner/error-banner.component';
 
 /**
  * HomeComponent is the main component for the home page of the application.
@@ -15,13 +20,19 @@ import { ImageService } from '../services/image.service';
  *
  * @component
  * @selector app-home
- * @imports CommonModule, LoadingComponent, MatIconModule, MatButtonModule
+ * @imports CommonModule, LoadingComponent, MatIconModule, MatButtonModule, ErrorBannerComponent
  * @templateUrl ./home.component.html
  * @styleUrl ./home.component.scss
  */
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, LoadingComponent, MatIconModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    LoadingComponent,
+    MatIconModule,
+    MatButtonModule,
+    ErrorBannerComponent,
+  ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -39,6 +50,24 @@ export class HomeComponent {
   loadingMessage: string = 'Uploading image, please wait..';
 
   /**
+   * Indicates whether there's an error to display
+   * @type {boolean}
+   */
+  errorState: boolean = false;
+
+  /**
+   * Error message to display
+   * @type {string}
+   */
+  errorMessage: string = '';
+
+  /**
+   * Available actions for the error
+   * @type {ErrorAction[]}
+   */
+  errorActions: ErrorAction[] = [];
+
+  /**
    * Maximum file size in bytes (10MB) - matching backend limit in ImagesProcessor.h
    * @type {number}
    */
@@ -54,8 +83,13 @@ export class HomeComponent {
    * Constructor for HomeComponent.
    * @param {ImageService} imageService - Service for handling image operations.
    * @param {Router} router - Router for navigating between pages.
+   * @param {ErrorHandlingService} errorHandling - Service for handling errors.
    */
-  constructor(private imageService: ImageService, private router: Router) {}
+  constructor(
+    private imageService: ImageService,
+    private router: Router,
+    private errorHandling: ErrorHandlingService
+  ) {}
 
   /**
    * Handles the drag over event to allow image drop.
@@ -144,6 +178,9 @@ export class HomeComponent {
    */
   async handleFiles(files: FileList | File[]): Promise<void> {
     try {
+      // Reset any previous errors
+      this.dismissError();
+
       // Validate file count
       if (files.length > 1) {
         this.showError('Invalid file count. Only one file is allowed.');
@@ -166,6 +203,15 @@ export class HomeComponent {
         error
       );
     }
+  }
+
+  /**
+   * Dismisses the current error message
+   */
+  dismissError(): void {
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
   }
 
   /**
@@ -206,7 +252,7 @@ export class HomeComponent {
   }
 
   /**
-   * Displays an error message in the console and as an alert.
+   * Displays an error message using the error handling service.
    * @param {string} message - The error message to display.
    * @param {any} [error] - Optional error object for logging.
    */
@@ -216,7 +262,24 @@ export class HomeComponent {
     } else {
       console.error(message);
     }
-    alert(message);
+
+    this.errorState = true;
+    this.errorMessage = message;
+    this.errorActions = [
+      {
+        label: 'Dismiss',
+        icon: 'close',
+        action: () => this.dismissError(),
+      },
+      {
+        label: 'Try Again',
+        icon: 'refresh',
+        action: () => {
+          this.dismissError();
+          this.onUploadClick();
+        },
+      },
+    ];
   }
 
   /**
@@ -329,7 +392,30 @@ export class HomeComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.loading = false;
-        this.showError('Error uploading image', error);
+
+        const errorMessage = this.errorHandling.getErrorMessageByStatus(
+          error,
+          'image upload'
+        );
+
+        this.errorState = true;
+        this.errorMessage = errorMessage;
+        this.errorActions = [
+          {
+            label: 'Try Again',
+            icon: 'refresh',
+            action: () => {
+              this.dismissError();
+              this.uploadImage(file);
+            },
+          },
+        ];
+
+        this.errorHandling.showErrorWithRetry(
+          'Error uploading image',
+          this.errorHandling.getReadableErrorMessage(error),
+          () => this.uploadImage(file)
+        );
       },
       complete: () => {
         this.loading = false;

@@ -11,6 +11,7 @@ import {
 } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
 import { HomeComponent } from './home.component';
 
@@ -18,11 +19,18 @@ describe('HomeComponent', () => {
   let component: HomeComponent;
   let fixture: ComponentFixture<HomeComponent>;
   let imageService: jasmine.SpyObj<ImageService>;
+  let errorHandlingService: jasmine.SpyObj<ErrorHandlingService>;
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
     const imageServiceSpy = jasmine.createSpyObj('ImageService', [
       'uploadImage',
+    ]);
+    const errorHandlingSpy = jasmine.createSpyObj('ErrorHandlingService', [
+      'showErrorWithRetry',
+      'showErrorWithActions',
+      'getReadableErrorMessage',
+      'getErrorMessageByStatus',
     ]);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
@@ -31,6 +39,7 @@ describe('HomeComponent', () => {
       providers: [
         provideHttpClient(withInterceptorsFromDi()),
         { provide: ImageService, useValue: imageServiceSpy },
+        { provide: ErrorHandlingService, useValue: errorHandlingSpy },
         { provide: Router, useValue: routerSpy },
       ],
     }).compileComponents();
@@ -38,7 +47,19 @@ describe('HomeComponent', () => {
     fixture = TestBed.createComponent(HomeComponent);
     component = fixture.componentInstance;
     imageService = TestBed.inject(ImageService) as jasmine.SpyObj<ImageService>;
+    errorHandlingService = TestBed.inject(
+      ErrorHandlingService
+    ) as jasmine.SpyObj<ErrorHandlingService>;
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+
+    // Set up default return values
+    errorHandlingService.getReadableErrorMessage.and.returnValue(
+      'Error message'
+    );
+    errorHandlingService.getErrorMessageByStatus.and.returnValue(
+      'Error by status'
+    );
+
     fixture.detectChanges();
   });
 
@@ -113,28 +134,29 @@ describe('HomeComponent', () => {
     Object.defineProperty(event, 'dataTransfer', { value: dataTransfer });
     Object.defineProperty(event, 'target', { value: dropzone });
     spyOn(event, 'preventDefault');
-    spyOn(window, 'alert');
     spyOn(console, 'error');
     component.onDrop(event);
     expect(event.preventDefault).toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledWith(
       'Invalid file count. Only one file is allowed.'
     );
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(component.errorState).toBeTrue();
+    expect(component.errorMessage).toBe(
       'Invalid file count. Only one file is allowed.'
     );
+    expect(component.errorActions.length).toBeGreaterThan(0);
   });
 
   it('should handle invalid file type', () => {
     const file = new File([''], 'test.txt', { type: 'text/plain' });
     const event = { target: { files: [file] } };
-    spyOn(window, 'alert');
     spyOn(console, 'error');
     component.onImageSelected(event);
     expect(console.error).toHaveBeenCalledWith(
       'Please upload a valid image file (JPEG, JPG, PNG).'
     );
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(component.errorState).toBeTrue();
+    expect(component.errorMessage).toBe(
       'Please upload a valid image file (JPEG, JPG, PNG).'
     );
   });
@@ -173,15 +195,32 @@ describe('HomeComponent', () => {
     const file = new File([''], 'test.png', { type: 'image/png' });
     const errorResponse = new HttpErrorResponse({
       error: 'Error uploading image',
+      status: 500,
     });
     imageService.uploadImage.and.returnValue(throwError(() => errorResponse));
     spyOn(console, 'error');
+
     component.uploadImage(file);
+
     expect(component.loading).toBeFalse();
-    expect(console.error).toHaveBeenCalledWith(
-      'Error uploading image',
-      errorResponse
+    expect(component.errorState).toBeTrue();
+    expect(errorHandlingService.getErrorMessageByStatus).toHaveBeenCalledWith(
+      errorResponse,
+      'image upload'
     );
+    expect(errorHandlingService.showErrorWithRetry).toHaveBeenCalled();
+  });
+
+  it('should dismiss error when dismissError is called', () => {
+    component.errorState = true;
+    component.errorMessage = 'Test error';
+    component.errorActions = [{ label: 'Test', action: () => {} }];
+
+    component.dismissError();
+
+    expect(component.errorState).toBeFalse();
+    expect(component.errorMessage).toBe('');
+    expect(component.errorActions.length).toBe(0);
   });
 
   it('should reset loading state after file upload completes', () => {
@@ -194,7 +233,6 @@ describe('HomeComponent', () => {
 
   describe('Image Validation', () => {
     beforeEach(() => {
-      spyOn(window, 'alert');
       spyOn(console, 'error');
     });
 
@@ -206,7 +244,7 @@ describe('HomeComponent', () => {
       await component.handleFiles([largeFile]);
 
       expect(console.error).toHaveBeenCalled();
-      expect(window.alert).toHaveBeenCalled();
+      expect(component.errorState).toBeTrue();
       expect(component.loading).toBeFalse();
       expect(imageService.uploadImage).not.toHaveBeenCalled();
     });
@@ -222,7 +260,8 @@ describe('HomeComponent', () => {
       expect(console.error).toHaveBeenCalledWith(
         'Please upload a valid image file (JPEG, JPG, PNG).'
       );
-      expect(window.alert).toHaveBeenCalledWith(
+      expect(component.errorState).toBeTrue();
+      expect(component.errorMessage).toBe(
         'Please upload a valid image file (JPEG, JPG, PNG).'
       );
       expect(component.loading).toBeFalse();
@@ -243,7 +282,7 @@ describe('HomeComponent', () => {
 
       expect(validateSpy).toHaveBeenCalledWith(file);
       expect(console.error).toHaveBeenCalled();
-      expect(window.alert).toHaveBeenCalled();
+      expect(component.errorState).toBeTrue();
       expect(component.loading).toBeFalse();
       expect(imageService.uploadImage).not.toHaveBeenCalled();
     });
@@ -303,7 +342,7 @@ describe('HomeComponent', () => {
         'There was an unexpected error. Please try another file.',
         jasmine.any(Error)
       );
-      expect(window.alert).toHaveBeenCalled();
+      expect(component.errorState).toBeTrue();
       expect(component.loading).toBeFalse();
       expect(imageService.uploadImage).not.toHaveBeenCalled();
     });
@@ -439,7 +478,7 @@ describe('HomeComponent', () => {
 
     it('should reject images with excessive dimensions', fakeAsync(() => {
       const file = new File([''], 'test.jpg', { type: 'image/jpeg' });
-      spyOn(window, 'alert');
+      spyOn(console, 'error');
 
       // Mock FileReader
       spyOn(window, 'FileReader').and.returnValue({
@@ -471,12 +510,13 @@ describe('HomeComponent', () => {
       tick();
 
       expect(result).toBeFalse();
-      expect(window.alert).toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalled();
+      expect(component.errorState).toBeTrue();
     }));
 
     it('should reject files that cannot be loaded as images', fakeAsync(() => {
       const file = new File([''], 'test.jpg', { type: 'image/jpeg' });
-      spyOn(window, 'alert');
+      spyOn(console, 'error');
 
       // Mock FileReader
       spyOn(window, 'FileReader').and.returnValue({
@@ -506,7 +546,8 @@ describe('HomeComponent', () => {
       tick();
 
       expect(result).toBeFalse();
-      expect(window.alert).toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalled();
+      expect(component.errorState).toBeTrue();
     }));
   });
 });

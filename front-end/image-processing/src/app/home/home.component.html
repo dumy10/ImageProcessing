@@ -4,6 +4,14 @@
       <h1>Image Processing</h1>
       <p>Upload an image and apply various filters to transform your photos.</p>
 
+      <app-error-banner
+        *ngIf="errorState"
+        [errorMessage]="errorMessage"
+        [showBanner]="errorState"
+        [actions]="errorActions"
+        (dismiss)="dismissError()"
+      ></app-error-banner>
+
       <div
         class="inner-box dropzone"
         (dragover)="onDragOver($event)"

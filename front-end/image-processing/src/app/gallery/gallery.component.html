@@ -1,3 +1,11 @@
+<!-- Error banner component -->
+<app-error-banner
+  [showBanner]="errorState"
+  [errorMessage]="errorMessage"
+  [actions]="errorActions"
+  (dismiss)="errorState = false; errorMessage = ''"
+></app-error-banner>
+
 <div class="gallery">
   <article class="pair" *ngFor="let imagePair of paginatedImagePairs">
     <div

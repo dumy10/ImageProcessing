@@ -31,6 +31,8 @@ namespace ImagesAPI.Controllers
         private const int CACHE_DURATION_MEDIUM = 60; // minutes
         #endregion
 
+        private const int MAX_IMAGE_SIZE = 1024 * 1024 * 10; // 10 MB
+
         /// <summary>
         /// Retrieves all images.
         /// </summary>
@@ -143,6 +145,12 @@ namespace ImagesAPI.Controllers
                 return BadRequest("No file uploaded.");
             }
 
+            if (image.Length > MAX_IMAGE_SIZE)
+            {
+                Logging.Instance.LogWarning("File size exceeds the limit.");
+                return BadRequest("File size exceeds the limit.");
+            }
+
             try
             {
                 // Use a memory stream to avoid file locking and improve performance
@@ -240,6 +248,8 @@ namespace ImagesAPI.Controllers
         public async Task<IActionResult> EditImage(string id, [FromBody] string filter)
         {
             Logging.Instance.LogMessage($"Applying filter {filter} to image with ID {id}...");
+
+            // We do not check for the size of the image here, as it's already uploaded and validated
 
             // Remove spaces and whitespace from the filter
             filter = filter.Replace(" ", string.Empty).ToLower();

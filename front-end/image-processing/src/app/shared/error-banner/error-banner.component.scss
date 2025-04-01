@@ -1,0 +1,61 @@
+.error-banner {
+  background-color: #fdecea;
+  border-left: 4px solid #f44336;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: slide-down 0.3s ease-out;
+  width: 100%;
+  box-sizing: border-box;
+
+  .error-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .error-icon {
+      color: #f44336;
+    }
+
+    span {
+      font-size: 14px;
+      color: #d32f2f;
+    }
+  }
+
+  .error-actions {
+    display: flex;
+    gap: 8px;
+
+    button {
+      min-width: auto;
+      padding: 4px 8px;
+      line-height: 24px;
+
+      &:first-child {
+        background-color: rgba(244, 67, 54, 0.1);
+        color: #d32f2f;
+      }
+
+      &:nth-child(2) {
+        background-color: rgba(33, 150, 243, 0.1);
+        color: #1976d2;
+      }
+    }
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

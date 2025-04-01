@@ -12,7 +12,12 @@ import { LoadingComponent } from '../loading/loading.component';
 import { ImageModel } from '../models/ImageModel';
 import { Tree, TreeNode } from '../models/tree';
 import { CacheService } from '../services/cache.service';
+import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
+import {
+  ErrorAction,
+  ErrorBannerComponent,
+} from '../shared/error-banner/error-banner.component';
 
 /**
  * GalleryComponent is a component that displays a gallery of images with pagination.
@@ -33,6 +38,7 @@ import { ImageService } from '../services/image.service';
     MatPaginatorModule,
     MatIconModule,
     MatButtonModule,
+    ErrorBannerComponent,
   ],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss',
@@ -97,19 +103,39 @@ export class GalleryComponent implements OnInit, OnDestroy {
   private initialPreloadDone: boolean = false;
 
   /**
+   * Error state flag
+   * @type {boolean}
+   */
+  errorState: boolean = false;
+
+  /**
+   * Error message to display
+   * @type {string}
+   */
+  errorMessage: string = '';
+
+  /**
+   * Error actions for the banner
+   * @type {ErrorAction[]}
+   */
+  errorActions: ErrorAction[] = [];
+
+  /**
    * Constructor for GalleryComponent.
    * @param {MatDialog} dialog - The dialog service for opening dialogs.
    * @param {ImageService} imageService - Service for handling image operations.
    * @param {CacheService} cacheService - Service for caching images.
    * @param {Router} router - Router for navigating between pages.
    * @param {ActivatedRoute} route - The activated route for accessing URL parameters.
+   * @param {ErrorHandlingService} errorHandling - Service for handling errors.
    */
   constructor(
     private dialog: MatDialog,
     private imageService: ImageService,
     private cacheService: CacheService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private errorHandling: ErrorHandlingService
   ) {}
 
   /**
@@ -141,6 +167,10 @@ export class GalleryComponent implements OnInit, OnDestroy {
    * Loads the images from the server and sets up pagination.
    */
   loadImages(): void {
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
+
     const imagesSub = this.imageService.getImages().subscribe({
       next: (response: ImageModel[]) => {
         // Reset the imagePairs array
@@ -165,7 +195,15 @@ export class GalleryComponent implements OnInit, OnDestroy {
 
         if (this.imagePairs.length === 0) {
           this.loading = false;
-          alert('No filtered images found');
+          this.errorState = true;
+          this.errorMessage = 'No filtered images found';
+          this.errorActions = [
+            {
+              label: 'Retry',
+              icon: 'refresh',
+              action: () => this.loadImages(),
+            },
+          ];
           return;
         }
 
@@ -176,15 +214,32 @@ export class GalleryComponent implements OnInit, OnDestroy {
         this.performSmartPreloading();
       },
       error: (error: HttpErrorResponse) => {
-        if (error.status === 404) {
-          console.error('No images found', error);
-          this.loading = false;
-          alert(error.message || 'No images found');
-          return;
-        }
         console.error('Failed to fetch images', error);
         this.loading = false;
-        alert(error.message || 'An error occurred while fetching images.');
+
+        this.errorState = true;
+        if (error.status === 404) {
+          this.errorMessage = 'No images found';
+        } else {
+          this.errorMessage = this.errorHandling.getErrorMessageByStatus(
+            error,
+            'images'
+          );
+        }
+
+        this.errorActions = [
+          {
+            label: 'Retry',
+            icon: 'refresh',
+            action: () => this.loadImages(),
+          },
+        ];
+
+        this.errorHandling.showErrorWithRetry(
+          'Failed to load images',
+          this.errorHandling.getReadableErrorMessage(error),
+          () => this.loadImages()
+        );
       },
       complete: () => {
         this.loading = false;
@@ -362,45 +417,52 @@ export class GalleryComponent implements OnInit, OnDestroy {
    */
   getImageTree(image: ImageModel): Tree<ImageModel> {
     const imageTree: Tree<ImageModel> = new Tree<ImageModel>();
-    
+
     // First find the original (root) image to establish the tree's root
     const originalImage = this.getOriginalImage(image);
     if (!originalImage) {
       console.error('Could not find original image for:', image);
       return imageTree; // Return empty tree if original image not found
     }
-    
+
     // Create a map to store all nodes that are part of this image's lineage
     const nodeMap: Map<string, TreeNode<ImageModel>> = new Map();
-    
+
     // Find all images that share the same original image
-    const relevantPairs = this.imagePairs.filter((pair) => 
-      this.getOriginalImage(pair.filteredImage).id === originalImage.id
+    const relevantPairs = this.imagePairs.filter(
+      (pair) =>
+        this.getOriginalImage(pair.filteredImage).id === originalImage.id
     );
-    
+
     if (relevantPairs.length === 0) {
       // If no relevant pairs, just add the original image as a standalone node
       const rootNode = new TreeNode<ImageModel>(originalImage);
       imageTree.setRoot(rootNode);
       return imageTree;
     }
-    
+
     // First pass: create nodes for all relevant images
-    relevantPairs.forEach(pair => {
+    relevantPairs.forEach((pair) => {
       // Only create nodes if they don't already exist in the map
       if (!nodeMap.has(pair.originalImage.id)) {
-        nodeMap.set(pair.originalImage.id, new TreeNode<ImageModel>(pair.originalImage));
+        nodeMap.set(
+          pair.originalImage.id,
+          new TreeNode<ImageModel>(pair.originalImage)
+        );
       }
       if (!nodeMap.has(pair.filteredImage.id)) {
-        nodeMap.set(pair.filteredImage.id, new TreeNode<ImageModel>(pair.filteredImage));
+        nodeMap.set(
+          pair.filteredImage.id,
+          new TreeNode<ImageModel>(pair.filteredImage)
+        );
       }
     });
-    
+
     // Ensure the root is in the map (in case it wasn't part of any pair)
     if (!nodeMap.has(originalImage.id)) {
       nodeMap.set(originalImage.id, new TreeNode<ImageModel>(originalImage));
     }
-    
+
     // Set the root node
     const rootNode = nodeMap.get(originalImage.id);
     if (rootNode) {
@@ -408,14 +470,14 @@ export class GalleryComponent implements OnInit, OnDestroy {
     }
 
     // Second pass: establish parent-child relationships
-    relevantPairs.forEach(pair => {
+    relevantPairs.forEach((pair) => {
       const childNode = nodeMap.get(pair.filteredImage.id);
       if (childNode && childNode.value.parentId) {
         const parentNode = nodeMap.get(childNode.value.parentId);
         if (parentNode) {
           // Check if this child is already added to prevent duplicates
           const alreadyAdded = parentNode.children.some(
-            existingChild => existingChild.value.id === childNode.value.id
+            (existingChild) => existingChild.value.id === childNode.value.id
           );
           if (!alreadyAdded) {
             parentNode.addChild(childNode);
@@ -460,6 +522,9 @@ export class GalleryComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     this.loadingMessage = 'Downloading the image...';
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
 
     const downloadSub = this.imageService.downloadImage(image.id).subscribe({
       next: (response) => {
@@ -475,10 +540,26 @@ export class GalleryComponent implements OnInit, OnDestroy {
       },
       error: (error: HttpErrorResponse) => {
         console.error('Failed to download image', error);
-        alert(
-          error.message || 'An error occurred while downloading the image.'
-        );
         this.loading = false;
+
+        this.errorState = true;
+        this.errorMessage = `Failed to download image: ${this.errorHandling.getReadableErrorMessage(
+          error
+        )}`;
+
+        this.errorActions = [
+          {
+            label: 'Retry',
+            icon: 'refresh',
+            action: () => this.downloadImage(image),
+          },
+        ];
+
+        this.errorHandling.showErrorWithRetry(
+          'Download failed',
+          this.errorHandling.getReadableErrorMessage(error),
+          () => this.downloadImage(image)
+        );
       },
       complete: () => {
         this.loading = false;
