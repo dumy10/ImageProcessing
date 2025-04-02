@@ -22,6 +22,7 @@
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
+  align-items: center;
 }
 
 .arrowContainer {
@@ -65,7 +66,26 @@
   background-color: var(--background-color);
   border-radius: 0.5rem;
   padding: 0.625rem;
+  position: relative;
+  min-height: 100px;
+  max-width: 100%;
+  width: fit-content;
+  min-width: 200px;
+  margin: 0 auto;
   @include theme-mixins.themed-shadow(1);
+
+  &[data-aspect-ratio] {
+    &[data-aspect-ratio="1"],
+    &[data-aspect-ratio^="2"],
+    &[data-aspect-ratio^="3"] {
+      width: 60%;
+    }
+
+    &[data-aspect-ratio^="0."] {
+      width: 40%;
+      min-width: 180px;
+    }
+  }
 
   & {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -87,6 +107,38 @@
   max-width: 100%;
   height: auto;
   max-height: 20rem;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+  object-fit: contain;
+
+  &.tall-image {
+    max-height: 25rem;
+  }
+}
+
+.image.loaded {
+  opacity: 1;
+}
+
+.image-loading-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-lighter);
+  z-index: 1;
+  border-radius: 0.5rem;
+
+  span {
+    margin-top: 10px;
+    color: var(--text-secondary-color);
+    font-size: 0.85rem;
+  }
 }
 
 .moreImagesIndicator {
@@ -114,6 +166,14 @@
 
   .imageContainer {
     padding: 0.3125rem;
+
+    &[data-aspect-ratio] {
+      width: 80%;
+
+      &[data-aspect-ratio^="0."] {
+        width: 60%;
+      }
+    }
   }
 
   .imageDialogActions {
@@ -136,6 +196,8 @@
 
   .imageContainer {
     padding: 0.125rem;
+    min-width: 150px;
+    width: 95%;
   }
 
   .imageDialogActions {

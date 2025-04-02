@@ -7,14 +7,14 @@ void InvertFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 	Logger::GetInstance().LogMessage("Applying invert filter");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	const int size = width * height * channels;
 
 	std::transform(std::execution::par, inputImage, inputImage + size, outputImage, [](unsigned char pixel) { return pixel ^ 0xFF; });
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Invert filter applied successfully");
 }

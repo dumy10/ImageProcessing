@@ -9,7 +9,7 @@ void FlipVerticalFilter::Apply(const unsigned char* inputImage, unsigned char* o
 	Logger::GetInstance().LogMessage("Applying FlipVerticalFilter");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	const int rowSize = width * channels;
 
@@ -24,7 +24,7 @@ void FlipVerticalFilter::Apply(const unsigned char* inputImage, unsigned char* o
 	}
 	
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Applied FlipVerticalFilter");
 }

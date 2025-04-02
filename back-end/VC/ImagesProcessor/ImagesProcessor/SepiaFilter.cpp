@@ -9,7 +9,7 @@ void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	Logger::GetInstance().LogMessage("Applying sepia filter");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	static constexpr float sepiaMatrix[3][3] = {
 		{0.393f, 0.769f, 0.189f}, // Coefficients for the red channel
@@ -38,7 +38,7 @@ void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	}
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Sepia filter applied");
 }

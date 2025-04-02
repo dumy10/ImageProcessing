@@ -1,13 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { LoadingComponent } from '../loading/loading.component';
-import { ImageModel } from '../models/ImageModel';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
+import {
+  ProgressTrackerService,
+  ProgressUpdate,
+} from '../services/progress-tracker.service';
 import {
   ErrorAction,
   ErrorBannerComponent,
@@ -26,6 +30,7 @@ import {
  */
 @Component({
   selector: 'app-home',
+  standalone: true,
   imports: [
     CommonModule,
     LoadingComponent,
@@ -36,7 +41,7 @@ import {
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit, OnDestroy {
   /**
    * Indicates whether the application is currently loading.
    * @type {boolean}
@@ -68,6 +73,15 @@ export class HomeComponent {
   errorActions: ErrorAction[] = [];
 
   /**
+   * Progress tracking variables
+   */
+  progressPercentage: number = 0;
+  showProgress: boolean = false;
+  private progressSubscription: Subscription | null = null;
+  private uploadingFile: File | null = null;
+  private uploadingFileId: string | null = null;
+
+  /**
    * Maximum file size in bytes (10MB) - matching backend limit in ImagesProcessor.h
    * @type {number}
    */
@@ -84,12 +98,88 @@ export class HomeComponent {
    * @param {ImageService} imageService - Service for handling image operations.
    * @param {Router} router - Router for navigating between pages.
    * @param {ErrorHandlingService} errorHandling - Service for handling errors.
+   * @param {ProgressTrackerService} progressTracker - Service for tracking progress.
    */
   constructor(
     private imageService: ImageService,
     private router: Router,
-    private errorHandling: ErrorHandlingService
+    private errorHandling: ErrorHandlingService,
+    private progressTracker: ProgressTrackerService
   ) {}
+
+  /**
+   * Initialize the component
+   */
+  ngOnInit(): void {
+    // Connect to the SignalR hub for progress updates
+    this.connectToProgressHub();
+  }
+
+  /**
+   * Clean up subscriptions when component is destroyed
+   */
+  ngOnDestroy(): void {
+    if (this.progressSubscription) {
+      this.progressSubscription.unsubscribe();
+    }
+
+    // Stop the SignalR connection
+    this.progressTracker.stopConnection();
+  }
+
+  /**
+   * Connect to the SignalR hub for progress updates
+   */
+  private async connectToProgressHub(): Promise<void> {
+    try {
+      // Start the connection and give it time to connect
+      this.progressSubscription = this.progressTracker
+        .startConnection()
+        .subscribe((update: ProgressUpdate) => {
+          // For upload progress, filter is 'upload'
+          if (
+            update.imageId === this.uploadingFileId &&
+            update.filter.toLowerCase() === 'upload'
+          ) {
+            this.handleProgressUpdate(update.progress);
+          }
+        });
+
+      // Wait for connection to be established
+      const connected = await this.progressTracker.waitForConnection(5000);
+      if (!connected) {
+        console.warn(
+          'Could not establish SignalR connection within timeout. Progress updates may be delayed.'
+        );
+      }
+    } catch (error) {
+      console.error('Error connecting to progress hub:', error);
+    }
+  }
+
+  /**
+   * Handle progress updates from the server
+   * @param {number} progress - The progress percentage (0-100)
+   */
+  private handleProgressUpdate(progress: number): void {
+    // Handle error case (-1) separately
+    if (progress === -1) {
+      this.showProgress = false;
+      return;
+    }
+
+    // Update the progress bar
+    this.progressPercentage = progress;
+    this.showProgress = true;
+
+    // If we reach 100%, hide the progress bar after a delay
+    if (progress >= 100) {
+      setTimeout(() => {
+        this.showProgress = false;
+        this.progressPercentage = 0;
+      }, 500); // Keep it visible for half a second after completion
+    }
+  }
 
   /**
    * Handles the drag over event to allow image drop.
@@ -196,6 +286,7 @@ export class HomeComponent {
 
       // If we reached here, the file is valid - upload it
       this.loading = true;
+      this.uploadingFile = file;
       this.uploadImage(file);
     } catch (error) {
       this.showError(
@@ -385,42 +476,69 @@ export class HomeComponent {
    * @param {File} file - The image file to upload.
    */
   uploadImage(file: File): void {
-    this.imageService.uploadImage(file).subscribe({
-      next: (response: ImageModel) => {
-        this.loading = false;
-        this.router.navigate(['/edit', response.id]);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.loading = false;
+    // Reset progress tracking
+    this.progressPercentage = 0;
+    this.showProgress = true;
+    this.loadingMessage = `Uploading ${file.name}...`;
 
-        const errorMessage = this.errorHandling.getErrorMessageByStatus(
-          error,
-          'image upload'
-        );
+    // Generate a temporary ID for tracking progress
+    this.uploadingFileId = `upload_${Date.now()}`;
 
-        this.errorState = true;
-        this.errorMessage = errorMessage;
-        this.errorActions = [
-          {
-            label: 'Try Again',
-            icon: 'refresh',
-            action: () => {
-              this.dismissError();
-              this.uploadImage(file);
+    // Upload the image with SignalR progress tracking
+    this.imageService
+      .uploadImage(
+        file,
+        true, // Enable progress tracking
+        true, // Use SignalR for progress tracking
+        this.uploadingFileId // Pass the temporary ID to the backend
+      )
+      .subscribe({
+        next: (response: any) => {
+          // Filter out progress updates and process only the final response
+          if (typeof response !== 'number') {
+            // Wait before navigating to the edit page
+            setTimeout(() => {
+              this.loading = false;
+              this.showProgress = false;
+              this.uploadingFile = null;
+              this.router.navigate(['/edit', response.id]);
+            }, 500);
+          }
+        },
+        error: (error: HttpErrorResponse) => {
+          this.loading = false;
+          this.showProgress = false;
+          this.uploadingFile = null;
+
+          const errorMessage = this.errorHandling.getErrorMessageByStatus(
+            error,
+            'image upload'
+          );
+
+          this.errorState = true;
+          this.errorMessage = errorMessage;
+          this.errorActions = [
+            {
+              label: 'Try Again',
+              icon: 'refresh',
+              action: () => {
+                this.dismissError();
+                this.uploadImage(file);
+              },
             },
-          },
-        ];
+          ];
 
-        this.errorHandling.showErrorWithRetry(
-          'Error uploading image',
-          this.errorHandling.getReadableErrorMessage(error),
-          () => this.uploadImage(file)
-        );
-      },
-      complete: () => {
-        this.loading = false;
-        console.log('Upload complete');
-      },
-    });
+          this.errorHandling.showErrorWithRetry(
+            'Error uploading image',
+            this.errorHandling.getReadableErrorMessage(error),
+            () => this.uploadImage(file)
+          );
+        },
+        complete: () => {
+          this.loading = false;
+          this.showProgress = false;
+          console.log('Upload complete');
+        },
+      });
   }
 }

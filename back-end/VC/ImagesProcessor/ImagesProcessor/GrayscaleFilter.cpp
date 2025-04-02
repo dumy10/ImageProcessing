@@ -9,7 +9,7 @@ void GrayscaleFilter::Apply(const unsigned char* inputImage, unsigned char* outp
 	Logger::GetInstance().LogMessage("Applying grayscale filter");
 	
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 		
 	const int size = width * height * channels;
 
@@ -26,7 +26,7 @@ void GrayscaleFilter::Apply(const unsigned char* inputImage, unsigned char* outp
 	}
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 		
 	Logger::GetInstance().LogMessage("Grayscale filter applied successfully");
 }

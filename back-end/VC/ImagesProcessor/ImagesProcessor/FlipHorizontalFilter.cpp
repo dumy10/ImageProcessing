@@ -9,7 +9,7 @@ void FlipHorizontalFilter::Apply(const unsigned char* inputImage, unsigned char*
 	Logger::GetInstance().LogMessage("Applying FlipHorizontalFilter");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	const int rowSize = width * channels;
 
@@ -31,7 +31,7 @@ void FlipHorizontalFilter::Apply(const unsigned char* inputImage, unsigned char*
 	}
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Applied FlipHorizontalFilter");
 }

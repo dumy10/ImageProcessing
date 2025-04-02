@@ -1,7 +1,14 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpEvent,
+  HttpEventType,
+  HttpHeaders,
+  HttpParams,
+  HttpRequest,
+} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, shareReplay, tap } from 'rxjs/operators';
+import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { ImageModel } from '../models/ImageModel';
 import { CacheService } from './cache.service';
@@ -50,23 +57,73 @@ export class ImageService {
   /**
    * Uploads an image to the server and clears the cache.
    * @param {File} image - The image file to upload.
-   * @returns {Observable<ImageModel>} - An observable containing the uploaded image data.
+   * @param {boolean} trackProgress - Whether to track upload progress (default: false).
+   * @param {boolean} useSignalR - Whether to use SignalR for progress tracking (default: false).
+   * @param {string} tempId - Optional temporary ID for progress tracking with SignalR
+   * @param {Function} progressCallback - Optional callback to handle progress updates.
+   * @returns {Observable<ImageModel | number>} - An observable containing either the uploaded image data or progress updates.
    */
-  uploadImage(image: File): Observable<ImageModel> {
+  uploadImage(
+    image: File,
+    trackProgress: boolean = false,
+    useSignalR: boolean = false,
+    tempId?: string,
+    progressCallback?: (progress: number) => void
+  ): Observable<ImageModel | number> {
     const formData = new FormData();
     formData.append('image', image);
 
     // Clear all caches as the collection has changed
     this.cacheService.clearAll();
 
-    return this.httpClient.post<ImageModel>(
-      `${this.baseURL}/upload`,
-      formData,
-      {
-        headers: new HttpHeaders({
-          'X-API-Key': this.apiKey,
-        }),
+    // Add query parameters for progress tracking
+    let params = new HttpParams();
+
+    if (trackProgress && useSignalR) {
+      params = params.set('trackProgress', 'true');
+
+      // Add tempId parameter if provided
+      if (tempId) {
+        params = params.set('tempId', tempId);
       }
+    }
+
+    // Create the request
+    const req = new HttpRequest('POST', `${this.baseURL}/upload`, formData, {
+      headers: new HttpHeaders({
+        'X-API-Key': this.apiKey,
+      }),
+      params: params,
+      reportProgress: trackProgress && !useSignalR, // Only use HTTP progress if not using SignalR
+    });
+
+    // Send the request and handle events
+    return this.httpClient.request<ImageModel>(req).pipe(
+      map((event: HttpEvent<ImageModel>) => {
+        // Only process progress events if HTTP progress tracking is enabled
+        if (trackProgress && !useSignalR) {
+          switch (event.type) {
+            case HttpEventType.UploadProgress:
+              const progress = event.total
+                ? Math.round((100 * event.loaded) / event.total)
+                : 0;
+              if (progressCallback) {
+                progressCallback(progress);
+              }
+              return progress;
+
+            case HttpEventType.Response:
+              return event.body as ImageModel;
+
+            default:
+              return 0;
+          }
+        } else if (event.type === HttpEventType.Response) {
+          // For SignalR tracking or no tracking, just return the final response
+          return event.body as ImageModel;
+        }
+        return 0;
+      })
     );
   }
 

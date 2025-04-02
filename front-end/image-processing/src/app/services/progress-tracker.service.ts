@@ -83,7 +83,7 @@ export class ProgressTrackerService {
       this.hubConnection.on(
         'ReceiveProgressUpdate',
         (imageId: string, filter: string, progress: number) => {
-          console.log(`Progress update: ${imageId}, ${filter}, ${progress}%`);
+          console.debug(`Progress update: ${imageId}, ${filter}, ${progress}%`);
           this.progressSubject.next({ imageId, filter, progress });
         }
       );

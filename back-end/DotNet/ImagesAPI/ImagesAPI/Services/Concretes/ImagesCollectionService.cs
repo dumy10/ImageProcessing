@@ -180,11 +180,20 @@ namespace ImagesAPI.Services.Concretes
                 ProgressCallback? progressHandler = null;
                 if (progressTracker != null)
                 {
+                    // Track the highest reported progress to ensure we never go backwards
+                    var highestReportedProgress = new ThreadLocal<int>(() => 20);
+
                     progressHandler = async progress =>
                     {
                         // Map the progress from native code (0-100) to our range (20-80)
                         int mappedProgress = 20 + (int)(progress * 0.6);
-                        await ReportProgressAsync(progressTracker, id, filter, mappedProgress, $"Applying filter: {progress}% complete");
+
+                        // Ensure progress never decreases
+                        if (mappedProgress > highestReportedProgress.Value)
+                        {
+                            highestReportedProgress.Value = mappedProgress;
+                            await ReportProgressAsync(progressTracker, id, filter, mappedProgress, $"Applying filter: {progress}% complete");
+                        }
                     };
                 }
 

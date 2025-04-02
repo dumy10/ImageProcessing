@@ -13,6 +13,7 @@ import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
+import { ProgressTrackerService } from '../services/progress-tracker.service';
 import { HomeComponent } from './home.component';
 
 describe('HomeComponent', () => {
@@ -21,6 +22,7 @@ describe('HomeComponent', () => {
   let imageService: jasmine.SpyObj<ImageService>;
   let errorHandlingService: jasmine.SpyObj<ErrorHandlingService>;
   let router: jasmine.SpyObj<Router>;
+  let progressTrackerService: jasmine.SpyObj<ProgressTrackerService>;
 
   beforeEach(async () => {
     const imageServiceSpy = jasmine.createSpyObj('ImageService', [
@@ -33,6 +35,17 @@ describe('HomeComponent', () => {
       'getErrorMessageByStatus',
     ]);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const progressTrackerSpy = jasmine.createSpyObj('ProgressTrackerService', [
+      'startConnection',
+      'stopConnection',
+      'waitForConnection',
+    ]);
+
+    // Set up default return values for progress tracker
+    progressTrackerSpy.startConnection.and.returnValue(
+      of({ imageId: '', filter: '', progress: 0 })
+    );
+    progressTrackerSpy.waitForConnection.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
       imports: [HomeComponent],
@@ -41,6 +54,7 @@ describe('HomeComponent', () => {
         { provide: ImageService, useValue: imageServiceSpy },
         { provide: ErrorHandlingService, useValue: errorHandlingSpy },
         { provide: Router, useValue: routerSpy },
+        { provide: ProgressTrackerService, useValue: progressTrackerSpy },
       ],
     }).compileComponents();
 
@@ -51,6 +65,9 @@ describe('HomeComponent', () => {
       ErrorHandlingService
     ) as jasmine.SpyObj<ErrorHandlingService>;
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    progressTrackerService = TestBed.inject(
+      ProgressTrackerService
+    ) as jasmine.SpyObj<ProgressTrackerService>;
 
     // Set up default return values
     errorHandlingService.getReadableErrorMessage.and.returnValue(
@@ -182,14 +199,30 @@ describe('HomeComponent', () => {
     expect(component.handleFiles).toHaveBeenCalledWith([file]);
   });
 
-  it('should upload image successfully', () => {
+  it('should upload image successfully', fakeAsync(() => {
     const file = new File([''], 'test.png', { type: 'image/png' });
     const response = { id: '123' } as any;
+
+    // Mock Date.now to return a consistent value for testing
+    spyOn(Date, 'now').and.returnValue(12345);
+
+    // Return an observable for the response
     imageService.uploadImage.and.returnValue(of(response));
+
     component.uploadImage(file);
+
+    // We need to use tick because the navigation happens after a setTimeout
+    tick(500);
+
     expect(component.loading).toBeFalse();
+    expect(imageService.uploadImage).toHaveBeenCalledWith(
+      file,
+      true, // Enable progress tracking
+      true, // Use SignalR for progress tracking
+      'upload_12345' // The temporary ID
+    );
     expect(router.navigate).toHaveBeenCalledWith(['/edit', response.id]);
-  });
+  }));
 
   it('should handle upload image error', () => {
     const file = new File([''], 'test.png', { type: 'image/png' });
@@ -305,7 +338,7 @@ describe('HomeComponent', () => {
       expect(imageService.uploadImage).not.toHaveBeenCalled();
     });
 
-    it('should accept and upload valid image files', async () => {
+    it('should accept and upload valid image files', fakeAsync(() => {
       // Create spies for the validation methods
       spyOn<any>(component, 'validateFileSignature').and.returnValue(
         Promise.resolve(true)
@@ -314,18 +347,43 @@ describe('HomeComponent', () => {
         Promise.resolve(true)
       );
 
-      imageService.uploadImage.and.returnValue(of({ id: '123' } as any));
+      // Spy on the uploadImage method to track when it's called
+      spyOn(component, 'uploadImage').and.callThrough();
+
+      // Mock Date.now to return a consistent value for testing
+      spyOn(Date, 'now').and.returnValue(1743603559250);
+
+      const response = { id: '123' } as any;
+      imageService.uploadImage.and.returnValue(of(response));
 
       // Create a mock valid image file
       const validFile = new File([''], 'valid.jpg', { type: 'image/jpeg' });
       Object.defineProperty(validFile, 'size', { value: 1024 * 1024 }); // 1MB
 
-      await component.handleFiles([validFile]);
+      // Run the handleFiles method
+      component.handleFiles([validFile]);
 
-      expect(component.loading).toBeFalse(); // Loading will be done after upload completes
-      expect(imageService.uploadImage).toHaveBeenCalledWith(validFile);
+      // Resolve all pending promises
+      tick();
+
+      // Verify uploadImage was called with the right file
+      expect(component.uploadImage).toHaveBeenCalledWith(validFile);
+
+      // Verify imageService.uploadImage was called with the right parameters
+      expect(imageService.uploadImage).toHaveBeenCalledWith(
+        validFile,
+        true, // Enable progress tracking
+        true, // Use SignalR for progress tracking
+        'upload_1743603559250' // The temporary ID
+      );
+
+      // Advance the clock to trigger the setTimeout in the component
+      tick(500);
+
+      // After the timeout, navigation should have happened
       expect(router.navigate).toHaveBeenCalledWith(['/edit', '123']);
-    });
+      expect(component.loading).toBeFalse(); // Loading should be false after navigation
+    }));
 
     it('should handle errors during image validation', async () => {
       // Create a spy for validateFileSignature that throws an error

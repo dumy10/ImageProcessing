@@ -9,7 +9,7 @@ void KaleidoscopeFilter::Apply(const unsigned char* inputImage, unsigned char* o
 	Logger::GetInstance().LogMessage("Applying kaleidoscope filter");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	static constexpr int numReflections = 6;  // Number of mirrored segments (adjustable for different effects)
 	const int centerX = width / 2;
@@ -46,7 +46,7 @@ void KaleidoscopeFilter::Apply(const unsigned char* inputImage, unsigned char* o
 	}
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Kaleidoscope filter applied");
 }

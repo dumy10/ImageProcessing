@@ -65,7 +65,7 @@ private:
 	 * @param encodedData Pointer to the vector to store the encoded data.
 	 * @return True if the image data was written successfully, false otherwise.
 	 */
-	[[nodiscard]] bool WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData) const;
+	[[nodiscard]] bool WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, ProgressCallback progressCallback) const;
 
 	/**
 	 * @brief Applies a specified filter to the image data.

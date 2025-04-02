@@ -1,0 +1,87 @@
+<!-- Error banner component -->
+<app-error-banner
+  [showBanner]="errorState"
+  [errorMessage]="errorMessage"
+  [actions]="errorActions"
+  (dismiss)="errorState = false; errorMessage = ''"
+></app-error-banner>
+
+<div class="image-tree-view-container" *ngIf="!loading && !errorState">
+  <div class="tree-header">
+    <h1>Image Filtering Tree</h1>
+    <div class="tree-info" *ngIf="imageTree.root">
+      <p>Original image: {{ imageTree.root.value.name }}</p>
+      <p>Total filter variations: {{ maxHorizontalCount }}</p>
+      <p>Filter depth: {{ maxLevel }}</p>
+    </div>
+
+    <div class="controls">
+      <div class="horizontal-controls">
+        <button
+          mat-button
+          class="btn btn-secondary"
+          (click)="showLessHorizontalImages()"
+          [disabled]="horizontalDisplayCount <= 1"
+          aria-label="Show fewer images horizontally"
+        >
+          Horizontal <mat-icon>remove</mat-icon>
+        </button>
+        <span class="control-value">{{ horizontalDisplayCount }}</span>
+        <button
+          mat-button
+          class="btn btn-secondary"
+          (click)="showMoreHorizontalImages()"
+          [disabled]="horizontalDisplayCount >= maxHorizontalCount"
+          aria-label="Show more images horizontally"
+        >
+          Horizontal <mat-icon>add</mat-icon>
+        </button>
+      </div>
+
+      <div class="vertical-controls">
+        <button
+          mat-button
+          class="btn btn-secondary"
+          (click)="showLessLevels()"
+          [disabled]="displayLevel <= 1"
+          aria-label="Show fewer levels vertically"
+        >
+          Vertical <mat-icon>remove</mat-icon>
+        </button>
+        <span class="control-value">{{ displayLevel }}</span>
+        <button
+          mat-button
+          class="btn btn-secondary"
+          (click)="showMoreLevels()"
+          [disabled]="displayLevel >= maxLevel"
+          aria-label="Show more levels vertically"
+        >
+          Vertical <mat-icon>add</mat-icon>
+        </button>
+      </div>
+
+      <button
+        mat-button
+        class="btn btn-primary back-button"
+        (click)="navigateBack()"
+        aria-label="Back to Gallery"
+      >
+        <mat-icon>arrow_back</mat-icon> Back to Gallery
+      </button>
+    </div>
+  </div>
+
+  <div class="image-tree-wrapper">
+    <app-image-tree
+      [node]="imageTree.root"
+      [imagePairs]="imagePairs"
+      [maxDepth]="displayLevel"
+      [horizontalDisplayCount]="horizontalDisplayCount"
+      class="large-image-tree"
+      role="tree"
+      aria-label="Image Tree"
+    ></app-image-tree>
+  </div>
+</div>
+
+<app-loading *ngIf="loading" [loading]="loading" [message]="loadingMessage" />

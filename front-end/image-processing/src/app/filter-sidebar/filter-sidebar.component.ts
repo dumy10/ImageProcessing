@@ -129,10 +129,22 @@ export class FilterSidebarComponent implements OnInit {
 
   /**
    * Toggles a filter category between open and closed states
+   * Only one category can be open at a time, or all can be closed
    * @param category The category to toggle
    */
   toggleCategory(category: string): void {
-    this.openCategories[category] = !this.openCategories[category];
+    const isCurrentlyOpen = this.openCategories[category];
+
+    // First close all categories
+    Object.keys(this.openCategories).forEach((key) => {
+      this.openCategories[key] = false;
+    });
+
+    // If the clicked category wasn't open before, open it
+    // If it was already open, it will remain closed (all categories closed)
+    if (!isCurrentlyOpen) {
+      this.openCategories[category] = true;
+    }
   }
 
   /**

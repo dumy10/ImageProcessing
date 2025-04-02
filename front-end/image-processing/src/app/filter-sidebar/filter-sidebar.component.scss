@@ -280,7 +280,8 @@
   .category-content {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease-in-out;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      padding 0.3s ease-in-out;
 
     &.expanded {
       max-height: 500px;
@@ -417,6 +418,12 @@
     font-size: 1rem;
   }
 
+  .filters-list {
+    max-height: calc(1.5em * 3);
+    overflow-y: auto;
+    @include mixins.themed-scrollbar;
+  }
+
   ul {
     list-style-type: none;
     padding-left: 0.5rem;
@@ -426,6 +433,7 @@
       margin-bottom: 0.3rem;
       display: flex;
       align-items: center;
+      height: 1.5em;
 
       &::before {
         content: "•";

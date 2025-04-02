@@ -73,9 +73,11 @@
     *ngIf="image && (image.appliedFilters?.length ?? 0) > 0"
   >
     <h4>Applied Filters</h4>
-    <ul>
-      <li *ngFor="let filter of image.appliedFilters">{{ filter }}</li>
-    </ul>
+    <div class="filters-list">
+      <ul>
+        <li *ngFor="let filter of image.appliedFilters">{{ filter }}</li>
+      </ul>
+    </div>
   </div>
 
   <!-- Action buttons -->

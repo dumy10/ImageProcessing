@@ -1,13 +1,21 @@
 <div *ngIf="node" class="treeNodeContainer">
   <!-- Parent Node -->
   <div class="treeNode">
+    <!-- Loading placeholder that shows when image is not loaded -->
+    <div class="image-loading-placeholder" *ngIf="!node.value.loaded">
+      <mat-spinner diameter="30"></mat-spinner>
+      <span>Loading...</span>
+    </div>
+
     <img
       [src]="node.value.url"
       alt="Image"
       class="treeNodeImage"
+      [class.loaded]="node.value.loaded"
       (click)="openDialog(node.value)"
       loading="lazy"
       (error)="onImageError(node.value)"
+      (load)="onImageLoad(node.value)"
       role="button"
       aria-label="Open image dialog"
     />

@@ -9,7 +9,7 @@ void OilPaintFilter::Apply(const unsigned char* inputImage, unsigned char* outpu
 	Logger::GetInstance().LogMessage("Applying oil paint filter");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	static constexpr int filterRadius = 4;
 	static constexpr int intensityLevels = 256;
@@ -104,7 +104,7 @@ void OilPaintFilter::Apply(const unsigned char* inputImage, unsigned char* outpu
 	}
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Oil paint filter applied");
 }

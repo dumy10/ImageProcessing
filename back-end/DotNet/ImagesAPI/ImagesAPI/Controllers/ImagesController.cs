@@ -127,6 +127,9 @@ namespace ImagesAPI.Controllers
         /// Uploads a new image to the server.
         /// </summary>
         /// <param name="image">The image file to upload.</param>
+        /// <param name="trackProgress">Optional query parameter to enable progress tracking (default: false)</param>
+        /// <param name="tempId">Optional query parameter with temporary ID for progress tracking</param>
+        /// <param name="progressTracker">The SignalR progress tracker service (injected when needed)</param>
         /// <returns>The uploaded image model.</returns>
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
@@ -135,9 +138,13 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [DisableRequestSizeLimit]
         [ResponseCache(NoStore = true)]
-        public async Task<IActionResult> UploadImage(IFormFile? image)
+        public async Task<IActionResult> UploadImage(IFormFile? image, [FromQuery] bool trackProgress = false, [FromQuery] string? tempId = null, [FromServices] IProgressTrackerService? progressTracker = null)
         {
-            Logging.Instance.LogMessage("Uploading image...");
+            bool useProgressTracking = trackProgress && progressTracker != null;
+            string progressId = string.IsNullOrEmpty(tempId) ? Guid.NewGuid().ToString() : tempId;
+
+            Logging.Instance.LogMessage("Uploading image..."
+                + (useProgressTracking ? $" with progress tracking (ID: {progressId})" : ""));
 
             if (image == null || image.Length == 0)
             {
@@ -153,10 +160,22 @@ namespace ImagesAPI.Controllers
 
             try
             {
+                // Report initial progress
+                if (useProgressTracking && progressTracker != null)
+                {
+                    await progressTracker.ReportProgressAsync(progressId, "upload", 0);
+                }
+
                 // Use a memory stream to avoid file locking and improve performance
                 using var memoryStream = new MemoryStream();
                 await image.CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
+
+                // Report progress after initial copy
+                if (useProgressTracking && progressTracker != null)
+                {
+                    await progressTracker.ReportProgressAsync(progressId, "upload", 20);
+                }
 
                 // Validate the image format
                 using var skData = SKData.Create(memoryStream);
@@ -165,6 +184,12 @@ namespace ImagesAPI.Controllers
                 {
                     Logging.Instance.LogWarning("Invalid or corrupted image file.");
                     return BadRequest("Invalid or corrupted image file.");
+                }
+
+                // Report progress after validation
+                if (useProgressTracking && progressTracker != null)
+                {
+                    await progressTracker.ReportProgressAsync(progressId, "upload", 40);
                 }
 
                 // Get the image format and check if it's allowed
@@ -188,6 +213,12 @@ namespace ImagesAPI.Controllers
                 int width = skImage.Width;
                 int height = skImage.Height;
 
+                // Report progress before upload
+                if (useProgressTracking && progressTracker != null)
+                {
+                    await progressTracker.ReportProgressAsync(progressId, "upload", 60);
+                }
+
                 // Upload the image to the drive using a stream directly
                 string imageId = await _dropboxService.UploadImage(image);
 
@@ -195,6 +226,12 @@ namespace ImagesAPI.Controllers
                 {
                     Logging.Instance.LogError("Error uploading the image.");
                     return BadRequest("Error uploading the image.");
+                }
+
+                // Report progress after upload
+                if (useProgressTracking && progressTracker != null)
+                {
+                    await progressTracker.ReportProgressAsync(progressId, "upload", 80);
                 }
 
                 // Create the model with the data we've already extracted
@@ -212,15 +249,17 @@ namespace ImagesAPI.Controllers
                 await _imagesCollectionService.Create(imageModel);
 
                 // Clear only necessary cache to ensure fresh data is returned
-                await _cacheSemaphore.WaitAsync();
-                try
+                await ExecuteCacheOperationSafelyAsync(() =>
                 {
                     _cacheService.Remove("all_images");
                     _cacheService.Set($"image_{imageId}", imageModel, CACHE_DURATION_MEDIUM);
-                }
-                finally
+                    return Task.CompletedTask;
+                });
+
+                // Report completion
+                if (useProgressTracking && progressTracker != null)
                 {
-                    _cacheSemaphore.Release();
+                    await progressTracker.ReportProgressAsync(progressId, "upload", 100);
                 }
 
                 Logging.Instance.LogMessage("Image uploaded successfully.");
@@ -247,11 +286,7 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ResponseCache(NoStore = true)]
-        public async Task<IActionResult> EditImage(
-            string id,
-            [FromBody] string filter,
-            [FromQuery] bool trackProgress = false,
-            [FromServices] IProgressTrackerService? progressTracker = null)
+        public async Task<IActionResult> EditImage(string id, [FromBody] string filter, [FromQuery] bool trackProgress = false, [FromServices] IProgressTrackerService? progressTracker = null)
         {
             bool useProgressTracking = trackProgress && progressTracker != null;
 
@@ -301,8 +336,7 @@ namespace ImagesAPI.Controllers
                 _cacheService.Set(filterCacheKey, newImage, CACHE_DURATION_MEDIUM);
 
                 // Use SemaphoreSlim to safely update cache in a concurrent environment
-                await _cacheSemaphore.WaitAsync();
-                try
+                await ExecuteCacheOperationSafelyAsync(() =>
                 {
                     // Clear exactly the keys the tests expect to be cleared
                     _cacheService.Remove("all_images");
@@ -316,11 +350,8 @@ namespace ImagesAPI.Controllers
 
                     // Add the new filtered image to cache
                     _cacheService.Set($"image_{newImage.Id}", newImage, CACHE_DURATION_MEDIUM);
-                }
-                finally
-                {
-                    _cacheSemaphore.Release();
-                }
+                    return Task.CompletedTask;
+                });
 
                 Logging.Instance.LogMessage($"Filter {filter} applied successfully to image with ID {id}.");
                 return Ok(newImage);
@@ -386,16 +417,12 @@ namespace ImagesAPI.Controllers
                 }
 
                 // Clear necessary cache
-                await _cacheSemaphore.WaitAsync();
-                try
+                await ExecuteCacheOperationSafelyAsync(() =>
                 {
                     _cacheService.Remove("all_images");
                     _cacheService.Remove($"image_{id}");
-                }
-                finally
-                {
-                    _cacheSemaphore.Release();
-                }
+                    return Task.CompletedTask;
+                });
 
                 Logging.Instance.LogMessage($"Image with ID {id} deleted successfully.");
                 return Ok();
@@ -472,6 +499,23 @@ namespace ImagesAPI.Controllers
             {
                 Logging.Instance.LogError(error.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        /// <summary>
+        /// Executes a cache operation safely with semaphore protection to prevent concurrent access issues.
+        /// </summary>
+        /// <param name="action">The cache operation to execute.</param>
+        private static async Task ExecuteCacheOperationSafelyAsync(Func<Task> action)
+        {
+            await _cacheSemaphore.WaitAsync();
+            try
+            {
+                await action();
+            }
+            finally
+            {
+                _cacheSemaphore.Release();
             }
         }
     }

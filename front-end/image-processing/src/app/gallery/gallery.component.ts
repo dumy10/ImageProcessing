@@ -5,9 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageModel } from '../models/ImageModel';
 import { Tree, TreeNode } from '../models/tree';
@@ -38,6 +39,7 @@ import {
     MatPaginatorModule,
     MatIconModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
     ErrorBannerComponent,
   ],
   templateUrl: './gallery.component.html',
@@ -375,22 +377,34 @@ export class GalleryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Opens a dialog to display the details of the given image.
-   * @param {ImageModel} image - The image for which to display the details.
+   * Opens a dialog to display the image hierarchy (vertical history).
+   * For full tree visualization, navigates to the dedicated image-tree view.
+   * @param {ImageModel} image - The image for which to display details.
    */
   openDialog(image: ImageModel): void {
     // Preload related images before opening the dialog
     this.preloadRelatedImages(image);
 
-    const dialogRef = this.dialog.open(ImageDialogComponent, {
-      data: {
-        tree: this.getImageTree(image),
-        imagePairs: this.imagePairs,
-      },
+    // Open a dialog showing the vertical hierarchy (history) of this image
+    const dialogRef = this.dialog.open(ImageHierarchyComponent, {
+      data: this.getImageHierarchy(image)
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      console.log('The dialog was closed');
+      console.log('The hierarchy dialog was closed');
+    });
+  }
+
+  /**
+   * Navigate to the dedicated image tree view page for the full tree visualization
+   * @param {ImageModel} image - The image for which to display the tree
+   */
+  viewImageTree(image: ImageModel): void {
+    this.router.navigate(['/image-tree', image.id], {
+      queryParams: {
+        page: this.currentPage,
+        pageSize: this.itemsPerPage
+      }
     });
   }
 
@@ -411,82 +425,34 @@ export class GalleryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Builds a tree structure of images based on their parent-child relationships.
-   * @param {ImageModel} image - The image for which to build the tree.
-   * @returns {Tree<ImageModel>} - The tree structure of images.
+   * Gets the image hierarchy for the given image (for vertical history).
+   * @param {ImageModel} image - The image for which to retrieve the hierarchy.
+   * @returns {ImageModel[]} - An array of images representing the hierarchy.
    */
-  getImageTree(image: ImageModel): Tree<ImageModel> {
-    const imageTree: Tree<ImageModel> = new Tree<ImageModel>();
+  getImageHierarchy(image: ImageModel): ImageModel[] {
+    const imageHierarchy: ImageModel[] = [];
+    let currentImage = image;
 
-    // First find the original (root) image to establish the tree's root
-    const originalImage = this.getOriginalImage(image);
-    if (!originalImage) {
-      console.error('Could not find original image for:', image);
-      return imageTree; // Return empty tree if original image not found
-    }
+    // Keep adding parents to the hierarchy until we reach the root
+    while (true) {
+      imageHierarchy.unshift(currentImage);
 
-    // Create a map to store all nodes that are part of this image's lineage
-    const nodeMap: Map<string, TreeNode<ImageModel>> = new Map();
-
-    // Find all images that share the same original image
-    const relevantPairs = this.imagePairs.filter(
-      (pair) =>
-        this.getOriginalImage(pair.filteredImage).id === originalImage.id
-    );
-
-    if (relevantPairs.length === 0) {
-      // If no relevant pairs, just add the original image as a standalone node
-      const rootNode = new TreeNode<ImageModel>(originalImage);
-      imageTree.setRoot(rootNode);
-      return imageTree;
-    }
-
-    // First pass: create nodes for all relevant images
-    relevantPairs.forEach((pair) => {
-      // Only create nodes if they don't already exist in the map
-      if (!nodeMap.has(pair.originalImage.id)) {
-        nodeMap.set(
-          pair.originalImage.id,
-          new TreeNode<ImageModel>(pair.originalImage)
-        );
+      if (!currentImage.parentId) {
+        break;
       }
-      if (!nodeMap.has(pair.filteredImage.id)) {
-        nodeMap.set(
-          pair.filteredImage.id,
-          new TreeNode<ImageModel>(pair.filteredImage)
-        );
-      }
-    });
 
-    // Ensure the root is in the map (in case it wasn't part of any pair)
-    if (!nodeMap.has(originalImage.id)) {
-      nodeMap.set(originalImage.id, new TreeNode<ImageModel>(originalImage));
+      const parentImage = this.imagePairs.find(
+        (imgPair) => imgPair.originalImage.id === currentImage.parentId
+      )?.originalImage;
+
+      if (!parentImage) {
+        break;
+      }
+
+      currentImage = parentImage;
     }
 
-    // Set the root node
-    const rootNode = nodeMap.get(originalImage.id);
-    if (rootNode) {
-      imageTree.setRoot(rootNode);
-    }
-
-    // Second pass: establish parent-child relationships
-    relevantPairs.forEach((pair) => {
-      const childNode = nodeMap.get(pair.filteredImage.id);
-      if (childNode && childNode.value.parentId) {
-        const parentNode = nodeMap.get(childNode.value.parentId);
-        if (parentNode) {
-          // Check if this child is already added to prevent duplicates
-          const alreadyAdded = parentNode.children.some(
-            (existingChild) => existingChild.value.id === childNode.value.id
-          );
-          if (!alreadyAdded) {
-            parentNode.addChild(childNode);
-          }
-        }
-      }
-    });
-
-    return imageTree;
+    return imageHierarchy;
   }
 
   /**

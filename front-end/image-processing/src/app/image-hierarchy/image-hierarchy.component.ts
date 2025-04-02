@@ -9,6 +9,7 @@ import {
   MatDialogTitle,
 } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ImageModel } from '../models/ImageModel';
 
 /**
@@ -29,6 +30,7 @@ import { ImageModel } from '../models/ImageModel';
     MatDialogActions,
     MatButtonModule,
     MatIconModule,
+    MatProgressSpinnerModule,
     CommonModule,
   ],
   templateUrl: './image-hierarchy.component.html',
@@ -56,7 +58,16 @@ export class ImageHierarchyComponent {
    * Handles image loading errors by replacing the source with a placeholder
    */
   onImageError(image: ImageModel): void {
+    image.loaded = true; // Set to true to hide the loading indicator
     image.url = 'assets/images/notfound.jpg';
+  }
+
+  /**
+   * Handles the image load event
+   * @param {ImageModel} image - The image that has been loaded
+   */
+  onImageLoad(image: ImageModel): void {
+    image.loaded = true;
   }
 
   /**
@@ -94,7 +105,7 @@ export class ImageHierarchyComponent {
   /**
    * Returns the subset of images to be displayed based on the current display count
    */
-  get displayImages(): ImageModel[] {
+  getDisplayImages(): ImageModel[] {
     return this.data.slice(0, this.displayCount);
   }
 }

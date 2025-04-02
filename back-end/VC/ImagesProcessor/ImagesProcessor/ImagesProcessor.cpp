@@ -79,6 +79,10 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 		// Create an ImageData object with the received data
 		std::unique_ptr<ImageData> image = std::make_unique<ImageData>(reinterpret_cast<const unsigned char*>(imageData), length, lowerExtension);
 
+		// The image was loaded successfully, report progress at 40%
+		if (progressCallback)
+			progressCallback(40);
+
 		double start = omp_get_wtime();
 
 		// Filter the image data with optional progress tracking

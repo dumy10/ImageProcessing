@@ -7,7 +7,7 @@
 void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
 {
     if (progressCallback) 
-		progressCallback(0);
+		progressCallback(60);
 
 	Logger::GetInstance().LogMessage("Applying blur filter");
     static constexpr int kernelSize = 7; // Defines the blur intensity.
@@ -83,7 +83,7 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
     }
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Blur filter applied successfully");
 }

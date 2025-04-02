@@ -31,10 +31,6 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 {
 	Logger::GetInstance().LogMessage("Filtering image data with filter: " + std::to_string(static_cast<int>(filter)));
 
-	// Report initial progress
-	if (progressCallback)
-		progressCallback(0);
-
 	std::unique_ptr<unsigned char[]> outputImage(new unsigned char[m_imageSize]);
 
 	if (!this->ApplyFilter(filter, outputImage.get(), progressCallback))
@@ -50,7 +46,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 
 	std::vector<unsigned char> encodedData;
 
-	if (!this->WriteToMemory(outputImage.get(), &encodedData))
+	if (!this->WriteToMemory(outputImage.get(), &encodedData, progressCallback))
 	{
 		Logger::GetInstance().LogError("Failed to write image data to memory");
 		*outputLength = 0;
@@ -69,9 +65,8 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 
 	std::memcpy(*outputData, encodedData.data(), *outputLength);
 
-	// Report completion
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(95);
 
 	Logger::GetInstance().LogMessage("Image data filtered successfully");
 }
@@ -81,6 +76,10 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	try
 	{
 		std::unique_ptr<IFilter> filter = FilterFactory::CreateFilter(filterType);
+
+		if (progressCallback)
+			progressCallback(50);
+
 		filter->Apply(m_imageData, outputImage, m_width, m_height, m_channels, progressCallback);
 		return true;
 	}
@@ -91,7 +90,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	}
 }
 
-[[nodiscard]] bool ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData) const
+[[nodiscard]] bool ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, ProgressCallback progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Writing image data to memory");
 
@@ -101,6 +100,9 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 
 	bool success = false;
 	EAllowedExtensions extension = g_kAllowedExtensions.find(m_extension)->second;
+
+	if (progressCallback)
+		progressCallback(80);
 
 	switch (extension)
 	{
@@ -116,6 +118,9 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 		Logger::GetInstance().LogError("Extension not supported: " + m_extension);
 		break;
 	}
+
+	if (progressCallback)
+		progressCallback(85);
 
 	return success;
 }

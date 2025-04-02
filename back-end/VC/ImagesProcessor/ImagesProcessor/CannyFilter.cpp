@@ -10,7 +10,7 @@ void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	Logger::GetInstance().LogMessage("Applying Canny filter");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	// 1. Convert to grayscale
 	std::vector<unsigned char> grayImage(width * height);
@@ -57,7 +57,7 @@ void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	}
 
 	if (progressCallback)
-		progressCallback(100);	
+		progressCallback(70);	
 
 	Logger::GetInstance().LogMessage("Canny filter applied successfully");
 }

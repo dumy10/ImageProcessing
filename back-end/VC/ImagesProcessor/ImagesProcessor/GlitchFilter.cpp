@@ -9,7 +9,7 @@ void GlitchFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 	Logger::GetInstance().LogMessage("Applying glitch filter to the image");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	// Copy the input image to the output image
 #pragma omp parallel for
@@ -71,7 +71,7 @@ void GlitchFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 	}
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Glitch filter applied");
 }

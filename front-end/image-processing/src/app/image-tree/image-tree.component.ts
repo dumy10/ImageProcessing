@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
 import { ImageModel } from '../models/ImageModel';
 import { TreeNode } from '../models/tree';
@@ -11,13 +12,13 @@ import { TreeNode } from '../models/tree';
  *
  * @component
  * @selector app-image-tree
- * @imports CommonModule
+ * @imports CommonModule, MatProgressSpinnerModule
  * @templateUrl ./image-tree.component.html
  * @styleUrl ./image-tree.component.scss
  */
 @Component({
   selector: 'app-image-tree',
-  imports: [CommonModule],
+  imports: [CommonModule, MatProgressSpinnerModule],
   templateUrl: './image-tree.component.html',
   styleUrl: './image-tree.component.scss',
 })
@@ -56,6 +57,16 @@ export class ImageTreeComponent {
   @Input() horizontalDisplayCount: number = 3;
 
   constructor(private dialog: MatDialog) {}
+
+  /**
+   * Initialize the loaded state to keep track of image loading
+   */
+  ngOnInit(): void {
+    // Ensure node value has loaded property
+    if (this.node && this.node.value && !('loaded' in this.node.value)) {
+      this.node.value.loaded = false;
+    }
+  }
 
   openDialog(image: ImageModel): void {
     const dialogRef = this.dialog.open(ImageHierarchyComponent, {
@@ -99,8 +110,21 @@ export class ImageTreeComponent {
     return imageHierarchy;
   }
 
+  /**
+   * Handles the image error event.
+   * @param {ImageModel} image - The image that failed to load.
+   */
   onImageError(image: ImageModel): void {
+    image.loaded = true;
     image.url = 'assets/images/notfound.jpg';
+  }
+
+  /**
+   * Handles the image load event.
+   * @param {ImageModel} image - The image that has been loaded.
+   */
+  onImageLoad(image: ImageModel): void {
+    image.loaded = true;
   }
 
   shouldDisplayChildren(): boolean {

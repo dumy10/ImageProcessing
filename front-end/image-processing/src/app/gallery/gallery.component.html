@@ -12,9 +12,16 @@
       class="image-container"
       *ngFor="let image of [imagePair.originalImage, imagePair.filteredImage]"
     >
+      <!-- Loading placeholder that shows when image is not loaded -->
+      <div class="image-loading-placeholder" *ngIf="!image.loaded">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Loading image...</span>
+      </div>
+
       <img
         [src]="image.url"
         [alt]="image.name || 'Image'"
+        [class.loaded]="image.loaded"
         (click)="openDialog(image)"
         loading="lazy"
         (error)="onImageError(image)"
@@ -27,9 +34,21 @@
         <button (click)="editImage(image)" aria-label="Edit image">
           <mat-icon class="edit-button">edit</mat-icon>
         </button>
+        <button (click)="viewImageTree(image)" aria-label="View image tree">
+          <mat-icon class="tree-button">account_tree</mat-icon>
+        </button>
       </div>
     </div>
   </article>
+</div>
+
+<!-- No results message when gallery is empty but not in loading state -->
+<div
+  class="no-images-message"
+  *ngIf="!loading && paginatedImagePairs.length === 0"
+>
+  <mat-icon>image_not_supported</mat-icon>
+  <p>No images found. Try uploading some images first.</p>
 </div>
 
 <mat-paginator
@@ -39,6 +58,7 @@
   [pageSizeOptions]="[6, 12, 26]"
   (page)="onPageChange($event)"
   [showFirstLastButtons]="true"
+  *ngIf="imagePairs.length > 0"
 />
 
 <app-loading *ngIf="loading" [loading]="loading" [message]="loadingMessage" />

@@ -14,7 +14,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
 import { ImageModel } from '../models/ImageModel';
 import { CacheService } from '../services/cache.service';
 import { ErrorHandlingService } from '../services/error-handling.service';
@@ -293,45 +293,7 @@ describe('GalleryComponent', () => {
     expect(routerSpy).toHaveBeenCalledWith(['/edit', '1']);
   });
 
-  it('should open dialog with image details', () => {
-    const dialogSpy = spyOn(component['dialog'], 'open').and.callThrough();
-    spyOn(component, 'preloadRelatedImages');
-
-    const image: ImageModel = {
-      id: '1',
-      url: 'test-url',
-      name: 'test-image',
-      parentId: undefined,
-      parentUrl: undefined,
-      width: 100,
-      height: 100,
-      appliedFilters: [],
-      loaded: false,
-    };
-    component.imagePairs = [
-      {
-        originalImage: image,
-        filteredImage: {
-          id: '2',
-          url: 'url2',
-          name: 'image2',
-          parentId: '1',
-          parentUrl: 'url1',
-          width: 100,
-          height: 100,
-          appliedFilters: [],
-          loaded: false,
-        },
-      },
-    ];
-
-    component.openDialog(image);
-
-    expect(dialogSpy).toHaveBeenCalled();
-    expect(component.preloadRelatedImages).toHaveBeenCalledWith(image);
-  });
-
-  it('should build image tree correctly', () => {
+  it('should build image hierarchy correctly', () => {
     const image: ImageModel = {
       id: '2',
       url: 'url2',
@@ -360,10 +322,11 @@ describe('GalleryComponent', () => {
       },
     ];
 
-    const tree = component.getImageTree(image);
+    const hierarchy = component.getImageHierarchy(image);
 
-    expect(tree.root?.value.id).toBe('1');
-    expect(tree.root?.children[0].value.id).toBe('2');
+    expect(hierarchy.length).toBe(2);
+    expect(hierarchy[0].id).toBe('1');
+    expect(hierarchy[1].id).toBe('2');
   });
 
   it('should retrieve original image correctly', () => {
@@ -434,7 +397,7 @@ describe('GalleryComponent', () => {
           parentUrl: 'url1',
           width: 100,
           height: 100,
-          appliedFilters: [],
+          appliedFilters: ['grayscale'],
           loaded: false,
         },
       },
@@ -442,11 +405,8 @@ describe('GalleryComponent', () => {
 
     component.openDialog(image);
 
-    expect(dialogSpy).toHaveBeenCalledWith(ImageDialogComponent, {
-      data: {
-        tree: jasmine.any(Object),
-        imagePairs: component.imagePairs,
-      },
+    expect(dialogSpy).toHaveBeenCalledWith(ImageHierarchyComponent, {
+      data: jasmine.any(Array),
     });
     expect(component.preloadRelatedImages).toHaveBeenCalledWith(image);
   });
@@ -631,5 +591,33 @@ describe('GalleryComponent', () => {
 
     // Verify all subscriptions were unsubscribed
     expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(2);
+  });
+
+  // Test for new viewImageTree method
+  it('should navigate to image tree view', () => {
+    const routerSpy = spyOn(component['router'], 'navigate');
+
+    const image: ImageModel = {
+      id: '1',
+      url: 'test-url',
+      name: 'test-image',
+      parentId: undefined,
+      parentUrl: undefined,
+      width: 100,
+      height: 100,
+      appliedFilters: [],
+      loaded: false,
+    };
+
+    component.currentPage = 2;
+    component.itemsPerPage = 8;
+    component.viewImageTree(image);
+
+    expect(routerSpy).toHaveBeenCalledWith(['/image-tree', '1'], {
+      queryParams: {
+        page: 2,
+        pageSize: 8,
+      },
+    });
   });
 });

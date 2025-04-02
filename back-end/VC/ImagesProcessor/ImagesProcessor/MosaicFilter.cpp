@@ -9,7 +9,7 @@ void MosaicFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 	Logger::GetInstance().LogMessage("Applying mosaic filter to image.");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	static constexpr int tileSize = 10;
 	const int numTilesX = width / tileSize;
@@ -69,7 +69,7 @@ void MosaicFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 	}
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Mosaic filter applied to image.");
 }

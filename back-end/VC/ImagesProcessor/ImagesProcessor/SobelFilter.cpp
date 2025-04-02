@@ -9,7 +9,7 @@ void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	Logger::GetInstance().LogMessage("Applying Sobel filter");
 
 	if (progressCallback)
-		progressCallback(0);
+		progressCallback(60);
 
 	// Sobel filter kernels
 	static constexpr int kernelX[3][3] = { { -1, 0, 1 },{ -2, 0, 2 },{ -1, 0, 1 } };
@@ -65,7 +65,7 @@ void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	}
 
 	if (progressCallback)
-		progressCallback(100);
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Sobel filter applied successfully");
 }

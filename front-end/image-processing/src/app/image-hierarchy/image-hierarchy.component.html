@@ -4,7 +4,7 @@
 <mat-dialog-content class="imageDialogContent">
   <div class="imagesColumn">
     <!-- Loop through each displayed image and add SVG arrows between them -->
-    <ng-container *ngFor="let imageModel of displayImages; let i = index">
+    <ng-container *ngFor="let imageModel of getDisplayImages(); let i = index">
       <!-- Add SVG arrow if this isn't the first image -->
       <div *ngIf="i > 0" class="arrowContainer">
         <svg
@@ -38,13 +38,25 @@
       </div>
 
       <!-- Image container -->
-      <div class="imageContainer">
+      <div
+        class="imageContainer"
+        [attr.data-aspect-ratio]="imageModel.width / imageModel.height"
+      >
+        <!-- Loading placeholder that shows when image is not loaded -->
+        <div class="image-loading-placeholder" *ngIf="!imageModel.loaded">
+          <mat-spinner diameter="30"></mat-spinner>
+          <span>Loading image...</span>
+        </div>
+
         <img
           [src]="imageModel.url"
           alt="Image"
           class="image"
+          [class.loaded]="imageModel.loaded"
+          [class.tall-image]="imageModel.height > imageModel.width * 1.5"
           loading="lazy"
           (error)="onImageError(imageModel)"
+          (load)="onImageLoad(imageModel)"
           aria-label="Image"
         />
       </div>
