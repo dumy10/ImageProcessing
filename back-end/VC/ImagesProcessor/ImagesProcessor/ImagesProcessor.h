@@ -1,8 +1,16 @@
 #pragma once
 #include "pch.h"
 #include "ImageData.h"
+#include "libdefine.h"
+#include "AllFilters.h"
 
 constexpr size_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length allowed. 10 MB
+
+/**
+ * @brief Callback function type for reporting progress.
+ * @param progress Progress value between 0 and 100.
+ */
+typedef void (*ProgressCallback)(int progress);
 
 /**
  * @brief Applies a specified filter to the given image data.
@@ -13,8 +21,11 @@ constexpr size_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length 
  * @param outputData Pointer to the output data.
  * @param extension File extension of the image.
  * @param outputLength Pointer to the length of the output data.
+ * @param progressCallback Optional callback function for reporting progress. Default is nullptr.
  */
-extern "C" IMAGESPROCESSOR_API void ApplyFilter(const char* imageData, int length, const char* filter, unsigned char** outputData, const char* extension, int* outputLength);
+extern "C" IMAGESPROCESSOR_API void ApplyFilter(const char* imageData, int length, const char* filter, 
+                                               unsigned char** outputData, const char* extension, 
+                                               int* outputLength, ProgressCallback progressCallback = nullptr);
 
 /**
  * @brief Frees the allocated memory for the image data.

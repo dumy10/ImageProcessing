@@ -4,8 +4,11 @@
 
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
-void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
+void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
 {
+    if (progressCallback) 
+		progressCallback(0);
+
 	Logger::GetInstance().LogMessage("Applying blur filter");
     static constexpr int kernelSize = 7; // Defines the blur intensity.
     static constexpr int halfKernel = kernelSize / 2;
@@ -78,6 +81,9 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
             outputImage[outIdx] = static_cast<unsigned char>(sum / area);
         }
     }
+
+	if (progressCallback)
+		progressCallback(100);
 
 	Logger::GetInstance().LogMessage("Blur filter applied successfully");
 }

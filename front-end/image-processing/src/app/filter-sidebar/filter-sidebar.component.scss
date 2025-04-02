@@ -107,7 +107,10 @@
   @include mixins.themed-card-background;
   border-radius: 0.625rem;
   @include mixins.themed-shadow(1);
-  overflow: hidden; // Move overflow to the sidebar container instead of host
+
+  & {
+    overflow: hidden; // Move overflow to the sidebar container instead of host
+  }
 
   & {
     height: 100%; // Keep full height

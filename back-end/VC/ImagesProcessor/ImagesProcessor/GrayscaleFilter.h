@@ -21,6 +21,7 @@ public:
 	 * @param width Width of the image.
 	 * @param height Height of the image.
 	 * @param channels Number of color channels in the image.
+	 * @param progressCallback Optional callback function for progress updates.
 	 */
-	void Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const override;
+	void Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback = nullptr) const override;
 };

@@ -234,10 +234,12 @@ namespace ImagesAPI.Controllers
         }
 
         /// <summary>
-        /// Applies a filter to an existing image.
+        /// Applies a filter to an existing image with optional real-time progress tracking via SignalR.
         /// </summary>
         /// <param name="id">The identifier of the image to edit.</param>
         /// <param name="filter">The filter to apply to the image.</param>
+        /// <param name="trackProgress">Optional query parameter to enable progress tracking (default: false)</param>
+        /// <param name="progressTracker">The SignalR progress tracker service (injected when needed)</param>
         /// <returns>The modified image model.</returns>
         [HttpPut("edit/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -245,11 +247,16 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ResponseCache(NoStore = true)]
-        public async Task<IActionResult> EditImage(string id, [FromBody] string filter)
+        public async Task<IActionResult> EditImage(
+            string id,
+            [FromBody] string filter,
+            [FromQuery] bool trackProgress = false,
+            [FromServices] IProgressTrackerService? progressTracker = null)
         {
-            Logging.Instance.LogMessage($"Applying filter {filter} to image with ID {id}...");
+            bool useProgressTracking = trackProgress && progressTracker != null;
 
-            // We do not check for the size of the image here, as it's already uploaded and validated
+            Logging.Instance.LogMessage($"Applying filter {filter} to image with ID {id}..."
+                + (useProgressTracking ? " with progress tracking" : ""));
 
             // Remove spaces and whitespace from the filter
             filter = filter.Replace(" ", string.Empty).ToLower();
@@ -269,12 +276,20 @@ namespace ImagesAPI.Controllers
                 // Check if this filtered version already exists in cache
                 if (_cacheService.TryGetValue<ImageModel>(filterCacheKey, out var cachedResult) && cachedResult != null)
                 {
+                    // If progress tracking is enabled, report immediate 100% completion
+                    if (useProgressTracking && progressTracker != null)
+                    {
+                        Logging.Instance.LogMessage($"Reporting immediate completion for cached result of {id} with filter {filter}");
+                        await progressTracker.ReportProgressAsync(id, filter, 0);  // Initial notification
+                        await progressTracker.ReportProgressAsync(id, filter, 100); // Immediate completion
+                    }
+
                     Logging.Instance.LogMessage($"Returning cached filtered image for ID {id} with filter {filter}");
                     return Ok(cachedResult);
                 }
 
-                // Apply the filter
-                var newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter, _dropboxService);
+                // Apply the filter with optional progress tracking
+                var newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter, _dropboxService, useProgressTracking ? progressTracker : null);
 
                 if (newImage == null)
                 {

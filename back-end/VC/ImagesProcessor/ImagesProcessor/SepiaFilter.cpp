@@ -4,9 +4,12 @@
 
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
-void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
+void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Applying sepia filter");
+
+	if (progressCallback)
+		progressCallback(0);
 
 	static constexpr float sepiaMatrix[3][3] = {
 		{0.393f, 0.769f, 0.189f}, // Coefficients for the red channel
@@ -33,6 +36,9 @@ void SepiaFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 		outputImage[i + 1] = static_cast<unsigned char>(std::clamp(newG, 0.0f, 255.0f));
 		outputImage[i + 2] = static_cast<unsigned char>(std::clamp(newB, 0.0f, 255.0f));
 	}
+
+	if (progressCallback)
+		progressCallback(100);
 
 	Logger::GetInstance().LogMessage("Sepia filter applied");
 }

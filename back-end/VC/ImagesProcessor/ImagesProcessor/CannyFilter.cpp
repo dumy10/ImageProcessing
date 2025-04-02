@@ -5,9 +5,12 @@
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 // It is supported but the Code Analysis tool does not recognize it
 
-void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
+void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Applying Canny filter");
+
+	if (progressCallback)
+		progressCallback(0);
 
 	// 1. Convert to grayscale
 	std::vector<unsigned char> grayImage(width * height);
@@ -52,6 +55,9 @@ void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 			outputImage[i * channels + c] = finalEdges[i];
 		}
 	}
+
+	if (progressCallback)
+		progressCallback(100);	
 
 	Logger::GetInstance().LogMessage("Canny filter applied successfully");
 }

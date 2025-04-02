@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, shareReplay, tap } from 'rxjs/operators';
@@ -144,13 +144,24 @@ export class ImageService {
    * Edits an image by applying a filter to it and clears the cache.
    * @param {string} id - The ID of the image to edit.
    * @param {string} filter - The filter to apply to the image.
+   * @param {boolean} trackProgress - Whether to track progress using SignalR (default: false).
    * @returns {Observable<ImageModel>} - An observable containing the edited image data.
    */
-  editImage(id: string, filter: string): Observable<ImageModel> {
+  editImage(
+    id: string,
+    filter: string,
+    trackProgress: boolean = false
+  ): Observable<ImageModel> {
     // For edit operations, invalidate both the individual image cache
     // and the collection cache since this changes an existing image
     this.cacheService.invalidateImage(id);
     this.cacheService.setImagesCache(null);
+
+    // Add trackProgress query parameter if enabled
+    let params = new HttpParams();
+    if (trackProgress) {
+      params = params.set('trackProgress', 'true');
+    }
 
     return this.httpClient.put<ImageModel>(
       `${this.baseURL}/edit/${id}`,
@@ -160,6 +171,7 @@ export class ImageService {
           'X-API-Key': this.apiKey,
           'Content-Type': 'application/json',
         }),
+        params: params,
       }
     );
   }

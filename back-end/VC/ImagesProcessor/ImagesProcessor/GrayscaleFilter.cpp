@@ -4,9 +4,13 @@
 
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
-void GrayscaleFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
+void GrayscaleFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Applying grayscale filter");
+	
+	if (progressCallback)
+		progressCallback(0);
+		
 	const int size = width * height * channels;
 
 #pragma omp parallel for
@@ -21,6 +25,9 @@ void GrayscaleFilter::Apply(const unsigned char* inputImage, unsigned char* outp
 		if (channels > 2 && i + 2 < size) outputImage[i + 2] = gray;
 	}
 
+	if (progressCallback)
+		progressCallback(100);
+		
 	Logger::GetInstance().LogMessage("Grayscale filter applied successfully");
 }
 

@@ -58,9 +58,21 @@
           (error)="onImageError()"
           (load)="onImageLoad()"
         />
-        <!-- Filter operation overlay - show only during filter operations -->
-        <div class="filter-operation-overlay" *ngIf="loading && image?.loaded">
+
+        <!-- Progress overlay -->
+        <div class="filter-operation-overlay" *ngIf="showProgress">
           <div class="filter-operation-container">
+            <div class="progress-bar-container">
+              <div class="progress-bar-wrapper">
+                <div
+                  class="progress-bar"
+                  [style.width.%]="progressPercentage"
+                ></div>
+              </div>
+              <div class="progress-text">
+                {{ progressPercentage }}% complete
+              </div>
+            </div>
             <div class="filter-operation-spinner">
               <mat-icon class="rotating">sync</mat-icon>
             </div>

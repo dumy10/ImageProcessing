@@ -6,6 +6,7 @@ import {
   Component,
   ElementRef,
   HostListener,
+  OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -13,7 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { NavigationEnd, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subscription } from 'rxjs';
 import { catchError, filter, finalize } from 'rxjs/operators';
 import { FilterSidebarComponent } from '../filter-sidebar/filter-sidebar.component';
 import { LoadingComponent } from '../loading/loading.component';
@@ -21,6 +22,10 @@ import { Filters } from '../models/filters';
 import { ImageModel } from '../models/ImageModel';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
+import {
+  ProgressTrackerService,
+  ProgressUpdate,
+} from '../services/progress-tracker.service';
 import {
   ErrorAction,
   ErrorBannerComponent,
@@ -45,7 +50,7 @@ import {
   templateUrl: './edit-image.component.html',
   styleUrl: './edit-image.component.scss',
 })
-export class EditImageComponent implements OnInit, AfterViewInit {
+export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('imageElement') imageElement: ElementRef | undefined;
 
   loading = false;
@@ -67,12 +72,23 @@ export class EditImageComponent implements OnInit, AfterViewInit {
   isFilterOperation = false; // Flag to distinguish between initial load and filter operation
   imageLoaded = false; // Track image loaded state separately
 
+  // Progress tracking variables
+  progressPercentage = 0;
+  showProgress = false;
+  private progressSubscription: Subscription | null = null;
+
   constructor(
     private router: Router,
     private imageService: ImageService,
     private errorHandling: ErrorHandlingService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private progressTracker: ProgressTrackerService
   ) {}
+
+  // Helper method to normalize filter names (remove spaces)
+  private normalizeFilterName(filterName: string): string {
+    return filterName.toLowerCase().replace(/\s+/g, '');
+  }
 
   ngOnInit(): void {
     this.checkScreenSize();
@@ -97,11 +113,87 @@ export class EditImageComponent implements OnInit, AfterViewInit {
           this.loadImage(newId);
         }
       });
+
+    // Start the SignalR connection for progress updates
+    this.connectToProgressHub();
   }
 
   ngAfterViewInit(): void {
     // Check if image is already loaded (from cache)
     this.checkImageLoadedStatus();
+  }
+
+  ngOnDestroy(): void {
+    // Clean up any pending timeouts when component is destroyed
+    if (this.imageLoadTimeout) {
+      clearTimeout(this.imageLoadTimeout);
+    }
+
+    // Unsubscribe from progress updates
+    if (this.progressSubscription) {
+      this.progressSubscription.unsubscribe();
+    }
+
+    // Stop the SignalR connection
+    this.progressTracker.stopConnection();
+  }
+
+  // Connect to the SignalR hub for progress updates
+  private async connectToProgressHub(): Promise<void> {
+    try {
+      // Start the connection and give it time to connect
+      this.progressSubscription = this.progressTracker
+        .startConnection()
+        .subscribe((update: ProgressUpdate) => {
+          // Only update progress if it's for the current image or filter
+          if (
+            this.image?.id &&
+            update.imageId === this.image.id &&
+            this.lastAppliedFilter &&
+            this.normalizeFilterName(update.filter) ===
+              this.normalizeFilterName(this.lastAppliedFilter.toString())
+          ) {
+            // Handle the progress update
+            this.handleProgressUpdate(update.progress);
+          }
+        });
+
+      // Wait for connection to be established with a 5-second timeout
+      const connected = await this.progressTracker.waitForConnection(5000);
+      if (!connected) {
+        console.warn(
+          'Could not establish SignalR connection within timeout. Progress updates may be delayed.'
+        );
+      }
+    } catch (error) {
+      console.error('Error connecting to progress hub:', error);
+    }
+  }
+
+  // Handle progress updates
+  private handleProgressUpdate(progress: number): void {
+    // Handle error case (-1) separately
+    if (progress === -1) {
+      // Error state will be handled by the error pipeline
+      this.showProgress = false;
+      return;
+    }
+
+    // Update the progress bar
+    this.progressPercentage = progress;
+    this.showProgress = true;
+
+    // If we reach 100%, hide the progress bar after a delay
+    if (progress >= 100) {
+      setTimeout(() => {
+        this.showProgress = false;
+        this.progressPercentage = 0;
+        this.cdr.detectChanges();
+      }, 1000); // Keep it visible for a second after completion
+    }
+
+    // Force UI update
+    this.cdr.detectChanges();
   }
 
   // Check if the image is already loaded (cached)
@@ -141,6 +233,8 @@ export class EditImageComponent implements OnInit, AfterViewInit {
     this.errorMessage = '';
     this.errorActions = [];
     this.imageLoaded = false; // Reset image loaded state
+    this.showProgress = false;
+    this.progressPercentage = 0;
 
     // Clear any existing timeout
     if (this.imageLoadTimeout) {
@@ -156,6 +250,10 @@ export class EditImageComponent implements OnInit, AfterViewInit {
           this.image = response as ImageModel;
           this.lastSuccessfulOperation = this.cloneImageModel(this.image);
           this.imagePath = this.image.url;
+
+          // Explicitly set loaded state for both component and model
+          this.imageLoaded = true;
+          this.image.loaded = true;
 
           // Handle the case where image might be loaded from cache
           // Set a small timeout to allow the browser to process the image
@@ -208,6 +306,8 @@ export class EditImageComponent implements OnInit, AfterViewInit {
     this.errorMessage = '';
     this.errorActions = [];
     this.lastAppliedFilter = filter;
+    this.showProgress = true;
+    this.progressPercentage = 0;
 
     // Store the current image ID in the undo stack before applying a new filter
     if (this.image.id) {
@@ -219,7 +319,11 @@ export class EditImageComponent implements OnInit, AfterViewInit {
     }
 
     this.imageService
-      .editImage(this.image.id, filter.toString().toLowerCase())
+      .editImage(
+        this.image.id,
+        this.normalizeFilterName(filter.toString()),
+        true
+      ) // Enable progress tracking
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -228,6 +332,7 @@ export class EditImageComponent implements OnInit, AfterViewInit {
         catchError((error: HttpErrorResponse) => {
           this.errorState = true;
           this.handleFilterError(error, filter);
+          this.showProgress = false; // Hide progress on error
           return of(null);
         })
       )
@@ -240,6 +345,13 @@ export class EditImageComponent implements OnInit, AfterViewInit {
             this.lastSuccessfulOperation = this.cloneImageModel(this.image);
             this.imagePath = this.image.url;
             this.router.navigate(['/edit', response.id], { replaceUrl: true });
+
+            // In case we don't get a 100% progress update from SignalR
+            setTimeout(() => {
+              this.showProgress = false;
+              this.progressPercentage = 0;
+              this.cdr.detectChanges();
+            }, 1000);
           }
         },
       });
@@ -375,6 +487,8 @@ export class EditImageComponent implements OnInit, AfterViewInit {
 
     if (this.image) {
       this.image.loaded = true;
+      // Force change detection to ensure UI updates
+      this.cdr.detectChanges();
     }
   }
 
@@ -434,6 +548,8 @@ export class EditImageComponent implements OnInit, AfterViewInit {
     this.errorMessage = '';
     this.errorActions = [];
     this.imageLoaded = false; // Reset image loaded state
+    this.showProgress = false;
+    this.progressPercentage = 0;
 
     this.imageService
       .getImage(imageId)
@@ -448,6 +564,11 @@ export class EditImageComponent implements OnInit, AfterViewInit {
           this.image = response as ImageModel;
           this.lastSuccessfulOperation = this.cloneImageModel(this.image);
           this.imagePath = this.image.url;
+          
+          // Explicitly set loaded state for both component and model
+          this.imageLoaded = true;
+          this.image.loaded = true;
+          
           this.router.navigate(['/edit', response.id], { replaceUrl: true });
 
           // Check if image is already loaded (from cache)
@@ -518,12 +639,5 @@ export class EditImageComponent implements OnInit, AfterViewInit {
       ...image,
       appliedFilters: [...(image.appliedFilters || [])],
     };
-  }
-
-  ngOnDestroy(): void {
-    // Clean up any pending timeouts when component is destroyed
-    if (this.imageLoadTimeout) {
-      clearTimeout(this.imageLoadTimeout);
-    }
   }
 }

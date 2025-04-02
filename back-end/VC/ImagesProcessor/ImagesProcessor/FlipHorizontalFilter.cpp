@@ -4,9 +4,13 @@
 
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
-void FlipHorizontalFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
+void FlipHorizontalFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Applying FlipHorizontalFilter");
+
+	if (progressCallback)
+		progressCallback(0);
+
 	const int rowSize = width * channels;
 
 #pragma omp parallel for
@@ -25,6 +29,9 @@ void FlipHorizontalFilter::Apply(const unsigned char* inputImage, unsigned char*
 			std::copy_n(inputRow + offset, channels, outputRow + flippedOffset);
 		}
 	}
+
+	if (progressCallback)
+		progressCallback(100);
 
 	Logger::GetInstance().LogMessage("Applied FlipHorizontalFilter");
 }

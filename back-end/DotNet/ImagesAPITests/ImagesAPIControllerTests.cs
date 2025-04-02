@@ -355,7 +355,7 @@ namespace ImagesAPITests
             // Arrange
             var image = new ImageModel { Id = "1", Name = "TestImage" };
             var filter = "grayscale";
-            _mockImagesCollectionService.Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object)).ReturnsAsync(image);
+            _mockImagesCollectionService.Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object, null)).ReturnsAsync(image);
 
             // Act
             var result = await _controller.EditImage("1", filter);
@@ -381,7 +381,7 @@ namespace ImagesAPITests
         {
             // Arrange
             var filter = "grayscale";
-            _mockImagesCollectionService.Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object)).ReturnsAsync((ImageModel?)null);
+            _mockImagesCollectionService.Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object, null)).ReturnsAsync((ImageModel?)null);
 
             // Act
             var result = await _controller.EditImage("1", filter);
@@ -396,7 +396,7 @@ namespace ImagesAPITests
             // Arrange
             var filter = "grayscale";
             _mockImagesCollectionService
-                .Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object))
+                .Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object, null))
                 // Use TaskFromException for better performance compared to ThrowsAsync
                 .Returns(Task.FromException<ImageModel?>(new InvalidOperationException()));
 
@@ -413,7 +413,7 @@ namespace ImagesAPITests
             // Arrange
             var image = new ImageModel { Id = "2", Name = "TestImage", ParentId = "1" };
             var filter = "grayscale";
-            _mockImagesCollectionService.Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object)).ReturnsAsync(image);
+            _mockImagesCollectionService.Setup(service => service.ApplyFilterToImage("1", filter, _mockDropboxService.Object, null)).ReturnsAsync(image);
 
             // Act
             var result = await _controller.EditImage("1", filter);

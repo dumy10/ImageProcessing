@@ -27,17 +27,26 @@ ImageData::~ImageData()
 	}
 }
 
-void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength) const
+void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength, ProgressCallback progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Filtering image data with filter: " + std::to_string(static_cast<int>(filter)));
 
+	// Report initial progress
+	if (progressCallback)
+		progressCallback(0);
+
 	std::unique_ptr<unsigned char[]> outputImage(new unsigned char[m_imageSize]);
 
-	if (!this->ApplyFilter(filter, outputImage.get()))
+	if (!this->ApplyFilter(filter, outputImage.get(), progressCallback))
 	{
 		*outputLength = 0;
 		*outputData = nullptr;
+		return;
 	}
+
+	// Report progress at 75% - image filtered, now encoding
+	if (progressCallback)
+		progressCallback(75);
 
 	std::vector<unsigned char> encodedData;
 
@@ -51,20 +60,28 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	}
 	Logger::GetInstance().LogMessage("Image data written to memory successfully");
 
+	// Report progress at 90% - image encoded, now copying
+	if (progressCallback)
+		progressCallback(90);
+
 	*outputLength = static_cast<int>(encodedData.size());
 	*outputData = new unsigned char[*outputLength];
 
 	std::memcpy(*outputData, encodedData.data(), *outputLength);
 
+	// Report completion
+	if (progressCallback)
+		progressCallback(100);
+
 	Logger::GetInstance().LogMessage("Image data filtered successfully");
 }
 
-[[nodiscard]] bool ImageData::ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage) const
+[[nodiscard]] bool ImageData::ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage, ProgressCallback progressCallback) const
 {
 	try
 	{
 		std::unique_ptr<IFilter> filter = FilterFactory::CreateFilter(filterType);
-		filter->Apply(m_imageData, outputImage, m_width, m_height, m_channels);
+		filter->Apply(m_imageData, outputImage, m_width, m_height, m_channels, progressCallback);
 		return true;
 	}
 	catch (const std::exception& e)

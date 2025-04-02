@@ -13,7 +13,7 @@ if (result.error) {
 // Create development environment.ts file with values
 const developmentEnvironmentContent = `export const environment = {
   production: false,
-  apiUrl: 'https://localhost:7156/Images',
+  apiUrl: '${process.env.API_URL || "https://api.yourdevelopment.com/Images"}',
   apiKey: '${process.env.API_KEY || "YOUR_API_KEY_HERE"}'
 };
 `;
