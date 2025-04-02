@@ -1,88 +1,67 @@
 @use "../../assets/themes/theme-mixins.scss" as theme-mixins;
 
-.treeNodeContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 1.25rem 0;
-  width: 100%;
+// ===========================
+// Layout Containers
+// ===========================
+
+.tree-visualization-container {
   position: relative;
-}
-
-.treeNode {
-  display: flex;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 15px;
-  background-color: var(--card-background);
-  border-radius: 5px;
-  padding: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-.treeNodeImage {
-  cursor: pointer;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
-  opacity: 0;
-
-  &.loaded {
-    opacity: 1;
-  }
-
-  &:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.filtersContainer {
-  background-color: var(--card-background);
-  color: var(--text-color);
-  font-size: 0.875rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.3125rem;
-  @include theme-mixins.themed-shadow(1);
-}
-
-.filtersContainer:hover {
-  background-color: var(--primary-color);
-  color: #ffffff;
-}
-
-.treeNodeChildrenContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
-.treeArrowsSvg {
+.d3-tree-container {
+  width: 100%;
+  height: 100%;
   display: block;
-  margin-bottom: 1rem;
-  margin-top: 0.5rem;
-  overflow: visible;
-  align-self: center; /* Center the SVG connections */
 }
 
-.treeArrow {
-  stroke: var(--text-color);
-  stroke-width: 2px;
+.no-data-message {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary-color);
+  font-style: italic;
+  font-size: 1.2rem;
+}
+
+// ===========================
+// D3 Core Elements
+// ===========================
+
+svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--background-color);
+}
+
+// ===========================
+// Link & Connection Styling
+// ===========================
+
+.link {
   fill: none;
+  stroke: var(--primary-color);
+  stroke-width: 3px;
+  stroke-opacity: 0.85;
+  stroke-linecap: round;
 }
 
-.arrowHead {
-  fill: var(--text-color);
+.arrow {
+  fill: var(--primary-color);
+  stroke: none;
+  opacity: 0.9;
 }
 
-.filterLabel {
-  font-size: 10px;
+.filter-label {
+  font-size: 15px;
   fill: var(--text-color);
-  font-weight: 500;
+  color: var(--text-color);
+  font-weight: bold;
   paint-order: stroke;
   stroke: var(--card-background);
   stroke-width: 5px;
@@ -90,80 +69,130 @@
   stroke-linejoin: round;
 }
 
-.treeNodeChildren {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-  overflow-x: visible;
-  padding-left: 0;
-  position: relative;
+// ===========================
+// Node Styling
+// ===========================
+
+.node {
+  cursor: pointer;
+
+  // Node circle styling
+  .node-circle {
+    fill: var(--card-background);
+    stroke: var(--border-color);
+    stroke-width: 4px;
+    transition: fill 0.2s ease, stroke 0.2s ease;
+
+    &:hover {
+      stroke: var(--primary-color);
+      stroke-width: 5px;
+    }
+  }
+
+  // Text on nodes
+  text {
+    font-size: 16px;
+    fill: var(--text-color);
+    color: var(--text-color);
+  }
 }
 
-.childNodeWrapper {
-  width: 200px;
-  display: flex;
-  justify-content: center;
-  position: relative;
-}
-
-.childTreeNode {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.childrenControls {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 0.5rem;
-  min-height: 2.5rem;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  position: relative;
-}
-
-.controlBtn {
-  min-width: 100px;
-  font-size: 0.875rem;
-  padding: 0.25rem 0.5rem;
-  margin: 0 0.5rem;
-}
-
-.hiddenChildrenIndicator {
-  color: var(--text-color);
-  font-size: 12px;
-  text-align: center;
-  margin: 5px 0;
-  background-color: var(--card-background);
-  border-radius: 0.5rem;
-  padding: 0.375rem 0.75rem;
+// Additional text styles
+.hidden-count {
+  font-size: 15px;
+  fill: var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 600;
   font-style: italic;
-  min-width: 150px;
-  margin-bottom: 1rem;
 }
 
-.image-loading-placeholder {
+.loading-text {
+  font-size: 14px;
+  fill: var(--text-color);
+  color: var(--text-color);
+}
+
+// ===========================
+// Loading States
+// ===========================
+
+.tree-loading-overlay {
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 100px;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--card-background);
-  border-radius: 5px;
-  z-index: 1;
+  background-color: rgba(var(--background-rgb), 0.7);
+  z-index: 10;
 
   span {
-    margin-top: 8px;
-    color: var(--text-secondary-color);
-    font-size: 0.75rem;
+    margin-top: 18px;
+    color: var(--text-color);
+    font-size: 1.2rem;
+  }
+}
+
+// ===========================
+// Tooltip Styling
+// ===========================
+
+:host ::ng-deep .d3-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background-color: var(--card-background);
+  color: var(--text-color);
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  max-width: 280px;
+  z-index: 1000;
+  border: 2px solid var(--border-color);
+
+  .tooltip-title {
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 8px;
+    font-size: 18px;
+  }
+
+  .tooltip-filter {
+    color: var(--text-color);
+    font-style: italic;
+  }
+}
+
+// ===========================
+// Dark Theme Overrides
+// ===========================
+
+:host-context(.dark-theme) {
+  .node text,
+  .loading-text,
+  .filter-label {
+    fill: white;
+    color: white;
+  }
+
+  .hidden-count {
+    fill: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .tree-loading-overlay span,
+  .no-data-message {
+    color: white;
+  }
+
+  .d3-tooltip {
+    color: white;
+
+    .tooltip-filter {
+      color: white;
+    }
   }
 }
