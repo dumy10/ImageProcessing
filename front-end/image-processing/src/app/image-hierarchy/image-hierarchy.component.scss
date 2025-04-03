@@ -1,5 +1,6 @@
 @use "../../assets/themes/theme-mixins.scss" as theme-mixins;
 
+// General dialog styles
 .dialogTitle {
   font-size: 1.5rem;
   text-align: center;
@@ -17,6 +18,299 @@
   @include theme-mixins.themed-scrollbar;
 }
 
+// View toggle control
+.viewToggleContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+
+  .viewToggleBtn {
+    padding: 0.25rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    background-color: var(--accent-lighter);
+    color: var(--accent-darker);
+
+    &:hover {
+      background-color: var(--accent-color);
+      color: var(--on-accent-color);
+    }
+
+    mat-icon {
+      margin-right: 0.25rem;
+      vertical-align: middle;
+    }
+  }
+}
+
+// Timeline view styles
+.timelineView {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timelineControls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--background-color);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+
+  .zoomControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 0.5rem;
+
+    .zoomSlider {
+      width: 100px;
+      margin: 0 0.5rem;
+    }
+
+    .zoomPercentage {
+      font-size: 0.85rem;
+      width: 40px;
+      text-align: center;
+      color: var(--text-color);
+      margin: 0 0.25rem;
+    }
+
+    button {
+      color: var(--primary-color);
+    }
+  }
+
+  .panInstructions {
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary-color);
+
+    mat-icon {
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+      margin-right: 0.25rem;
+    }
+  }
+}
+
+.timelineContainer {
+  width: 100%;
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  user-select: none;
+  max-height: 500px;
+
+  &.has-overflow {
+    cursor: grab;
+
+    &.is-panning {
+      cursor: grabbing;
+    }
+  }
+}
+
+.timelineTrack {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 500px;
+  margin-bottom: 2rem;
+  padding-top: 10px;
+  transform-origin: center center;
+  transition: transform 0.1s ease;
+  will-change: transform;
+}
+
+.timelineLine {
+  position: absolute;
+  top: 35px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--accent-color);
+  z-index: 1;
+}
+
+.timelineNode {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 180px;
+  z-index: 2;
+
+  // Special case for 3 images
+  .timelineContainer:has(.timelineNode:nth-child(3):last-child) & {
+    width: 160px;
+
+    &:first-child,
+    &:last-child {
+      transform: translateX(-40%);
+    }
+
+    &:last-child {
+      transform: translateX(-60%);
+    }
+  }
+
+  .nodeCircle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: var(--on-accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border: 3px solid var(--background-color);
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .filterBadge {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    background: var(--card-background);
+    border-radius: 20px;
+    padding: 0.25rem 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    font-size: 0.8rem;
+    color: var(--text-color);
+    z-index: 3;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: transform 0.2s ease;
+    max-width: 150px;
+    overflow: hidden; /* Hide overflow text */
+    text-overflow: ellipsis; /* Show ellipsis for overflow */
+    white-space: nowrap; /* Keep text on single line */
+
+    &:hover {
+      transform: translateX(-50%) scale(1.05);
+      z-index: 10;
+    }
+
+    /* Special styling for two images case */
+    &[style*="left:30%"],
+    &[style*="left:70%"] {
+      transform: translateX(-25%);
+
+      &:hover {
+        transform: translateX(-25%) scale(1.05);
+      }
+    }
+
+    .filterIcon {
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+      margin-right: 0.25rem;
+      color: var(--accent-color);
+    }
+
+    .filterName {
+      white-space: nowrap;
+    }
+  }
+
+  .timelineImage {
+    margin-top: 100px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    @include theme-mixins.themed-shadow(1);
+
+    & {
+      transition: transform 0.3s ease;
+      border: 3px solid var(--card-background);
+      max-width: 200px;
+    }
+
+    // Special styling for single image case
+    .timelineContainer:has(.timelineNode:only-child) & {
+      max-width: 350px;
+    }
+
+    // Special styling for two images case
+    .timelineContainer:has(.timelineNode:nth-child(2):last-child) & {
+      max-width: 280px;
+    }
+
+    &:hover {
+      transform: scale(1.05);
+      @include theme-mixins.themed-shadow(2);
+    }
+
+    &.original {
+      border-color: var(--success-color);
+    }
+
+    &.result {
+      border-color: var(--primary-color);
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      max-height: 220px;
+      object-fit: contain;
+
+      // Taller image for single image case
+      .timelineContainer:has(.timelineNode:only-child) & {
+        max-height: 350px;
+      }
+
+      // Taller image for two images case
+      .timelineContainer:has(.timelineNode:nth-child(2):last-child) & {
+        max-height: 280px;
+      }
+    }
+  }
+}
+
+.timeline-more {
+  position: sticky;
+  bottom: 0;
+  margin-top: 1rem;
+  text-align: center;
+  font-style: italic;
+  color: var(--secondary-text-color);
+  background-color: var(--background-color);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// Standard vertical view styles
 .imagesColumn {
   display: flex;
   flex-direction: column;
@@ -47,15 +341,17 @@
   fill: var(--secondary-text-color);
 }
 
-.filterLabel {
-  font-size: 0.75rem;
-  fill: var(--text-color);
-  font-weight: 500;
-  paint-order: stroke;
-  stroke: var(--card-background);
-  stroke-width: 5px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.filterLabelGroup {
+  .filterLabelBackground {
+    fill: var(--accent-color);
+    opacity: 0.9;
+  }
+
+  .filterLabel {
+    font-size: 0.75rem;
+    fill: var(--text-color);
+    font-weight: 500;
+  }
 }
 
 .imageContainer {
@@ -63,7 +359,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background-color: var(--background-color);
+  background-color: var(--card-background);
   border-radius: 0.5rem;
   padding: 0.625rem;
   position: relative;
@@ -89,11 +385,67 @@
 
   & {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 4px solid transparent;
   }
 
   &:hover {
     transform: scale(1.03);
     @include theme-mixins.themed-shadow(2);
+  }
+
+  &.original-image {
+    border-left-color: var(--success-color);
+  }
+
+  &.final-image {
+    border-left-color: var(--primary-color);
+  }
+}
+
+.stepBadge {
+  position: absolute;
+  top: -0.75rem;
+  left: -0.75rem;
+  background: var(--primary-color);
+  color: var(--on-primary-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 5;
+}
+
+.filterInfoContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+
+  .filterInfoBadge {
+    display: flex;
+    align-items: center;
+    background: var(--background-lighter);
+    border-radius: 1rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.05);
+      background: var(--accent-lighter);
+    }
+
+    mat-icon {
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+      margin-right: 0.25rem;
+      color: var(--accent-color);
+    }
   }
 }
 
@@ -151,6 +503,26 @@
   color: var(--secondary-text-color);
 }
 
+// Override mat-slider to match theme
+::ng-deep .mat-mdc-slider {
+  --mdc-slider-handle-color: var(--primary-color);
+  --mdc-slider-focus-handle-color: var(--primary-color);
+  --mdc-slider-hover-handle-color: var(--primary-color);
+  --mdc-slider-active-track-color: var(--primary-color);
+  --mdc-slider-inactive-track-color: var(--primary-lighter);
+
+  .mdc-slider__thumb {
+    height: 16px;
+    width: 16px;
+  }
+}
+
+// Override tooltip styles to allow multiline tooltips
+::ng-deep .multiline-tooltip {
+  white-space: pre-line !important;
+}
+
+// Responsive styles
 @media (max-width: 768px) {
   .dialogTitle {
     font-size: 1.25rem;
@@ -176,8 +548,35 @@
     }
   }
 
+  .timelineTrack {
+    height: 320px;
+  }
+
+  .timelineNode {
+    width: 180px;
+
+    .timelineImage {
+      max-width: 160px;
+      margin-top: 40px;
+    }
+  }
+
   .imageDialogActions {
     padding: 0.3125rem 0;
+  }
+
+  .timelineControls {
+    flex-direction: column;
+
+    .zoomControls {
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 0.5rem;
+
+      .zoomSlider {
+        width: 80px;
+      }
+    }
   }
 }
 
@@ -200,7 +599,54 @@
     width: 95%;
   }
 
+  .timelineTrack {
+    height: 280px;
+  }
+
+  .timelineNode {
+    width: 120px;
+
+    .nodeCircle {
+      width: 32px;
+      height: 32px;
+      font-size: 0.8rem;
+    }
+
+    .timelineImage {
+      max-width: 100px;
+      margin-top: 35px;
+    }
+
+    .filterBadge {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.35rem;
+    }
+  }
+
   .imageDialogActions {
     padding: 0.125rem 0;
+  }
+
+  .timelineControls {
+    padding: 0.25rem;
+
+    .zoomControls {
+      .zoomSlider {
+        width: 60px;
+      }
+
+      .zoomPercentage {
+        width: 30px;
+        font-size: 0.75rem;
+      }
+
+      button {
+        transform: scale(0.9);
+      }
+    }
+
+    .panInstructions {
+      font-size: 0.7rem;
+    }
   }
 }
