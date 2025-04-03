@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { FilterButtonsComponent } from '../filter-buttons/filter-buttons.component';
 import { Filters } from '../models/filters';
 import { ImageModel } from '../models/ImageModel';
+import { ErrorHandlingService } from '../services/error-handling.service';
 
 /**
  * Component for displaying the sidebar with filter categories and other image information
@@ -48,6 +49,11 @@ export class FilterSidebarComponent implements OnInit {
   @Input() canRedo = false;
 
   /**
+   * Whether a filter operation is in progress
+   */
+  @Input() isFilteringInProgress = false;
+
+  /**
    * Event emitted when a filter is selected
    */
   @Output() filterSelected = new EventEmitter<Filters>();
@@ -85,6 +91,8 @@ export class FilterSidebarComponent implements OnInit {
    * Filter categories mapping
    */
   filterCategories: { [key: string]: Filters[] } = {};
+
+  constructor(private errorHandling: ErrorHandlingService) {}
 
   /**
    * Initializes the component and populates the filter categories
@@ -178,6 +186,15 @@ export class FilterSidebarComponent implements OnInit {
    * @param filter The selected filter
    */
   onFilterSelected(filter: Filters): void {
+    if (this.isFilteringInProgress) {
+      this.errorHandling.showErrorWithRetry(
+        'Filter in progress',
+        'A filter operation is already in progress. Please wait.',
+        () => {}, // No retry action needed, just a dismiss
+        'Dismiss'
+      );
+      return;
+    }
     this.filterSelected.emit(filter);
   }
 
@@ -185,6 +202,15 @@ export class FilterSidebarComponent implements OnInit {
    * Initiates the download of the image
    */
   downloadImage(): void {
+    if (this.isFilteringInProgress) {
+      this.errorHandling.showErrorWithRetry(
+        'Filter in progress',
+        'A filter operation is already in progress. Please wait.',
+        () => {}, // No retry action needed, just a dismiss
+        'Dismiss'
+      );
+      return;
+    }
     this.downloadImageEvent.emit();
   }
 
@@ -192,6 +218,15 @@ export class FilterSidebarComponent implements OnInit {
    * Triggers undo action
    */
   undoFilter(): void {
+    if (this.isFilteringInProgress) {
+      this.errorHandling.showErrorWithRetry(
+        'Filter in progress',
+        'A filter operation is already in progress. Please wait.',
+        () => {}, // No retry action needed, just a dismiss
+        'Dismiss'
+      );
+      return;
+    }
     this.undoEvent.emit();
   }
 
@@ -199,6 +234,15 @@ export class FilterSidebarComponent implements OnInit {
    * Triggers redo action
    */
   redoFilter(): void {
+    if (this.isFilteringInProgress) {
+      this.errorHandling.showErrorWithRetry(
+        'Filter in progress',
+        'A filter operation is already in progress. Please wait.',
+        () => {}, // No retry action needed, just a dismiss
+        'Dismiss'
+      );
+      return;
+    }
     this.redoEvent.emit();
   }
 }

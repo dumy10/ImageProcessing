@@ -114,12 +114,28 @@
   padding: 2rem;
   text-align: center;
   color: var(--text-secondary-color);
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 
   mat-icon {
     font-size: 3rem;
     height: 3rem;
     width: 3rem;
     margin-bottom: 1rem;
+  }
+
+  p {
+    margin: 0;
+    max-width: 80%;
+    word-wrap: break-word;
   }
 }
 

@@ -63,5 +63,59 @@
       font-size: 0.7rem;
       border-radius: 0.25rem;
     }
+
+    &.active-filter {
+      background-color: var(--accent-color);
+      position: relative;
+      box-shadow: 0 0 8px var(--accent-color);
+      transform: scale(1.05);
+
+      // Add a pulsing animation to indicate processing
+      &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: inherit;
+        box-shadow: 0 0 6px 2px var(--accent-color);
+        animation: pulse-shadow 1.5s ease-in-out infinite;
+      }
+
+      .dark-theme & {
+        box-shadow: 0 0 8px var(--accent-color);
+      }
+
+      // Override disabled opacity for active filter
+      &:disabled {
+        opacity: 0.9;
+      }
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+
+      &:not(.active-filter):hover {
+        transform: none;
+        background-color: var(--primary-color);
+      }
+    }
+  }
+}
+
+@keyframes pulse-shadow {
+  0% {
+    opacity: 0.6;
+    box-shadow: 0 0 6px 2px var(--accent-color);
+  }
+  50% {
+    opacity: 0.3;
+    box-shadow: 0 0 10px 4px var(--accent-color);
+  }
+  100% {
+    opacity: 0.6;
+    box-shadow: 0 0 6px 2px var(--accent-color);
   }
 }

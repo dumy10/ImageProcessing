@@ -15,9 +15,10 @@ export class ErrorHandlingService {
   showErrorWithRetry(
     title: string,
     message: string,
-    retryAction: () => void
+    retryAction: () => void,
+    buttonLabel: string = 'Retry'
   ): void {
-    const snackBarRef = this.snackBar.open(`${title}: ${message}`, 'Retry', {
+    const snackBarRef = this.snackBar.open(`${title}: ${message}`, buttonLabel, {
       duration: 10000,
       panelClass: ['error-snackbar'],
     });

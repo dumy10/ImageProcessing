@@ -295,7 +295,22 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   filterImage(filter: Filters): void {
     if (!this.image) {
-      console.error('No image to edit');
+      this.errorHandling.showErrorWithRetry(
+        'Image Filtering',
+        'No image to filter. Please load an image first.',
+        () => {}, // No retry action needed, just a dismiss
+        'Dismiss'
+      );
+      return;
+    }
+
+    if (this.isFilterOperation) {
+      this.errorHandling.showErrorWithRetry(
+        'Filter in progress',
+        'A filter operation is already in progress. Please wait.',
+        () => {}, // No retry action needed, just a dismiss
+        'Dismiss'
+      );
       return;
     }
 
@@ -564,11 +579,11 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
           this.image = response as ImageModel;
           this.lastSuccessfulOperation = this.cloneImageModel(this.image);
           this.imagePath = this.image.url;
-          
+
           // Explicitly set loaded state for both component and model
           this.imageLoaded = true;
           this.image.loaded = true;
-          
+
           this.router.navigate(['/edit', response.id], { replaceUrl: true });
 
           // Check if image is already loaded (from cache)

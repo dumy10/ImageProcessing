@@ -174,4 +174,85 @@ describe('FilterSidebarComponent', () => {
     effectsIcon = categoryHeaders[1].query(By.css('mat-icon'));
     expect(effectsIcon.nativeElement.textContent.trim()).toBe('expand_less');
   });
+
+  it('should disable undo/redo buttons when filtering is in progress', () => {
+    component.isFilteringInProgress = true;
+    fixture.detectChanges();
+
+    const historyButtons = fixture.debugElement.query(
+      By.css('.history-buttons')
+    );
+    const undoButton = historyButtons.queryAll(By.css('button'))[0];
+    const redoButton = historyButtons.queryAll(By.css('button'))[1];
+
+    expect(undoButton.nativeElement.disabled).toBeTrue();
+    expect(redoButton.nativeElement.disabled).toBeTrue();
+  });
+
+  it('should disable download button when filtering is in progress', () => {
+    component.isFilteringInProgress = true;
+    fixture.detectChanges();
+
+    const saveButton = fixture.debugElement.query(
+      By.css('.save-button button')
+    );
+    expect(saveButton.nativeElement.disabled).toBeTrue();
+  });
+
+  it('should not emit events when operations are attempted during filtering', () => {
+    spyOn(component.filterSelected, 'emit');
+    spyOn(component.downloadImageEvent, 'emit');
+    spyOn(component.undoEvent, 'emit');
+    spyOn(component.redoEvent, 'emit');
+    spyOn(console, 'warn');
+
+    component.isFilteringInProgress = true;
+
+    // Try to perform operations while filtering is in progress
+    component.onFilterSelected(Filters.Blur);
+    component.downloadImage();
+    component.undoFilter();
+    component.redoFilter();
+
+    // Verify no events were emitted
+    expect(component.filterSelected.emit).not.toHaveBeenCalled();
+    expect(component.downloadImageEvent.emit).not.toHaveBeenCalled();
+    expect(component.undoEvent.emit).not.toHaveBeenCalled();
+    expect(component.redoEvent.emit).not.toHaveBeenCalled();
+  });
+
+  it('should pass isFilteringInProgress flag to filter-buttons component', () => {
+    component.isFilteringInProgress = true;
+
+    // Make sure 'adjustments' category is open (which should be the default)
+    component.openCategories = {
+      adjustments: true,
+      effects: false,
+      transform: false,
+    };
+
+    fixture.detectChanges();
+
+    // Get expanded categories
+    const categoryContent = fixture.debugElement.query(
+      By.css('.category-content.expanded')
+    );
+
+    expect(categoryContent).withContext('No expanded category content found');
+
+    if (categoryContent) {
+      const filterButtonsComponent = categoryContent.query(
+        By.css('app-filter-buttons')
+      );
+
+      expect(filterButtonsComponent).withContext(
+        'Filter buttons component not found'
+      );
+
+      // Access the component instance instead of properties
+      const filterButtonsComponentInstance =
+        filterButtonsComponent.componentInstance;
+      expect(filterButtonsComponentInstance.isFilteringInProgress).toBeTrue();
+    }
+  });
 });

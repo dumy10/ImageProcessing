@@ -20,6 +20,7 @@
     [sidebarCollapsed]="sidebarCollapsed"
     [canUndo]="canUndo()"
     [canRedo]="canRedo()"
+    [isFilteringInProgress]="loading || isFilterOperation || showProgress"
     (filterSelected)="filterImage($event)"
     (toggleSidebarEvent)="toggleSidebar()"
     (downloadImageEvent)="downloadImage()"

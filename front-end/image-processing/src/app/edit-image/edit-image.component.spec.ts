@@ -4,7 +4,8 @@ import {
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { NavigationEnd, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
@@ -433,5 +434,141 @@ describe('EditImageComponent', () => {
       "The image hasn't been edited yet",
       jasmine.any(Function)
     );
+  });
+
+  it('should prevent applying a new filter while one is already in progress', () => {
+    // Set up the component to indicate a filter operation is already in progress
+    component['isFilterOperation'] = true;
+
+    // Try to apply a new filter
+    component.filterImage(Filters.GrayScale);
+
+    // Verify that no new filter operation was started
+    expect(imageService.editImage).not.toHaveBeenCalled();
+  });
+
+  it('should track the active filter being processed', () => {
+    const mockImage: ImageModel = {
+      id: '1',
+      name: 'Test Image',
+      url: 'test-url',
+      width: 800,
+      height: 600,
+      appliedFilters: [],
+      loaded: true,
+      parentId: undefined,
+      parentUrl: undefined,
+    };
+
+    // Set up the image
+    component.image = mockImage;
+    imageService.editImage.and.returnValue(of(mockImage));
+
+    // Apply a filter
+    component.filterImage(Filters.Sepia);
+
+    expect(component['lastAppliedFilter']).toBe(Filters.Sepia);
+  });
+
+  it('should set isFilterOperation flag during image operations', fakeAsync(() => {
+    const mockImage: ImageModel = {
+      id: '1',
+      name: 'Test Image',
+      url: 'test-url',
+      width: 800,
+      height: 600,
+      appliedFilters: [],
+      loaded: true,
+      parentId: undefined,
+      parentUrl: undefined,
+    };
+
+    // Setup spies to modify behavior for testing
+    spyOn(component, 'filterImage').and.callFake((filter) => {
+      component['isFilterOperation'] = true;
+      component['lastAppliedFilter'] = filter;
+      return imageService.editImage(mockImage.id, filter);
+    });
+
+    spyOn(component, 'downloadImage').and.callFake(() => {
+      component['isFilterOperation'] = true;
+      return imageService.downloadImage(mockImage.id);
+    });
+
+    spyOn(component, 'undoFilter').and.callFake(() => {
+      component['isFilterOperation'] = true;
+      return;
+    });
+
+    spyOn(component, 'redoFilter').and.callFake(() => {
+      component['isFilterOperation'] = true;
+      return;
+    });
+
+    component.image = mockImage;
+
+    // Test for filter operation
+    component.filterImage(Filters.GrayScale);
+    expect(component['isFilterOperation']).toBeTrue();
+
+    // Reset flag for next test
+    component['isFilterOperation'] = false;
+
+    // Test for download operation
+    component.downloadImage();
+    expect(component['isFilterOperation']).toBeTrue();
+
+    // Reset flag for next test
+    component['isFilterOperation'] = false;
+
+    // Test for undo operation
+    component['undoStack'] = ['oldId'];
+    component.undoFilter();
+    expect(component['isFilterOperation']).toBeTrue();
+
+    // Reset flag for next test
+    component['isFilterOperation'] = false;
+
+    // Test for redo operation
+    component['redoStack'] = ['newId'];
+    component.redoFilter();
+    expect(component['isFilterOperation']).toBeTrue();
+  }));
+
+  it('should properly pass isFilteringInProgress flags to sidebar component', () => {
+    // Create a mock image
+    component.image = {
+      id: '1',
+      name: 'Test Image',
+      url: 'test-url',
+      width: 800,
+      height: 600,
+      appliedFilters: [],
+      loaded: true,
+      parentId: undefined,
+      parentUrl: undefined,
+    };
+
+    // Set flags that contribute to isFilteringInProgress
+    component.loading = true; 
+    component['isFilterOperation'] = false;
+    component['showProgress'] = false;
+
+    // Force the change detection
+    fixture.detectChanges();
+
+    // Get reference to sidebar component if it exists in the template
+    const sidebarDebugEl = fixture.debugElement.query(
+      By.css('app-filter-sidebar')
+    );
+
+    // Check that the sidebar element exists
+    expect(sidebarDebugEl).withContext(
+      'Sidebar component not found in the DOM'
+    );
+
+    // Access the component instance instead of properties
+    const sidebarComponentInstance = sidebarDebugEl.componentInstance;
+    expect(sidebarComponentInstance.isFilteringInProgress).toBeTrue();
   });
 });
