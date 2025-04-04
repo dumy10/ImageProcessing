@@ -30,6 +30,7 @@
 #include <unordered_map>
 #include <vector>
 #include <array>
+#include <cstring>
 
 // Logger needed headers
 #include <chrono>
