@@ -1,16 +1,24 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { Subscription } from 'rxjs';
+import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageModel } from '../models/ImageModel';
 import { Tree, TreeNode } from '../models/tree';
+import { CacheService } from '../services/cache.service';
+import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
+import {
+  ErrorAction,
+  ErrorBannerComponent,
+} from '../shared/error-banner/error-banner.component';
 
 /**
  * GalleryComponent is a component that displays a gallery of images with pagination.
@@ -31,11 +39,13 @@ import { ImageService } from '../services/image.service';
     MatPaginatorModule,
     MatIconModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
+    ErrorBannerComponent,
   ],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss',
 })
-export class GalleryComponent implements OnInit {
+export class GalleryComponent implements OnInit, OnDestroy {
   /**
    * Indicates whether the application is currently loading.
    * @type {boolean}
@@ -83,24 +93,58 @@ export class GalleryComponent implements OnInit {
   totalPages: number = 1;
 
   /**
+   * Subscriptions to unsubscribe on component destruction
+   * @type {Subscription[]}
+   */
+  private subscriptions: Subscription[] = [];
+
+  /**
+   * Flag to track if initial preloading has been performed
+   * @type {boolean}
+   */
+  private initialPreloadDone: boolean = false;
+
+  /**
+   * Error state flag
+   * @type {boolean}
+   */
+  errorState: boolean = false;
+
+  /**
+   * Error message to display
+   * @type {string}
+   */
+  errorMessage: string = '';
+
+  /**
+   * Error actions for the banner
+   * @type {ErrorAction[]}
+   */
+  errorActions: ErrorAction[] = [];
+
+  /**
    * Constructor for GalleryComponent.
    * @param {MatDialog} dialog - The dialog service for opening dialogs.
    * @param {ImageService} imageService - Service for handling image operations.
+   * @param {CacheService} cacheService - Service for caching images.
    * @param {Router} router - Router for navigating between pages.
    * @param {ActivatedRoute} route - The activated route for accessing URL parameters.
+   * @param {ErrorHandlingService} errorHandling - Service for handling errors.
    */
   constructor(
     private dialog: MatDialog,
     private imageService: ImageService,
+    private cacheService: CacheService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private errorHandling: ErrorHandlingService
   ) {}
 
   /**
    * Initializes the component and loads the images.
    */
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
+    const paramsSub = this.route.queryParams.subscribe((params) => {
       this.currentPage = params['page'] ? +params['page'] : 0;
       this.itemsPerPage = params['pageSize'] ? +params['pageSize'] : 6;
       this.onPageChange({
@@ -108,53 +152,191 @@ export class GalleryComponent implements OnInit {
         pageSize: this.itemsPerPage,
       });
     });
+    this.subscriptions.push(paramsSub);
+
     this.loading = true;
     this.loadImages();
+  }
+
+  /**
+   * Clean up subscriptions when component is destroyed
+   */
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
   /**
    * Loads the images from the server and sets up pagination.
    */
   loadImages(): void {
-    this.imageService.getImages().subscribe({
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
+
+    const imagesSub = this.imageService.getImages().subscribe({
       next: (response: ImageModel[]) => {
+        // Reset the imagePairs array
+        this.imagePairs = [];
+
         response.forEach((image) => {
           if (!image.parentUrl) {
             return;
           }
 
-          this.imagePairs.push({
-            originalImage: response.find(
-              (img) => img.id === image.parentId
-            ) as ImageModel,
-            filteredImage: image,
-          });
+          const originalImage = response.find(
+            (img) => img.id === image.parentId
+          ) as ImageModel;
+
+          if (originalImage) {
+            this.imagePairs.push({
+              originalImage,
+              filteredImage: image,
+            });
+          }
         });
 
         if (this.imagePairs.length === 0) {
           this.loading = false;
-          alert('No filtered images found');
+          this.errorState = true;
+          this.errorMessage = 'No filtered images found';
+          this.errorActions = [
+            {
+              label: 'Retry',
+              icon: 'refresh',
+              action: () => this.loadImages(),
+            },
+          ];
           return;
         }
 
         this.updatePagination();
         this.loading = false;
+
+        // Perform smart preloading
+        this.performSmartPreloading();
       },
       error: (error: HttpErrorResponse) => {
-        if (error.status === 404) {
-          console.error('No images found', error);
-          this.loading = false;
-          alert(error.message || 'No images found');
-          return;
-        }
         console.error('Failed to fetch images', error);
         this.loading = false;
-        alert(error.message || 'An error occurred while fetching images.');
+
+        this.errorState = true;
+        if (error.status === 404) {
+          this.errorMessage = 'No images found';
+        } else {
+          this.errorMessage = this.errorHandling.getErrorMessageByStatus(
+            error,
+            'images'
+          );
+        }
+
+        this.errorActions = [
+          {
+            label: 'Retry',
+            icon: 'refresh',
+            action: () => this.loadImages(),
+          },
+        ];
+
+        this.errorHandling.showErrorWithRetry(
+          'Failed to load images',
+          this.errorHandling.getReadableErrorMessage(error),
+          () => this.loadImages()
+        );
       },
       complete: () => {
         this.loading = false;
       },
     });
+    this.subscriptions.push(imagesSub);
+  }
+
+  /**
+   * Implements a smart preloading strategy based on user behavior and current page
+   */
+  performSmartPreloading(): void {
+    if (!this.initialPreloadDone) {
+      // First-time preloading strategy - preload current page plus some from next page
+      this.preloadImagesForCurrentAndNextPage();
+
+      // Mark initial preload as done
+      this.initialPreloadDone = true;
+
+      // Schedule additional preloading after a delay to not block initial render
+      setTimeout(() => {
+        // Preload additional pages based on navigation direction (default: forward)
+        this.preloadAdditionalImages();
+      }, 3000); // Wait 3 seconds before preloading more
+    } else {
+      // For subsequent navigation, just preload current and next page
+      this.preloadImagesForCurrentAndNextPage();
+    }
+
+    // Log cache statistics for debugging
+    console.debug('Cache stats:', this.cacheService.getCacheStats());
+  }
+
+  /**
+   * Preloads images for the current page and next page to improve browsing experience
+   */
+  preloadImagesForCurrentAndNextPage(): void {
+    // Preload all images on the current page
+    this.paginatedImagePairs.forEach((pair) => {
+      this.imageService.preloadImage(pair.originalImage.id);
+      this.imageService.preloadImage(pair.filteredImage.id);
+    });
+
+    // Preload images for the next page if it exists
+    if (this.currentPage < this.totalPages - 1) {
+      const nextPageStartIndex = (this.currentPage + 1) * this.itemsPerPage;
+      const nextPageEndIndex = nextPageStartIndex + this.itemsPerPage;
+      const nextPageItems = this.imagePairs.slice(
+        nextPageStartIndex,
+        nextPageEndIndex
+      );
+
+      // Preload the first few images from the next page (limit to avoid too many requests)
+      const preloadLimit = Math.min(nextPageItems.length, 3);
+      nextPageItems.slice(0, preloadLimit).forEach((pair) => {
+        this.imageService.preloadImage(pair.originalImage.id);
+        this.imageService.preloadImage(pair.filteredImage.id);
+      });
+    }
+  }
+
+  /**
+   * Preloads additional images for improved user experience beyond the current/next page
+   */
+  preloadAdditionalImages(): void {
+    // Only preload additional images if there are multiple pages
+    if (this.totalPages <= 2) return;
+
+    // Determine how many additional pages to preload based on available bandwidth/cache
+    const additionalPagesToPreload = Math.min(
+      2,
+      this.totalPages - this.currentPage - 2
+    );
+    if (additionalPagesToPreload <= 0) return;
+
+    for (let i = 2; i <= additionalPagesToPreload + 1; i++) {
+      const pageIndex = this.currentPage + i;
+      if (pageIndex >= this.totalPages) break;
+
+      const pageStartIndex = pageIndex * this.itemsPerPage;
+      const pageEndIndex = pageStartIndex + this.itemsPerPage;
+      const pageItems = this.imagePairs.slice(pageStartIndex, pageEndIndex);
+
+      // For distant pages, only preload the first image or two
+      const distantPreloadLimit = Math.min(pageItems.length, 2);
+      for (let j = 0; j < distantPreloadLimit; j++) {
+        // Use lower priority (setTimeout) to prevent blocking more important loads
+        setTimeout(() => {
+          if (pageItems[j]) {
+            this.imageService.preloadImage(pageItems[j].originalImage.id);
+            this.imageService.preloadImage(pageItems[j].filteredImage.id);
+          }
+        }, i * 1000); // Stagger the preloading
+      }
+    }
   }
 
   /**
@@ -181,6 +363,9 @@ export class GalleryComponent implements OnInit {
       queryParamsHandling: 'merge',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Preload images when page changes
+    this.performSmartPreloading();
   }
 
   /**
@@ -192,58 +377,82 @@ export class GalleryComponent implements OnInit {
   }
 
   /**
-   * Opens a dialog to display the details of the given image.
-   * @param {ImageModel} image - The image for which to display the details.
+   * Opens a dialog to display the image hierarchy (vertical history).
+   * For full tree visualization, navigates to the dedicated image-tree view.
+   * @param {ImageModel} image - The image for which to display details.
    */
   openDialog(image: ImageModel): void {
-    const dialogRef = this.dialog.open(ImageDialogComponent, {
-      data: {
-        tree: this.getImageTree(image),
-        imagePairs: this.imagePairs,
-      },
+    // Preload related images before opening the dialog
+    this.preloadRelatedImages(image);
+
+    // Open a dialog showing the vertical hierarchy (history) of this image
+    const dialogRef = this.dialog.open(ImageHierarchyComponent, {
+      data: this.getImageHierarchy(image)
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      console.log('The dialog was closed');
+      console.log('The hierarchy dialog was closed');
     });
   }
 
   /**
-   * Builds a tree structure of images based on their parent-child relationships.
-   * @param {ImageModel} image - The image for which to build the tree.
-   * @returns {Tree<ImageModel>} - The tree structure of images.
+   * Navigate to the dedicated image tree view page for the full tree visualization
+   * @param {ImageModel} image - The image for which to display the tree
    */
-  getImageTree(image: ImageModel): Tree<ImageModel> {
-    const imageTree: Tree<ImageModel> = new Tree<ImageModel>();
-    const nodeMap: Map<string, TreeNode<ImageModel>> = new Map();
-
-    // Create nodes for all images and store them in the map
-    this.imagePairs.forEach((imgPair) => {
-      const originalNode = new TreeNode<ImageModel>(imgPair.originalImage);
-      const filteredNode = new TreeNode<ImageModel>(imgPair.filteredImage);
-      nodeMap.set(imgPair.originalImage.id, originalNode);
-      nodeMap.set(imgPair.filteredImage.id, filteredNode);
-    });
-
-    // Set the root node as the original image
-    const originalImage = this.getOriginalImage(image);
-    const rootNode = nodeMap.get(originalImage.id);
-    if (rootNode) {
-      imageTree.setRoot(rootNode);
-    }
-
-    // Traverse the images and build the tree
-    nodeMap.forEach((node, id) => {
-      const parentId = node.value.parentId;
-      if (parentId) {
-        const parentNode = nodeMap.get(parentId);
-        if (parentNode) {
-          parentNode.addChild(node);
-        }
+  viewImageTree(image: ImageModel): void {
+    this.router.navigate(['/image-tree', image.id], {
+      queryParams: {
+        page: this.currentPage,
+        pageSize: this.itemsPerPage
       }
     });
+  }
 
-    return imageTree;
+  /**
+   * Preloads related images for a specific image
+   * @param {ImageModel} image - The image whose related images should be preloaded
+   */
+  preloadRelatedImages(image: ImageModel): void {
+    // Find all images related to this one in the image hierarchy
+    const originalImage = this.getOriginalImage(image);
+
+    // Find all filtered versions of the original image
+    this.imagePairs
+      .filter((pair) => pair.originalImage.id === originalImage.id)
+      .forEach((pair) => {
+        this.imageService.preloadImage(pair.filteredImage.id);
+      });
+  }
+
+  /**
+   * Gets the image hierarchy for the given image (for vertical history).
+   * @param {ImageModel} image - The image for which to retrieve the hierarchy.
+   * @returns {ImageModel[]} - An array of images representing the hierarchy.
+   */
+  getImageHierarchy(image: ImageModel): ImageModel[] {
+    const imageHierarchy: ImageModel[] = [];
+    let currentImage = image;
+
+    // Keep adding parents to the hierarchy until we reach the root
+    while (true) {
+      imageHierarchy.unshift(currentImage);
+
+      if (!currentImage.parentId) {
+        break;
+      }
+
+      const parentImage = this.imagePairs.find(
+        (imgPair) => imgPair.originalImage.id === currentImage.parentId
+      )?.originalImage;
+
+      if (!parentImage) {
+        break;
+      }
+
+      currentImage = parentImage;
+    }
+
+    return imageHierarchy;
   }
 
   /**
@@ -264,7 +473,7 @@ export class GalleryComponent implements OnInit {
 
       currentImage = parentImage;
     }
-    return currentImage as ImageModel;
+    return currentImage;
   }
 
   /**
@@ -279,8 +488,11 @@ export class GalleryComponent implements OnInit {
 
     this.loading = true;
     this.loadingMessage = 'Downloading the image...';
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
 
-    this.imageService.downloadImage(image.id).subscribe({
+    const downloadSub = this.imageService.downloadImage(image.id).subscribe({
       next: (response) => {
         const url = window.URL.createObjectURL(response);
         const a = document.createElement('a');
@@ -294,15 +506,32 @@ export class GalleryComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         console.error('Failed to download image', error);
-        alert(
-          error.message || 'An error occurred while downloading the image.'
-        );
         this.loading = false;
+
+        this.errorState = true;
+        this.errorMessage = `Failed to download image: ${this.errorHandling.getReadableErrorMessage(
+          error
+        )}`;
+
+        this.errorActions = [
+          {
+            label: 'Retry',
+            icon: 'refresh',
+            action: () => this.downloadImage(image),
+          },
+        ];
+
+        this.errorHandling.showErrorWithRetry(
+          'Download failed',
+          this.errorHandling.getReadableErrorMessage(error),
+          () => this.downloadImage(image)
+        );
       },
       complete: () => {
         this.loading = false;
       },
     });
+    this.subscriptions.push(downloadSub);
   }
 
   /**

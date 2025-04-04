@@ -1,4 +1,100 @@
 /* You can add global styles to this file, and also import other style files */
+@use "./assets/themes/theme.scss" as theme;
+@use "./assets/global-material-overrides.scss";
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme classes */
+.light-theme {
+  --primary-color: #{theme.$light-primary};
+  --accent-color: #{theme.$light-accent};
+  --warn-color: #{theme.$light-warn};
+  --background-color: #{theme.$light-background};
+  --card-background: #{theme.$light-card-background};
+  --text-color: #{theme.$light-text};
+  --secondary-text-color: #{theme.$light-secondary-text};
+  --disabled-text-color: #{theme.$light-disabled-text};
+  --divider-color: #{theme.$light-divider};
+
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.dark-theme {
+  --primary-color: #{theme.$dark-primary};
+  --accent-color: #{theme.$dark-accent};
+  --warn-color: #{theme.$dark-warn};
+  --background-color: #{theme.$dark-background};
+  --card-background: #{theme.$dark-card-background};
+  --text-color: #{theme.$dark-text};
+  --secondary-text-color: #{theme.$dark-secondary-text};
+  --disabled-text-color: #{theme.$dark-disabled-text};
+  --divider-color: #{theme.$dark-divider};
+
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Material component theme overrides */
+.dark-theme {
+  .mat-toolbar {
+    background-color: var(--card-background);
+    color: var(--text-color);
+  }
+
+  .mat-card {
+    background-color: var(--card-background);
+    color: var(--text-color);
+  }
+
+  .mat-button,
+  .mat-icon-button,
+  .mat-stroked-button {
+    color: var(--text-color);
+  }
+}
+
+/* Error snackbar styling */
+.error-snackbar {
+  background-color: #f44336;
+  color: white;
+  font-weight: 500;
+
+  .mat-simple-snackbar-action {
+    color: white;
+    font-weight: 700;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 0 8px;
+    border-radius: 4px;
+    margin-left: 12px;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+/* Separate dark theme style for snackbar action button */
+.dark-theme .error-snackbar .mat-simple-snackbar-action {
+  color: #000000 !important;
+  font-weight: 800;
+  padding: 0 8px;
+  border-radius: 4px;
+  margin-left: 12px;
+}
+
+/* Alternative selector to ensure it gets applied */
+body.dark-theme
+  .mat-mdc-snack-bar-container
+  .mdc-snackbar__surface
+  .mat-mdc-button.mat-mdc-snack-bar-action {
+  color: #000000 !important;
+}

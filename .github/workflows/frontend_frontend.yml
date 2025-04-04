@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      API_URL: https://localhost:7156/Images
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -22,6 +25,12 @@ jobs:
         run: |
           cd front-end/image-processing
           npm ci
+
+      - name: Create Environment File
+        run: |
+            cd front-end/image-processing
+            echo "API_KEY=${{ secrets.API_KEY }}" > .env
+            echo "API_URL=${{ env.API_URL }}" >> .env
 
       - name: Run Tests
         run: |

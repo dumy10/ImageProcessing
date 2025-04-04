@@ -27,43 +27,60 @@ ImageData::~ImageData()
 	}
 }
 
-void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength) const
+void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength, ProgressCallback progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Filtering image data with filter: " + std::to_string(static_cast<int>(filter)));
 
 	std::unique_ptr<unsigned char[]> outputImage(new unsigned char[m_imageSize]);
 
-	if (!this->ApplyFilter(filter, outputImage.get()))
+	if (!this->ApplyFilter(filter, outputImage.get(), progressCallback))
 	{
-		*outputLength = 0;
-		*outputData = nullptr;
-	}
-
-	std::vector<unsigned char> encodedData;
-
-	if (!this->WriteToMemory(outputImage.get(), &encodedData))
-	{
-		Logger::GetInstance().LogError("Failed to write image data to memory");
 		*outputLength = 0;
 		*outputData = nullptr;
 		return;
 	}
+
+	// Report progress at 75% - image filtered, now encoding
+	if (progressCallback)
+		progressCallback(75);
+
+	std::vector<unsigned char> encodedData;
+
+	if (!this->WriteToMemory(outputImage.get(), &encodedData, progressCallback))
+	{
+		Logger::GetInstance().LogError("Failed to write image data to memory");
+		*outputLength = 0;
+		*outputData = nullptr;
+		encodedData.clear();
+		return;
+	}
 	Logger::GetInstance().LogMessage("Image data written to memory successfully");
+
+	// Report progress at 90% - image encoded, now copying
+	if (progressCallback)
+		progressCallback(90);
 
 	*outputLength = static_cast<int>(encodedData.size());
 	*outputData = new unsigned char[*outputLength];
 
 	std::memcpy(*outputData, encodedData.data(), *outputLength);
 
+	if (progressCallback)
+		progressCallback(95);
+
 	Logger::GetInstance().LogMessage("Image data filtered successfully");
 }
 
-[[nodiscard]] bool ImageData::ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage) const
+[[nodiscard]] bool ImageData::ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage, ProgressCallback progressCallback) const
 {
 	try
 	{
 		std::unique_ptr<IFilter> filter = FilterFactory::CreateFilter(filterType);
-		filter->Apply(m_imageData, outputImage, m_width, m_height, m_channels);
+
+		if (progressCallback)
+			progressCallback(50);
+
+		filter->Apply(m_imageData, outputImage, m_width, m_height, m_channels, progressCallback);
 		return true;
 	}
 	catch (const std::exception& e)
@@ -73,26 +90,37 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	}
 }
 
-[[nodiscard]] bool ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData) const
+[[nodiscard]] bool ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, ProgressCallback progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Writing image data to memory");
 
-	encodedData->reserve(m_imageSize);
+	encodedData->clear();
+	int size = m_imageSize + 1024; // Add an extra buffer for the encoded data to prevent reallocation of memory
+	encodedData->reserve(size);
 
 	bool success = false;
+	EAllowedExtensions extension = g_kAllowedExtensions.find(m_extension)->second;
 
-	if (m_extension == ".png")
+	if (progressCallback)
+		progressCallback(80);
+
+	switch (extension)
 	{
+	case EAllowedExtensions::PNG:
 		success = stbi_write_png_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, m_width * m_channels);
-	}
-	else if (m_extension == ".jpg" || m_extension == ".jpeg")
-	{
+		break;
+	case EAllowedExtensions::JPG:
+	case EAllowedExtensions::JPEG:
 		success = stbi_write_jpg_to_func(kWriteCallback, encodedData, m_width, m_height, m_channels, outputImage, kImageQuality);
-	}
-	else
-	{
+		break;
+	case EAllowedExtensions::UNDEFINED:
+	default:
 		Logger::GetInstance().LogError("Extension not supported: " + m_extension);
+		break;
 	}
+
+	if (progressCallback)
+		progressCallback(85);
 
 	return success;
 }

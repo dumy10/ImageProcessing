@@ -33,5 +33,25 @@
         /// Flip vertical filter
         /// </summary>
         FLIPVERTICAL,
+        /// <summary>
+        /// Sepia filter
+        /// </summary>
+        SEPIA,
+        /// <summary>
+        /// Oil paint filter
+        /// </summary>
+        OILPAINT,
+        /// <summary>
+        /// Kaleidoscope filter
+        /// </summary>
+        KALEIDOSCOPE,
+        /// <summary>
+        /// Mosaic filter
+        /// </summary>
+        MOSAIC,
+        /// <summary>
+        /// Glitch filter
+        /// </summary>
+        GLITCH,
     }
 }

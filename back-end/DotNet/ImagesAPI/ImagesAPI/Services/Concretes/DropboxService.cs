@@ -8,9 +8,20 @@ namespace ImagesAPI.Services.Concretes
     /// <summary>
     /// Service for interacting with Dropbox to perform image-related operations.
     /// </summary>
-    public class DropboxService(IDropboxAPISettings dropboxAPISettings) : IDropboxService
+    /// <remarks>
+    /// Constructor for the DropboxService
+    /// </remarks>
+    /// <param name="dropboxAPISettings">Dropbox API settings</param>
+    /// <param name="cacheService">Cache service for optimizing image retrieval</param>
+    public class DropboxService(IDropboxAPISettings dropboxAPISettings, ICacheService cacheService) : IDropboxService
     {
         private readonly DropboxClient _dropboxClient = new(dropboxAPISettings.RefreshToken, dropboxAPISettings.AppKey, dropboxAPISettings.AppSecret);
+        private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+
+        #region Cache Durations
+        private const int CACHE_DURATION_METADATA = 120; // 2 hours
+        private const int CACHE_DURATION_URL = 1440; // 24 hours
+        #endregion
 
         /// <summary>
         /// Uploads an image to Dropbox.
@@ -57,6 +68,14 @@ namespace ImagesAPI.Services.Concretes
         {
             DeleteResult result = await _dropboxClient.Files.DeleteV2Async(imageId);
 
+            // Remove from cache if the deletion is successful
+            if (result.Metadata != null)
+            {
+                _cacheService.Remove($"image_stream_{imageId}");
+                _cacheService.Remove($"image_metadata_{imageId}");
+                _cacheService.Remove($"image_url_{imageId}");
+            }
+
             return result.Metadata != null;
         }
 
@@ -67,7 +86,10 @@ namespace ImagesAPI.Services.Concretes
         /// <returns>The file metadata.</returns>
         public async Task<FileMetadata?> GetFile(string imageId)
         {
-            return await _dropboxClient.Files.GetMetadataAsync(imageId) as FileMetadata;
+            // Try to get the metadata from cache first
+            string cacheKey = $"image_metadata_{imageId}";
+
+            return await _cacheService.GetOrCreateAsync<FileMetadata?>(cacheKey, async () => await _dropboxClient.Files.GetMetadataAsync(imageId) as FileMetadata, CACHE_DURATION_METADATA);
         }
 
         /// <summary>
@@ -79,6 +101,7 @@ namespace ImagesAPI.Services.Concretes
         /// <returns>A memory stream containing the image data.</returns>
         public async Task<MemoryStream?> GetStreamForImage(string imageId)
         {
+            // We do not want to cache the stream itself, it can be a large object and the CLR could dispose it making it unusable
             using var downloadedFile = await (await _dropboxClient.Files.DownloadAsync(imageId)).GetContentAsStreamAsync();
             var memoryStream = new MemoryStream();
             await downloadedFile.CopyToAsync(memoryStream);
@@ -94,9 +117,25 @@ namespace ImagesAPI.Services.Concretes
         /// <returns>The public URL of the image.</returns>
         public async Task<string> GetImageURL(string imageId)
         {
-            var sharedLink = await _dropboxClient.Sharing.CreateSharedLinkWithSettingsAsync(imageId);
+            // Try to get the URL from cache first
+            string cacheKey = $"image_url_{imageId}";
 
-            return sharedLink.Url.Replace("dl=0", "raw=1");
+            return await _cacheService.GetOrCreateAsync<string>(cacheKey,
+                async () =>
+                {
+                    try
+                    {
+                        var sharedLink = await _dropboxClient.Sharing.CreateSharedLinkWithSettingsAsync(imageId);
+                        return sharedLink.Url.Replace("dl=0", "raw=1");
+                    }
+                    catch (Exception)
+                    {
+                        // Return empty string instead of null in case of failure
+                        return string.Empty;
+                    }
+                },
+                CACHE_DURATION_URL
+            ) ?? string.Empty; // Use empty string as fallback if null is returned
         }
     }
 }

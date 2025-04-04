@@ -27,12 +27,9 @@ namespace ImagesAPI.Logger
             executingAssemblyPath = Path.GetDirectoryName(executingAssemblyPath) ?? string.Empty;
 
             string logDirectory = Path.Combine(executingAssemblyPath, "ImagesProcessorLogs");
-            _logFile = Path.Combine(logDirectory, "ImagesAPI.log");
 
-            if (File.Exists(_logFile))
-            {
-                File.Delete(_logFile);
-            }
+            // Create a log file for the current execution of the program in order to avoid overwriting logs across different executions
+            _logFile = Path.Combine(logDirectory, $"ImagesAPI-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log");
 
             if (!Directory.Exists(logDirectory))
             {
@@ -72,10 +69,20 @@ namespace ImagesAPI.Logger
                 throw new InvalidOperationException("Log file path is not set.");
             }
 
-            lock (_lock)
+            try
             {
-                using StreamWriter writer = new(_logFile, true) { AutoFlush = true };
-                writer.WriteLine($"{{{level}}} {DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}");
+                lock (_lock)
+                {
+                    using StreamWriter writer = new(_logFile, true) { AutoFlush = true };
+                    writer.WriteLine($"{{{level}}} {DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Ignore exceptions
+                // If we execute a lots of operations sometimes it can't lock the file and will throw an exception, we can ignore it
+                Console.WriteLine("An error occured while trying to write a message to the log file.");
+                Console.WriteLine(ex.Message);
             }
         }
     }

@@ -10,12 +10,22 @@
  * @brief Callback function for writing image data.
  */
 static stbi_write_func* kWriteCallback = [](void* context, void* data, int size) {
-	std::vector<unsigned char>* buffer = reinterpret_cast<std::vector<unsigned char>*>(context);
-	unsigned char* bytes = reinterpret_cast<unsigned char*>(data);
-	buffer->insert(buffer->end(), bytes, bytes + size);
+	auto* buffer = static_cast<std::vector<unsigned char>*>(context);
+
+	// Minimize reallocation
+	size_t currentSize = buffer->size();
+	buffer->resize(currentSize + size);
+
+	std::memcpy(buffer->data() + currentSize, data, size);
 	};
 
 static const size_t kImageQuality = 100; ///< Quality of the jpg image.
+
+/**
+ * @brief Callback function type for reporting progress.
+ * @param progress Progress value between 0 and 100.
+ */
+typedef void (*ProgressCallback)(int progress);
 
 /**
  * @brief Class for handling image data and applying filters.
@@ -43,8 +53,9 @@ public:
 	 * @param filter The filter to apply.
 	 * @param outputData Pointer to the output data.
 	 * @param outputLength Pointer to the length of the output data.
+	 * @param progressCallback Optional callback function for progress updates.
 	 */
-	void FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength) const;
+	void FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength, ProgressCallback progressCallback = nullptr) const;
 
 private:
 	/**
@@ -54,16 +65,17 @@ private:
 	 * @param encodedData Pointer to the vector to store the encoded data.
 	 * @return True if the image data was written successfully, false otherwise.
 	 */
-	[[nodiscard]] bool WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData) const;
+	[[nodiscard]] bool WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, ProgressCallback progressCallback) const;
 
 	/**
 	 * @brief Applies a specified filter to the image data.
 	 *
 	 * @param filter The filter to apply.
 	 * @param outputImage Pointer to the output image data.
+	 * @param progressCallback Optional callback function for progress updates.
 	 * @return True if the filter was applied successfully, false otherwise.
 	 */
-	[[nodiscard]] bool ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage) const;
+	[[nodiscard]] bool ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage, ProgressCallback progressCallback = nullptr) const;
 private:
 	std::string m_extension; ///< File extension of the image.
 	unsigned char* m_imageData; ///< Pointer to the image data.

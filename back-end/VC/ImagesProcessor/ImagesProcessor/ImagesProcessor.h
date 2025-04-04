@@ -1,8 +1,20 @@
 #pragma once
 #include "pch.h"
 #include "ImageData.h"
+#include "libdefine.h"
+#include "AllFilters.h"
 
-constexpr size_t kMaxImageLength = 1024 * 1024 * 50; /// < Maximum image length allowed. 50 MB
+constexpr size_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length allowed. 10 MB
+
+/**
+ * @brief Callback function type for reporting progress.
+ * @param progress Progress value between 0 and 100.
+ */
+typedef void (*ProgressCallback)(int progress);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief Applies a specified filter to the given image data.
@@ -13,26 +25,33 @@ constexpr size_t kMaxImageLength = 1024 * 1024 * 50; /// < Maximum image length 
  * @param outputData Pointer to the output data.
  * @param extension File extension of the image.
  * @param outputLength Pointer to the length of the output data.
+ * @param progressCallback Optional callback function for reporting progress. Default is nullptr.
  */
-extern "C" IMAGESPROCESSOR_API void ApplyFilter(const char* imageData, int length, const char* filter, unsigned char** outputData, const char* extension, int* outputLength);
+IMAGESPROCESSOR_API void ApplyFilter(const char* imageData, int length, const char* filter, 
+                                     unsigned char** outputData, const char* extension, 
+                                     int* outputLength, ProgressCallback progressCallback = nullptr);
 
 /**
- * @brief Frees the allocated memory for the image data.
- *
- * @param data Pointer to the data to be freed.
+ * @brief Frees memory allocated by the ApplyFilter function.
+ * 
+ * @param data Pointer to the memory to free.
  */
-extern "C" IMAGESPROCESSOR_API void FreeMemory(unsigned char** data);
+IMAGESPROCESSOR_API void FreeMemory(unsigned char** data);
+
+#ifdef __cplusplus
+}
+#endif
 
 /**
- * @brief Converts a given string to lowercase.
+ * @brief Converts a string to lowercase.
  *
- * @param input The input string to convert.
- * @return The converted lowercase string.
+ * @param input The string to convert.
+ * @return The lowercase string.
  */
 std::string ToLowerCase(const std::string& input);
 
 /**
- * @brief Checks if a given pointer is valid.
+ * @brief Checks if a pointer is valid.
  *
  * @param pointer The pointer to check.
  * @return True if the pointer is valid, false otherwise.

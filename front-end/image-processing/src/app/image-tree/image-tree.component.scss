@@ -1,54 +1,198 @@
-.treeNodeContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 1.25rem 0;
-}
+@use "../../assets/themes/theme-mixins.scss" as theme-mixins;
 
-.treeNode {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 0.625rem;
-}
+// ===========================
+// Layout Containers
+// ===========================
 
-.treeNodeImage {
-  width: 150px;
-  height: 150px;
-  object-fit: contain;
-  border: 0.0625rem solid #ccc;
-  border-radius: 0.3125rem;
-  margin-bottom: 0.3125rem;
-  cursor: pointer;
-  transition: transform 0.2s ease-in-out;
-}
-
-.treeNodeImage:hover {
-  transform: scale(1.05);
-}
-
-.filtersContainer {
-  background-color: #f8f9fa;
-  color: #333;
-  font-size: 0.875rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.3125rem;
-  box-shadow: 0rem 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
-}
-
-.filtersContainer:hover {
-  background-color: #495057;
-  color: #ffffff;
-}
-
-.treeNodeChildren {
-  display: flex;
-  flex-direction: row; 
-  flex-wrap: nowrap; 
-  justify-content: flex-start; 
-  gap: 0.9375rem;
-  margin-top: 0.625rem;
+.tree-visualization-container {
+  position: relative;
   width: 100%;
-  overflow-x: auto; 
+  height: 100%;
+  overflow: hidden;
+}
+
+.d3-tree-container {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.no-data-message {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary-color);
+  font-style: italic;
+  font-size: 1.2rem;
+}
+
+// ===========================
+// D3 Core Elements
+// ===========================
+
+svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--background-color);
+}
+
+// ===========================
+// Link & Connection Styling
+// ===========================
+
+.link {
+  fill: none;
+  stroke: var(--primary-color);
+  stroke-width: 3px;
+  stroke-opacity: 0.85;
+  stroke-linecap: round;
+}
+
+.arrow {
+  fill: var(--primary-color);
+  stroke: none;
+  opacity: 0.9;
+}
+
+.filter-label {
+  font-size: 15px;
+  fill: var(--text-color);
+  color: var(--text-color);
+  font-weight: bold;
+  paint-order: stroke;
+  stroke: var(--card-background);
+  stroke-width: 5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+// ===========================
+// Node Styling
+// ===========================
+
+.node {
+  cursor: pointer;
+
+  // Node circle styling
+  .node-circle {
+    fill: var(--card-background);
+    stroke: var(--border-color);
+    stroke-width: 4px;
+    transition: fill 0.2s ease, stroke 0.2s ease;
+
+    &:hover {
+      stroke: var(--primary-color);
+      stroke-width: 5px;
+    }
+  }
+
+  // Text on nodes
+  text {
+    font-size: 16px;
+    fill: var(--text-color);
+    color: var(--text-color);
+  }
+}
+
+// Additional text styles
+.hidden-count {
+  font-size: 15px;
+  fill: var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 600;
+  font-style: italic;
+}
+
+.loading-text {
+  font-size: 14px;
+  fill: var(--text-color);
+  color: var(--text-color);
+}
+
+// ===========================
+// Loading States
+// ===========================
+
+.tree-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(var(--background-rgb), 0.7);
+  z-index: 10;
+
+  span {
+    margin-top: 18px;
+    color: var(--text-color);
+    font-size: 1.2rem;
+  }
+}
+
+// ===========================
+// Tooltip Styling
+// ===========================
+
+:host ::ng-deep .d3-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background-color: var(--card-background);
+  color: var(--text-color);
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  max-width: 280px;
+  z-index: 1000;
+  border: 2px solid var(--border-color);
+
+  .tooltip-title {
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 8px;
+    font-size: 18px;
+  }
+
+  .tooltip-filter {
+    color: var(--text-color);
+    font-style: italic;
+  }
+}
+
+// ===========================
+// Dark Theme Overrides
+// ===========================
+
+:host-context(.dark-theme) {
+  .node text,
+  .loading-text,
+  .filter-label {
+    fill: white;
+    color: white;
+  }
+
+  .hidden-count {
+    fill: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .tree-loading-overlay span,
+  .no-data-message {
+    color: white;
+  }
+
+  .d3-tooltip {
+    color: white;
+
+    .tooltip-filter {
+      color: white;
+    }
+  }
 }

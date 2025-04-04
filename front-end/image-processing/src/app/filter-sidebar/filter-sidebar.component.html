@@ -1,0 +1,97 @@
+<!-- Sidebar toggle button -->
+<button
+  class="sidebar-toggle"
+  (click)="toggleSidebar()"
+  [attr.aria-label]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+>
+  <mat-icon>{{ sidebarCollapsed ? "chevron_right" : "chevron_left" }}</mat-icon>
+</button>
+
+<!-- Sidebar content -->
+<div class="sidebar">
+  <h3>Image Filters</h3>
+
+  <!-- History buttons (undo/redo) -->
+  <div
+    class="history-buttons"
+    *ngIf="
+      image && ((image.appliedFilters?.length ?? 0) > 0 || canUndo || canRedo)
+    "
+  >
+    <button
+      mat-icon-button
+      (click)="undoFilter()"
+      aria-label="Undo last filter"
+      [disabled]="!canUndo || isFilteringInProgress"
+    >
+      <mat-icon>undo</mat-icon>
+    </button>
+    <button
+      mat-icon-button
+      (click)="redoFilter()"
+      aria-label="Redo last filter"
+      [disabled]="!canRedo || isFilteringInProgress"
+    >
+      <mat-icon>redo</mat-icon>
+    </button>
+  </div>
+
+  <!-- Filter categories -->
+  <div class="filter-categories">
+    <!-- Dynamically generate filter categories -->
+    <div class="filter-category" *ngFor="let category of getCategories()">
+      <div class="category-header" (click)="toggleCategory(category)">
+        <h4>{{ category | titlecase }}</h4>
+        <mat-icon>{{
+          isCategoryOpen(category) ? "expand_less" : "expand_more"
+        }}</mat-icon>
+      </div>
+      <div class="category-content" [class.expanded]="isCategoryOpen(category)">
+        <app-filter-buttons
+          [filters]="getFiltersByCategory(category)"
+          [isFilteringInProgress]="isFilteringInProgress"
+          (filterSelected)="onFilterSelected($event)"
+        ></app-filter-buttons>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image statistics -->
+  <div class="stats-container" *ngIf="image">
+    <div class="stat-item">
+      <span>Width:</span>
+      <span>{{ image.width }}px</span>
+    </div>
+    <div class="stat-item">
+      <span>Height:</span>
+      <span>{{ image.height }}px</span>
+    </div>
+  </div>
+
+  <!-- Applied filters list -->
+  <div
+    class="filters-applied"
+    *ngIf="image && (image.appliedFilters?.length ?? 0) > 0"
+  >
+    <h4>Applied Filters</h4>
+    <div class="filters-list">
+      <ul>
+        <li *ngFor="let filter of image.appliedFilters">{{ filter }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="action-buttons">
+    <div class="save-button">
+      <button
+        mat-button
+        (click)="downloadImage()"
+        aria-label="Download processed image"
+        [disabled]="isFilteringInProgress"
+      >
+        <mat-icon>download</mat-icon>Download Image
+      </button>
+    </div>
+  </div>
+</div>

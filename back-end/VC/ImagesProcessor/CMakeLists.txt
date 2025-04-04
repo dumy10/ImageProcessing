@@ -8,7 +8,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Set output directories for binaries and libraries
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+# Define platform flags
+if(WIN32)
+    set(PLATFORM_WINDOWS TRUE)
+    add_compile_definitions(_WINDOWS)
+elseif(UNIX AND NOT APPLE)
+    set(PLATFORM_LINUX TRUE)
+    add_compile_definitions(_LINUX)
+endif()
 
 # Enable OpenMP if available
 find_package(OpenMP)
@@ -32,20 +42,28 @@ target_include_directories(ImagesProcessor PRIVATE
 
 # Precompiled header
 target_precompile_headers(ImagesProcessor PRIVATE ${CMAKE_SOURCE_DIR}/ImagesProcessor/pch.h)
+
 # Set compiler definitions for exports and warnings
 target_compile_definitions(ImagesProcessor PRIVATE 
     _CRT_SECURE_NO_WARNINGS
     IMAGESPROCESSOR_EXPORTS
 )
 
+# Set Linux-specific properties
+if(PLATFORM_LINUX)
+    # Output as libImagesProcessor.so on Linux
+    set_target_properties(ImagesProcessor PROPERTIES PREFIX "lib")
+    
+    # Add visibility flags
+    target_compile_options(ImagesProcessor PRIVATE -fvisibility=hidden)
+    
+    # On Linux, add these libs (may be needed for filesystem, etc.)
+    target_link_libraries(ImagesProcessor PRIVATE pthread dl)
+endif()
+
 # Link OpenMP if available
 if(OpenMP_CXX_FOUND)
     target_link_libraries(ImagesProcessor PRIVATE OpenMP::OpenMP_CXX)
-endif()
-
-# Set Windows-specific options
-if(WIN32)
-    target_compile_definitions(ImagesProcessor PRIVATE _WINDOWS)
 endif()
 
 # Download and unpack Google Test and Google Mock at configure time
@@ -81,16 +99,20 @@ target_include_directories(ImagesProcessorTests PRIVATE
     ${CMAKE_SOURCE_DIR}/external/stb-master
 )
 
-# Installation target (optional)
+# Installation target
 install(TARGETS ImagesProcessor
     RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
+    LIBRARY DESTINATION bin
     ARCHIVE DESTINATION lib
 )
 
 # Display summary
 message(STATUS "Project: ${PROJECT_NAME}")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Source files: ${SOURCES}")
-message(STATUS "Test source files: ${TEST_SOURCES}")
+message(STATUS "Platform: ${CMAKE_SYSTEM_NAME}")
+if(PLATFORM_WINDOWS)
+    message(STATUS "Building for Windows")
+elseif(PLATFORM_LINUX)
+    message(STATUS "Building for Linux")
+endif()
 message(STATUS "Output directory: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")

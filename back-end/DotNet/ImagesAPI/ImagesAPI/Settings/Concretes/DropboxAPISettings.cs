@@ -12,40 +12,21 @@ namespace ImagesAPI.Settings.Concretes
         /// </summary>
         public string RefreshToken
         {
-            get
-            {
-                return "ERXudb-nuuYAAAAAAAAAAex-vPQZ8xZjcNclJqV0e0aBMhlDyrDvN8oTZdekcj0s";
-            }
-            set
-            {
-
-            }
+            get => Environment.GetEnvironmentVariable("DROPBOX_REFRESH_TOKEN")!;
         }
         /// <summary>
         /// Gets or sets the app key used for authenticating with the Dropbox API.
         /// </summary>
         public string AppKey
         {
-            get
-            {
-                return "zf6j1kcgm2vuuq5";
-            }
-            set
-            {
-            }
+            get => Environment.GetEnvironmentVariable("DROPBOX_APP_KEY")!;
         }
         /// <summary>
         /// Gets or sets the app secret used for authenticating with the Dropbox API.
         /// </summary>
         public string AppSecret
         {
-            get
-            {
-                return "h3ocpjkezi17qxz";
-            }
-            set
-            {
-            }
+            get => Environment.GetEnvironmentVariable("DROPBOX_APP_SECRET")!;
         }
     }
 }

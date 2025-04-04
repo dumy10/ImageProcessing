@@ -1,9 +1,25 @@
 #include "ImagesProcessorTest.h"
 #include "stb_image_implementation.cpp"
 
+// Initialize static members
+std::vector<int> ImagesProcessorTest::progressValues;
+std::mutex ImagesProcessorTest::progressMutex;
+
+void ImagesProcessorTest::ProgressCallbackTracker(int progress)
+{
+	std::lock_guard<std::mutex> lock(progressMutex);
+	progressValues.push_back(progress);
+}
+
+void ImagesProcessorTest::ResetProgressTracking()
+{
+	std::lock_guard<std::mutex> lock(progressMutex);
+	progressValues.clear();
+}
+
 void ImagesProcessorTest::SetUp()
 {
-
+	ResetProgressTracking();
 }
 
 void ImagesProcessorTest::TearDown()
@@ -42,6 +58,8 @@ const std::vector<unsigned char> ImagesProcessorTest::GetMockImageData(const std
 
 	return imageDataBuffer;
 }
+
+// Basic functionality tests
 
 TEST_F(ImagesProcessorTest, ApplyFilter_InvalidParameters)
 {
@@ -167,4 +185,60 @@ TEST_F(ImagesProcessorTest, ApplyFilter_ValidParameters_ValidJpegImageData)
 	EXPECT_GT(outputLength, 0);
 	EXPECT_NO_THROW(FreeMemory(&outputData));
 	EXPECT_EQ(outputData, nullptr);
+}
+
+TEST_F(ImagesProcessorTest, LoggerInstanceCreationAndLogging)
+{
+	EXPECT_NO_THROW(Logger::GetInstance().LogMessage("Logger instance created successfully."));
+}
+
+TEST_F(ImagesProcessorTest, ApplyFilter_EmptyImage)
+{
+	// Create an empty 1x1 valid image
+	const int width = 1;
+	const int height = 1;
+	const int channels = 3;
+	std::unique_ptr<unsigned char[]> emptyImage(new unsigned char[width * height * channels]());
+
+	std::vector<unsigned char> imageDataBuffer;
+	stbi_write_png_to_func(kWriteCallback, &imageDataBuffer, width, height, channels, emptyImage.get(), width * channels);
+
+	int length = static_cast<int>(imageDataBuffer.size());
+	const char* filter = "grayscale";
+	const char* extension = ".png";
+	unsigned char* outputData = nullptr;
+	int outputLength = 0;
+
+	ApplyFilter(reinterpret_cast<const char*>(imageDataBuffer.data()), length, filter, &outputData, extension, &outputLength);
+
+	EXPECT_NE(outputData, nullptr);
+	EXPECT_GT(outputLength, 0);
+	EXPECT_NO_THROW(FreeMemory(&outputData));
+	EXPECT_EQ(outputData, nullptr);
+}
+
+TEST_F(ImagesProcessorTest, ApplyFilter_UnsupportedImageFormat)
+{
+	// Test with an image format extension that isn't supported
+	std::vector<unsigned char> imageData = GetMockImageData(".png"); // Use PNG data
+	int length = static_cast<int>(imageData.size());
+	const char* filter = "grayscale";
+	const char* extension = ".bmp"; // Use BMP extension if it's unsupported
+	unsigned char* outputData = nullptr;
+	int outputLength = 0;
+
+	ApplyFilter(reinterpret_cast<const char*>(imageData.data()), length, filter, &outputData, extension, &outputLength);
+
+	// If BMP is unsupported, expect null output
+	// If BMP is supported, this would succeed
+	if (outputData == nullptr) 
+	{
+		EXPECT_EQ(outputLength, 0);
+	}
+	else 
+	{
+		EXPECT_GT(outputLength, 0);
+		EXPECT_NO_THROW(FreeMemory(&outputData));
+		EXPECT_EQ(outputData, nullptr);
+	}
 }

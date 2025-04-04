@@ -1,24 +1,31 @@
-<div *ngIf="node" class="treeNodeContainer">
-  <div class="treeNode">
-    <img
-      [src]="node.value.url"
-      alt="Image"
-      class="treeNodeImage"
-      (click)="openDialog(node.value)"
-      loading="lazy"
-      (error)="onImageError(node.value)"
-      role="button"
-      aria-label="Open image dialog"
-    />
-    <span *ngIf="node.value.appliedFilters" class="filtersContainer">
-      {{ node.value.appliedFilters[node.value.appliedFilters.length - 1] }}
-    </span>
-  </div>
-  <div class="treeNodeChildren" *ngIf="node.children.length > 0">
-    <app-image-tree
-      *ngFor="let child of node.children"
-      [node]="child"
-      [imagePairs]="imagePairs"
-    ></app-image-tree>
+<!-- Error banner component -->
+<app-error-banner
+  [showBanner]="errorState"
+  [errorMessage]="errorMessage"
+  [actions]="errorActions"
+  (dismiss)="errorState = false; errorMessage = ''"
+></app-error-banner>
+
+<!-- Main container with loading state handling -->
+<div class="tree-visualization-container" *ngIf="node">
+  <!-- Container for D3 tree visualization with direct reference -->
+  <div class="d3-tree-container" #treeContainer></div>
+
+  <!-- Loading indicator while tree is initializing -->
+  <div class="tree-loading-overlay" *ngIf="!node.value.loaded">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Loading tree visualization...</span>
   </div>
 </div>
+
+<!-- Fallback when no data is available -->
+<div class="no-data-message" *ngIf="!node">
+  <p>No image data available for visualization</p>
+</div>
+
+<!-- Loading overlay for download operations -->
+<app-loading
+  *ngIf="loading"
+  [loading]="loading"
+  [message]="loadingMessage"
+></app-loading>

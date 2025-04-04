@@ -6,7 +6,8 @@ on:
       - main
 
 jobs:
-  test-backend:
+  test-backend-windows:
+    name: Test Backend on Windows
     runs-on: windows-latest
     permissions:
       contents: read #This is required for actions/checkout
@@ -39,10 +40,66 @@ jobs:
       - name: Run C# tests
         run: dotnet test back-end\DotNet\ImagesAPITests\ImagesAPITests.csproj --configuration Release --runtime win-x64
 
+  test-backend-linux:
+    name: Test Backend on Linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.x"
+
+      - name: Install required packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev
+
+      - name: Install SkiaSharp dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfontconfig1 libfreetype6 libgl1-mesa-dev libgif7 libpng16-16 libjpeg-turbo8
+          # Create symlinks that SkiaSharp looks for
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
+
+      # This step ensures SkiaSharp native libraries are available
+      - name: Install SkiaSharp.NativeAssets.Linux
+        run: |
+          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp.NativeAssets.Linux
+          dotnet restore back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: "3.21.0"
+
+      - name: Configure CMake
+        run: cmake -S back-end/VC/ImagesProcessor -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build with CMake
+        run: cmake --build build --config Release
+
+      - name: Run C++ Tests
+        run: ./build/bin/ImagesProcessorTests
+
+      - name: Build with dotnet
+        run: dotnet build back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj --configuration Release
+
+      - name: Run C# tests
+        run: dotnet test back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj --configuration Release
+
   test-frontend:
     runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
+
+    env:
+      API_URL: https://localhost:7156/Images
 
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +113,12 @@ jobs:
         run: |
           cd front-end/image-processing
           npm ci
+
+      - name: Create Environment File
+        run: |
+          cd front-end/image-processing
+          echo "API_KEY=${{ secrets.API_KEY }}" > .env
+          echo "API_URL=${{ env.API_URL }}" >> .env
 
       - name: Run Tests
         run: |
