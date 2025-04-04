@@ -717,6 +717,22 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       );
   }
 
+  /**
+   * Reset the tree view to the default centered position and zoom level
+   * This can be called from the parent component
+   */
+  resetView(): void {
+    if (this.svg && this.g) {
+      // First apply zoom-to-fit to ensure we can see the entire tree
+      this.zoomToFit();
+
+      // Then after a short delay, center the view for optimal presentation
+      setTimeout(() => {
+        this.centerView();
+      }, 300);
+    }
+  }
+
   openDialog(image: ImageModel): void {
     const dialogRef = this.dialog.open(ImageHierarchyComponent, {
       data: this.getImageHierarchy(image),

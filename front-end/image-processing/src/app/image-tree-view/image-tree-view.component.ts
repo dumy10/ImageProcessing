@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -84,6 +84,11 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
   maxHorizontalCount: number = 0;
 
   /**
+   * Flag to indicate if there are more levels with actual nodes to display
+   */
+  hasMoreNodesToShow: boolean = true;
+
+  /**
    * Image ID from the route parameter.
    */
   imageId: string | null = null;
@@ -117,6 +122,11 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
    * Cached page size from URL query parameters
    */
   cachedPageSize: number = 6;
+
+  /**
+   * Reference to the child ImageTreeComponent
+   */
+  @ViewChild(ImageTreeComponent) imageTreeComponent!: ImageTreeComponent;
 
   constructor(
     private imageService: ImageService,
@@ -316,6 +326,12 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
       }
     });
 
+    // After building the tree, check if there are more nodes to display beyond current display level
+    if (imageTree.root) {
+      this.hasMoreNodesToShow =
+        this.maxLevel > this.displayLevel && this.checkForNodesAtNextLevel();
+    }
+
     return imageTree;
   }
 
@@ -394,11 +410,66 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Checks if there are actual nodes at the next depth level
+   * Returns true if there are nodes at display level + 1
+   */
+  private checkForNodesAtNextLevel(): boolean {
+    if (!this.imageTree.root) return false;
+
+    // Use BFS to check if there are any nodes at the next depth level
+    // Only including the nodes that would be visible with current horizontalDisplayCount
+    const queue: Array<{ node: TreeNode<ImageModel>; level: number }> = [];
+    queue.push({ node: this.imageTree.root, level: 1 });
+
+    while (queue.length > 0) {
+      const { node, level } = queue.shift()!;
+
+      // If we find nodes at the next level we want to show, return true
+      if (level === this.displayLevel + 1) {
+        return true;
+      }
+
+      // Only add children if we haven't reached the target level yet
+      if (level < this.displayLevel + 1 && node.children.length > 0) {
+        // Apply horizontalDisplayCount filtering similar to the D3 visualization
+        let displayedChildren = node.children;
+        if (node.children.length > this.horizontalDisplayCount) {
+          const totalChildren = node.children.length;
+          const childrenToShow = Math.min(
+            totalChildren,
+            this.horizontalDisplayCount
+          );
+
+          // Center the displayed children
+          const startIndex = Math.max(
+            0,
+            Math.floor((totalChildren - childrenToShow) / 2)
+          );
+          displayedChildren = node.children.slice(
+            startIndex,
+            startIndex + childrenToShow
+          );
+        }
+
+        // Add only the visible children to the queue
+        for (const child of displayedChildren) {
+          queue.push({ node: child, level: level + 1 });
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Increases the vertical depth of the tree display
    */
   showMoreLevels(): void {
     if (this.displayLevel < this.maxLevel) {
       this.displayLevel++;
+
+      // Check if there are any more levels with actual nodes to display
+      this.hasMoreNodesToShow = this.checkForNodesAtNextLevel();
     }
   }
 
@@ -408,6 +479,9 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
   showLessLevels(): void {
     if (this.displayLevel > 1) {
       this.displayLevel--;
+      // When decreasing levels, there will always be more nodes to show if we haven't reached max depth
+      this.hasMoreNodesToShow =
+        this.displayLevel < this.maxLevel && this.checkForNodesAtNextLevel();
     }
   }
 
@@ -420,6 +494,16 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
         this.horizontalDisplayCount + 2,
         this.maxHorizontalCount
       );
+
+      // Recalculate the maximum visible level with the new horizontal display count
+      // This might reveal additional levels that were previously hidden
+      const maxVisibleLevel = this.calculateMaxVisibleLevel();
+
+      // After changing horizontal display count, check if there are more nodes at next level
+      // This is important because showing more nodes horizontally might reveal nodes with children
+      // at the next level that weren't visible before
+      this.hasMoreNodesToShow =
+        this.displayLevel < maxVisibleLevel && this.checkForNodesAtNextLevel();
     }
   }
 
@@ -432,7 +516,65 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
         this.horizontalDisplayCount - 2,
         1
       );
+
+      // After changing horizontal display count, check if there are more nodes at next level
+      // This is necessary because hiding nodes horizontally might hide nodes that had children
+      // at the next level
+      this.hasMoreNodesToShow =
+        this.displayLevel < this.maxLevel && this.checkForNodesAtNextLevel();
+
+      // Find the maximum level that has visible nodes with the new horizontal display count
+      const maxVisibleLevel = this.calculateMaxVisibleLevel();
+
+      // If current display level is higher than max visible level, adjust it
+      if (this.displayLevel > maxVisibleLevel) {
+        this.displayLevel = Math.max(1, maxVisibleLevel);
+      }
     }
+  }
+
+  /**
+   * Calculates the maximum tree level that has visible nodes
+   * based on the current horizontalDisplayCount
+   */
+  private calculateMaxVisibleLevel(): number {
+    if (!this.imageTree.root) return 1;
+
+    let maxVisibleLevel = 1;
+    const queue: Array<{ node: TreeNode<ImageModel>; level: number }> = [];
+    queue.push({ node: this.imageTree.root, level: 1 });
+
+    while (queue.length > 0) {
+      const { node, level } = queue.shift()!;
+      maxVisibleLevel = Math.max(maxVisibleLevel, level);
+
+      // Only include children that would be visible with current horizontalDisplayCount
+      let displayedChildren = node.children;
+      if (node.children.length > this.horizontalDisplayCount) {
+        const totalChildren = node.children.length;
+        const childrenToShow = Math.min(
+          totalChildren,
+          this.horizontalDisplayCount
+        );
+
+        // Center the displayed children
+        const startIndex = Math.max(
+          0,
+          Math.floor((totalChildren - childrenToShow) / 2)
+        );
+        displayedChildren = node.children.slice(
+          startIndex,
+          startIndex + childrenToShow
+        );
+      }
+
+      // Add visible children to the queue
+      for (const child of displayedChildren) {
+        queue.push({ node: child, level: level + 1 });
+      }
+    }
+
+    return maxVisibleLevel;
   }
 
   /**
@@ -446,5 +588,15 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
         pageSize: this.cachedPageSize,
       },
     });
+  }
+
+  /**
+   * Resets the tree view to its default centered position
+   */
+  resetTreeView(): void {
+    if (this.imageTreeComponent) {
+      // Call the resetView method in the child component
+      this.imageTreeComponent.resetView();
+    }
   }
 }

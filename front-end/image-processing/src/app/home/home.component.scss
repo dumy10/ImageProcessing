@@ -1,5 +1,18 @@
 @use "../../assets/themes/theme-mixins.scss" as mixins;
 
+// Define keyframes for the cloud upload animation
+@keyframes float-upload {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
 .photo-editor-container {
   display: flex;
   justify-content: center;
@@ -204,6 +217,7 @@
   height: 2.5rem;
   width: 2.5rem;
   color: var(--primary-color);
+  animation: float-upload 2s ease-in-out infinite;
 }
 
 .dropzone.uploading {

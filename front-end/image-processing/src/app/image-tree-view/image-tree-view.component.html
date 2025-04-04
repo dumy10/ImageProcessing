@@ -24,7 +24,7 @@
           [disabled]="horizontalDisplayCount <= 1"
           aria-label="Show fewer images horizontally"
         >
-          Horizontal <mat-icon>remove</mat-icon>
+          <mat-icon>remove</mat-icon> Reduce width
         </button>
         <span class="control-value">{{ horizontalDisplayCount }}</span>
         <button
@@ -34,7 +34,7 @@
           [disabled]="horizontalDisplayCount >= maxHorizontalCount"
           aria-label="Show more images horizontally"
         >
-          Horizontal <mat-icon>add</mat-icon>
+          <mat-icon>add</mat-icon> Expand width
         </button>
       </div>
 
@@ -46,19 +46,28 @@
           [disabled]="displayLevel <= 1"
           aria-label="Show fewer levels vertically"
         >
-          Vertical <mat-icon>remove</mat-icon>
+          <mat-icon>remove</mat-icon> Reduce depth
         </button>
         <span class="control-value">{{ displayLevel }}</span>
         <button
           mat-button
           class="btn btn-secondary"
           (click)="showMoreLevels()"
-          [disabled]="displayLevel >= maxLevel"
+          [disabled]="displayLevel >= maxLevel || !hasMoreNodesToShow"
           aria-label="Show more levels vertically"
         >
-          Vertical <mat-icon>add</mat-icon>
+          <mat-icon>add</mat-icon> Add more depth
         </button>
       </div>
+
+      <button
+        mat-button
+        class="btn btn-secondary"
+        (click)="resetTreeView()"
+        aria-label="Reset tree view"
+      >
+        <mat-icon>center_focus_strong</mat-icon> Reset View
+      </button>
 
       <button
         mat-button
