@@ -1,98 +1,31 @@
-<div *ngIf="node" class="treeNodeContainer">
-  <!-- Parent Node -->
-  <div class="treeNode">
-    <img
-      [src]="node.value.url"
-      alt="Image"
-      class="treeNodeImage"
-      (click)="openDialog(node.value)"
-      loading="lazy"
-      (error)="onImageError(node.value)"
-      role="button"
-      aria-label="Open image dialog"
-    />
+<!-- Error banner component -->
+<app-error-banner
+  [showBanner]="errorState"
+  [errorMessage]="errorMessage"
+  [actions]="errorActions"
+  (dismiss)="errorState = false; errorMessage = ''"
+></app-error-banner>
+
+<!-- Main container with loading state handling -->
+<div class="tree-visualization-container" *ngIf="node">
+  <!-- Container for D3 tree visualization with direct reference -->
+  <div class="d3-tree-container" #treeContainer></div>
+
+  <!-- Loading indicator while tree is initializing -->
+  <div class="tree-loading-overlay" *ngIf="!node.value.loaded">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Loading tree visualization...</span>
   </div>
-
-  <!-- Child Nodes and Connecting Arrows -->
-  <ng-container *ngIf="node.children.length > 0">
-    <!-- SVG for arrows connecting parent to children -->
-    <svg
-      class="treeArrowsSvg"
-      [attr.viewBox]="'0 0 ' + node.children.length * 200 + ' 80'"
-      [attr.width]="node.children.length * 200"
-      height="80"
-    >
-      <!-- Parent to branch point line -->
-      <line
-        [attr.x1]="100"
-        y1="0"
-        [attr.x2]="100"
-        y2="30"
-        class="treeArrow"
-      ></line>
-
-      <!-- Horizontal connector line when multiple children -->
-      <line
-        *ngIf="node.children.length > 1"
-        [attr.x1]="100"
-        y1="30"
-        [attr.x2]="node.children.length * 200 - 100"
-        y2="30"
-        class="treeArrow"
-      ></line>
-
-      <!-- Lines and arrows to each child node with filter labels -->
-      <ng-container *ngFor="let child of node.children; let i = index">
-        <!-- Vertical line to child -->
-        <line
-          [attr.x1]="i * 200 + 100"
-          y1="30"
-          [attr.x2]="i * 200 + 100"
-          y2="70"
-          class="treeArrow"
-        ></line>
-
-        <!-- Filter name on the line -->
-        <text
-          *ngIf="
-            child.value.appliedFilters && child.value.appliedFilters.length
-          "
-          [attr.x]="i * 200 + 100"
-          y="50"
-          class="filterLabel"
-          text-anchor="middle"
-          dominant-baseline="middle"
-        >
-          {{
-            child.value.appliedFilters[child.value.appliedFilters.length - 1]
-          }}
-        </text>
-
-        <!-- Arrow head pointing to child -->
-        <polygon
-          [attr.points]="
-            i * 200 +
-            95 +
-            ' 70, ' +
-            (i * 200 + 100) +
-            ' 80, ' +
-            (i * 200 + 105) +
-            ' 70'
-          "
-          class="arrowHead"
-        ></polygon>
-      </ng-container>
-    </svg>
-
-    <!-- Container for horizontally arranged child nodes -->
-    <div class="treeNodeChildren">
-      <div *ngFor="let child of node.children" class="childNodeWrapper">
-        <app-image-tree
-          [node]="child"
-          [imagePairs]="imagePairs"
-          class="childTreeNode"
-        ></app-image-tree>
-      </div>
-    </div>
-  </ng-container>
 </div>
+
+<!-- Fallback when no data is available -->
+<div class="no-data-message" *ngIf="!node">
+  <p>No image data available for visualization</p>
+</div>
+
+<!-- Loading overlay for download operations -->
+<app-loading
+  *ngIf="loading"
+  [loading]="loading"
+  [message]="loadingMessage"
+></app-loading>

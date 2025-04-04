@@ -1,10 +1,173 @@
 <h2 mat-dialog-title class="dialogTitle" aria-label="Image title">
-  Image: {{ data.length ? data[data.length - 1].name : 'Unknown' }}
+  Image: {{ data.length ? data[data.length - 1].name : "Unknown" }}
 </h2>
+
+<div class="viewToggleContainer">
+  <button
+    mat-button
+    class="viewToggleBtn"
+    (click)="toggleView()"
+    aria-label="Toggle view"
+  >
+    <mat-icon>{{ timelineView ? "view_stream" : "timeline" }}</mat-icon>
+    {{ timelineView ? "Standard View" : "Timeline View" }}
+  </button>
+</div>
+
 <mat-dialog-content class="imageDialogContent">
-  <div class="imagesColumn">
-    <!-- Loop through each image and add SVG arrows between them -->
-    <ng-container *ngFor="let imageModel of data; let i = index">
+  <!-- Timeline View with zoom and pan controls -->
+  <div class="timelineView" *ngIf="timelineView">
+    <div class="timelineControls" *ngIf="hasOverflow">
+      <div class="zoomControls">
+        <button
+          mat-icon-button
+          (click)="zoomOut()"
+          [disabled]="zoomLevel <= minZoom"
+          aria-label="Zoom out"
+        >
+          <mat-icon>zoom_out</mat-icon>
+        </button>
+        <mat-slider
+          min="0.1"
+          max="2"
+          step="0.1"
+          aria-label="Zoom level"
+          class="zoomSlider"
+        >
+          <input
+            matSliderThumb
+            [(ngModel)]="zoomLevel"
+            (input)="onZoomChange()"
+          />
+        </mat-slider>
+        <button
+          mat-icon-button
+          (click)="zoomIn()"
+          [disabled]="zoomLevel >= maxZoom"
+          aria-label="Zoom in"
+        >
+          <mat-icon>zoom_in</mat-icon>
+        </button>
+        <span class="zoomPercentage">{{ (zoomLevel * 100).toFixed(0) }}%</span>
+        <button
+          mat-icon-button
+          (click)="fitToView()"
+          matTooltip="Fit to view"
+          aria-label="Fit to view"
+        >
+          <mat-icon>fit_screen</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          (click)="resetView()"
+          matTooltip="Reset view"
+          aria-label="Reset view"
+        >
+          <mat-icon>restart_alt</mat-icon>
+        </button>
+      </div>
+      <div class="panInstructions" *ngIf="hasOverflow">
+        <mat-icon>pan_tool</mat-icon> Click and drag to pan
+      </div>
+    </div>
+
+    <div
+      #timelineContainer
+      class="timelineContainer"
+      [class.has-overflow]="hasOverflow"
+      [class.is-panning]="isPanning"
+      (mousedown)="startPanning($event)"
+    >
+      <div
+        class="timelineTrack"
+        [style.width]="100 * timelineWidthMultiplier + '%'"
+        [style.transform-origin]="'center center'"
+      >
+        <div class="timelineLine"></div>
+        <ng-container
+          *ngFor="let imageModel of getDisplayImages(); let i = index"
+        >
+          <!-- Calculate position: for single image, center it; for multiple images, distribute evenly -->
+          <div class="timelineNode" [style.left]="calculateNodePosition(i)">
+            <div class="nodeCircle" [matTooltip]="'Step ' + (i + 1)">
+              <span>{{ i + 1 }}</span>
+            </div>
+
+            <ng-container
+              *ngFor="
+                let filter of getNewFiltersApplied(imageModel, i);
+                let j = index
+              "
+            >
+              <!-- Adjust positioning based on image count -->
+              <div
+                class="filterBadge"
+                [style.top]="j * 30 + 'px'"
+                [style.left]="
+                  data.length <= 2 ? (j % 2 === 0 ? '30%' : '70%') : '50%'
+                "
+              >
+                <mat-icon
+                  class="filterIcon"
+                  [matTooltip]="getFilterInfo(filter).description"
+                >
+                  {{ getFilterInfo(filter).icon }}
+                </mat-icon>
+                <span class="filterName">{{
+                  getDisplayFilterName(filter)
+                }}</span>
+              </div>
+            </ng-container>
+
+            <div
+              class="timelineImage"
+              [ngClass]="{
+                original: i === 0,
+                result: i === getDisplayImages().length - 1
+              }"
+            >
+              <!-- Loading placeholder that shows when image is not loaded -->
+              <div class="image-loading-placeholder" *ngIf="!imageModel.loaded">
+                <mat-spinner diameter="30"></mat-spinner>
+                <span>Loading...</span>
+              </div>
+
+              <img
+                [src]="imageModel.url"
+                alt="Image step {{ i + 1 }}"
+                class="image"
+                [class.loaded]="imageModel.loaded"
+                [class.tall-image]="imageModel.height > imageModel.width * 1.5"
+                [matTooltip]="getImageTooltip(imageModel)"
+                matTooltipClass="multiline-tooltip"
+                loading="lazy"
+                (error)="onImageError(imageModel)"
+                (load)="onImageLoad(imageModel)"
+              />
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Show indication if more images are available but not shown in timeline -->
+      <div
+        *ngIf="displayCount < data.length"
+        class="moreImagesIndicator timeline-more"
+      >
+        <p>
+          + {{ data.length - displayCount }} more image{{
+            data.length - displayCount > 1 ? "s" : ""
+          }}
+          in history
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Standard Vertical View -->
+  <div class="imagesColumn" *ngIf="!timelineView">
+    <!-- Loop through each displayed image and add SVG arrows between them -->
+    <ng-container *ngFor="let imageModel of getDisplayImages(); let i = index">
       <!-- Add SVG arrow if this isn't the first image -->
       <div *ngIf="i > 0" class="arrowContainer">
         <svg
@@ -14,50 +177,108 @@
           height="60"
         >
           <!-- Arrow line -->
-          <line
-            x1="50"
-            y1="0"
-            x2="50"
-            y2="40"
-            class="arrowLine"
-          ></line>
-          
-          <!-- Filter name on the line -->
-          <text
-            *ngIf="imageModel.appliedFilters && imageModel.appliedFilters.length"
-            x="50"
-            y="30"
-            class="filterLabel"
-            text-anchor="middle"
-            dominant-baseline="middle"
+          <line x1="50" y1="0" x2="50" y2="40" class="arrowLine"></line>
+
+          <!-- Filter info on the arrow -->
+          <ng-container
+            *ngFor="let filter of getNewFiltersApplied(imageModel, i)"
           >
-            {{ imageModel.appliedFilters[imageModel.appliedFilters.length - 1] }}
-          </text>
-          
+            <g class="filterLabelGroup">
+              <circle
+                cx="50"
+                y="25"
+                r="15"
+                class="filterLabelBackground"
+              ></circle>
+              <text
+                x="50"
+                y="30"
+                class="filterLabel"
+                text-anchor="middle"
+                dominant-baseline="middle"
+                [matTooltip]="getFilterInfo(filter).description"
+              >
+                {{ getDisplayFilterName(filter) }}
+              </text>
+            </g>
+          </ng-container>
+
           <!-- Arrow head -->
-          <polygon
-            points="45 40, 50 50, 55 40"
-            class="arrowHead"
-          ></polygon>
+          <polygon points="45 40, 50 50, 55 40" class="arrowHead"></polygon>
         </svg>
       </div>
 
       <!-- Image container -->
-      <div class="imageContainer">
+      <div
+        class="imageContainer"
+        [attr.data-aspect-ratio]="imageModel.width / imageModel.height"
+        [ngClass]="{
+          'original-image': i === 0,
+          'final-image': i === getDisplayImages().length - 1
+        }"
+      >
+        <!-- Step indicator badge -->
+        <div class="stepBadge">Step {{ i + 1 }}</div>
+
+        <!-- Loading placeholder that shows when image is not loaded -->
+        <div class="image-loading-placeholder" *ngIf="!imageModel.loaded">
+          <mat-spinner diameter="30"></mat-spinner>
+          <span>Loading image...</span>
+        </div>
+
         <img
           [src]="imageModel.url"
           alt="Image"
           class="image"
+          [class.loaded]="imageModel.loaded"
+          [class.tall-image]="imageModel.height > imageModel.width * 1.5"
+          [matTooltip]="getImageTooltip(imageModel)"
+          matTooltipClass="multiline-tooltip"
           loading="lazy"
           (error)="onImageError(imageModel)"
+          (load)="onImageLoad(imageModel)"
           aria-label="Image"
         />
+
+        <!-- Filter info badges -->
+        <div class="filterInfoContainer" *ngIf="i > 0">
+          <ng-container
+            *ngFor="let filter of getNewFiltersApplied(imageModel, i)"
+          >
+            <div
+              class="filterInfoBadge"
+              [matTooltip]="getFilterInfo(filter).description"
+            >
+              <mat-icon>{{ getFilterInfo(filter).icon }}</mat-icon>
+              {{ getDisplayFilterName(filter) }}
+            </div>
+          </ng-container>
+        </div>
       </div>
     </ng-container>
+
+    <!-- Show indication if more images are available but not shown -->
+    <div *ngIf="displayCount < data.length" class="moreImagesIndicator">
+      <p>
+        + {{ data.length - displayCount }} more image{{
+          data.length - displayCount > 1 ? "s" : ""
+        }}
+        in hierarchy
+      </p>
+    </div>
   </div>
 </mat-dialog-content>
 
 <mat-dialog-actions id="imageDialogActions" class="imageDialogActions">
+  <button
+    mat-button
+    class="btn btn-secondary"
+    (click)="showLessImages()"
+    [disabled]="!canShowLess()"
+    aria-label="Show less images"
+  >
+    Show Less <mat-icon>remove</mat-icon>
+  </button>
   <button
     mat-button
     class="btn btn-primary"
@@ -65,5 +286,14 @@
     aria-label="Close dialog"
   >
     Close
+  </button>
+  <button
+    mat-button
+    class="btn btn-secondary"
+    (click)="showMoreImages()"
+    [disabled]="!canShowMore()"
+    aria-label="Show more images"
+  >
+    Show More <mat-icon>add</mat-icon>
   </button>
 </mat-dialog-actions>

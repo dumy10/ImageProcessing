@@ -13,7 +13,8 @@ namespace ImagesAPI.Services.Interfaces
         /// <param name="id">The identifier of the image to modify.</param>
         /// <param name="filter">The name of the filter to apply.</param>
         /// <param name="driveService">The drive service for image operations.</param>
+        /// <param name="progressTracker">Optional service for tracking progress updates.</param>
         /// <returns>A task representing the asynchronous operation, containing the modified image model.</returns>
-        Task<ImageModel?> ApplyFilterToImage(string id, string filter, IDriveService driveService);
+        Task<ImageModel?> ApplyFilterToImage(string id, string filter, IDriveService driveService, IProgressTrackerService? progressTracker = null);
     }
 }

@@ -4,9 +4,12 @@
 
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
-void MosaicFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels) const
+void MosaicFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Applying mosaic filter to image.");
+
+	if (progressCallback)
+		progressCallback(60);
 
 	static constexpr int tileSize = 10;
 	const int numTilesX = width / tileSize;
@@ -64,6 +67,9 @@ void MosaicFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 			}
 		}
 	}
+
+	if (progressCallback)
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Mosaic filter applied to image.");
 }

@@ -22,7 +22,7 @@
       mat-icon-button
       (click)="undoFilter()"
       aria-label="Undo last filter"
-      [disabled]="!canUndo"
+      [disabled]="!canUndo || isFilteringInProgress"
     >
       <mat-icon>undo</mat-icon>
     </button>
@@ -30,7 +30,7 @@
       mat-icon-button
       (click)="redoFilter()"
       aria-label="Redo last filter"
-      [disabled]="!canRedo"
+      [disabled]="!canRedo || isFilteringInProgress"
     >
       <mat-icon>redo</mat-icon>
     </button>
@@ -49,6 +49,7 @@
       <div class="category-content" [class.expanded]="isCategoryOpen(category)">
         <app-filter-buttons
           [filters]="getFiltersByCategory(category)"
+          [isFilteringInProgress]="isFilteringInProgress"
           (filterSelected)="onFilterSelected($event)"
         ></app-filter-buttons>
       </div>
@@ -73,9 +74,11 @@
     *ngIf="image && (image.appliedFilters?.length ?? 0) > 0"
   >
     <h4>Applied Filters</h4>
-    <ul>
-      <li *ngFor="let filter of image.appliedFilters">{{ filter }}</li>
-    </ul>
+    <div class="filters-list">
+      <ul>
+        <li *ngFor="let filter of image.appliedFilters">{{ filter }}</li>
+      </ul>
+    </div>
   </div>
 
   <!-- Action buttons -->
@@ -85,6 +88,7 @@
         mat-button
         (click)="downloadImage()"
         aria-label="Download processed image"
+        [disabled]="isFilteringInProgress"
       >
         <mat-icon>download</mat-icon>Download Image
       </button>

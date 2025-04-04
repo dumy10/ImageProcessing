@@ -1,0 +1,308 @@
+// Component-specific theme overrides
+
+// Card styles
+.mat-mdc-card {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Dialog styles
+.mat-mdc-dialog-container {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Material Dialog theming - more specific selectors
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  background-color: var(--card-background);
+  color: var(--text-color);
+
+  .dark-theme & {
+    background-color: var(--card-background);
+    color: var(--text-color);
+
+    // Dialog action buttons with lighter text in dark theme
+    .mat-mdc-dialog-actions {
+      .mat-mdc-button,
+      .mat-mdc-raised-button,
+      .mat-mdc-outlined-button,
+      .mat-mdc-unelevated-button {
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+    }
+  }
+}
+
+// Ensure dialog content follows theme
+.mat-mdc-dialog-content {
+  color: var(--text-color);
+}
+
+// Material Dialog backdrop
+.cdk-overlay-dark-backdrop {
+  background: rgba(0, 0, 0, 0.32);
+
+  .dark-theme & {
+    background: rgba(0, 0, 0, 0.6);
+  }
+}
+
+// Material Dialog container
+.cdk-overlay-pane .mat-mdc-dialog-container {
+  .mdc-dialog__container {
+    .mdc-dialog__surface {
+      background-color: var(--card-background);
+      color: var(--text-color);
+    }
+  }
+}
+
+// Material Paginator theming - more specific selectors
+.mat-mdc-paginator {
+  background-color: transparent;
+  color: var(--text-color);
+
+  .dark-theme & {
+    background-color: transparent;
+    color: var(--text-color);
+  }
+
+  .mat-mdc-paginator-container {
+    color: var(--text-color);
+  }
+
+  .mat-mdc-icon-button {
+    color: var(--text-color);
+
+    &.mat-mdc-button-disabled {
+      color: var(--disabled-text-color);
+    }
+  }
+
+  .mat-mdc-paginator-range-label,
+  .mat-mdc-paginator-page-size-label {
+    color: var(--text-color);
+  }
+
+  .mat-mdc-select-value {
+    color: var(--text-color);
+  }
+
+  .mat-mdc-select-arrow {
+    color: var(--text-color);
+  }
+}
+
+// Fix for paginator dropdown
+.mat-mdc-paginator .mat-mdc-paginator-page-size .mat-mdc-select {
+  .mat-mdc-select-value {
+    color: var(--text-color);
+  }
+}
+
+// Explicit overrides for specific paginator elements
+.dark-theme {
+  .mat-mdc-paginator-page-size-label,
+  .mat-mdc-paginator-range-label {
+    color: var(--text-color) !important;
+  }
+
+  .mat-mdc-paginator .mat-mdc-paginator-container {
+    .mat-mdc-paginator-page-size-select {
+      .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+        .mdc-floating-label,
+      .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+        .mdc-text-field__input {
+        color: var(--text-color) !important;
+      }
+    }
+
+    // Icon buttons
+    .mat-mdc-icon-button {
+      color: var(--text-color) !important;
+
+      &.mat-mdc-button-disabled {
+        color: var(--disabled-text-color) !important;
+      }
+    }
+  }
+
+  // Fix for the select field in paginator
+  .mat-mdc-form-field-type-mat-select .mat-mdc-select-value-text {
+    color: var(--text-color);
+  }
+
+  .mat-mdc-form-field-focus-overlay {
+    background-color: var(--background-color);
+  }
+
+  // Button styles for better text visibility in dark theme
+  .mat-mdc-button,
+  .mat-mdc-raised-button,
+  .mat-mdc-outlined-button,
+  .mat-mdc-unelevated-button {
+    color: rgba(255, 255, 255, 0.9) !important;
+
+    &.mat-primary {
+      color: white !important;
+    }
+
+    &.mat-accent {
+      color: white !important;
+    }
+
+    &:disabled {
+      color: var(--disabled-text-color) !important;
+    }
+  }
+
+  // Specific override for dialog action buttons
+  .mat-mdc-dialog-actions {
+    .mat-mdc-button,
+    .mat-mdc-raised-button,
+    .mat-mdc-outlined-button,
+    .mat-mdc-unelevated-button {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+  }
+}
+
+// Form field styles
+.mat-form-field {
+  &.mat-focused {
+    .dark-theme & .mat-form-field-label {
+      color: var(--accent-color);
+    }
+  }
+}
+
+// Add smooth transitions for all Angular Material components
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-icon-button,
+.mat-mdc-menu-panel,
+.mat-mdc-select-panel,
+.mat-option,
+.mat-mdc-checkbox,
+.mat-mdc-radio-button,
+.mat-mdc-slide-toggle,
+.mat-mdc-slider,
+.mat-mdc-progress-bar,
+.mat-mdc-progress-spinner,
+.mat-mdc-tab,
+.mat-mdc-tab-body,
+.mat-expansion-panel,
+.mat-drawer,
+.mat-toolbar {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+// Material Menu Panel theming
+.mat-mdc-menu-panel {
+  background-color: var(--card-background);
+
+  .dark-theme & {
+    background-color: var(--card-background);
+  }
+
+  .mat-mdc-menu-item {
+    color: var(--text-color);
+
+    &:hover:not([disabled]) {
+      background-color: rgba(0, 0, 0, 0.04);
+
+      .dark-theme & {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    &.mat-mdc-menu-item-highlighted:not([disabled]) {
+      background-color: rgba(0, 0, 0, 0.04);
+
+      .dark-theme & {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+}
+
+// Material Select Panel theming
+.mat-mdc-select-panel {
+  background-color: var(--card-background);
+
+  .dark-theme & {
+    background-color: var(--card-background);
+  }
+
+  .mat-mdc-option {
+    color: var(--text-color);
+
+    &:hover:not(.mat-mdc-option-disabled) {
+      background-color: rgba(0, 0, 0, 0.04);
+
+      .dark-theme & {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    &.mat-mdc-option-active {
+      background-color: rgba(0, 0, 0, 0.04);
+
+      .dark-theme & {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+}
+
+// Override for Material Select dropdown
+.cdk-overlay-pane {
+  .mat-mdc-select-panel {
+    background-color: var(--card-background);
+
+    .mat-mdc-option {
+      color: var(--text-color);
+    }
+  }
+}
+
+// Force theme-specific styles with higher specificity for dialog and overlay components
+body.dark-theme {
+  .cdk-overlay-container {
+    .mat-mdc-dialog-container {
+      .mdc-dialog__surface {
+        background-color: var(--card-background);
+
+        // Dialog action buttons
+        .mat-mdc-dialog-actions {
+          button {
+            color: rgba(255, 255, 255, 0.9) !important;
+          }
+        }
+      }
+    }
+
+    .cdk-overlay-pane {
+      .mat-mdc-select-panel,
+      .mat-mdc-autocomplete-panel,
+      .mat-mdc-menu-panel {
+        background-color: var(--card-background);
+      }
+
+      .mat-mdc-option {
+        color: var(--text-color);
+      }
+    }
+  }
+}
+
+// Wrapper for all Material popups
+.cdk-overlay-container {
+  .mat-mdc-select-panel,
+  .mat-mdc-menu-panel,
+  .mat-mdc-autocomplete-panel,
+  .mat-mdc-tooltip-panel {
+    background-color: var(--card-background);
+    color: var(--text-color);
+  }
+}

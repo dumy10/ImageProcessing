@@ -4,7 +4,9 @@
     *ngFor="let filter of filters"
     (click)="filterImage(filter)"
     class="filter-button"
+    [class.active-filter]="isActiveFilter(filter)"
     [attr.aria-label]="'Apply ' + filter + ' filter'"
+    [disabled]="isButtonDisabled(filter)"
   >
     <mat-icon>filter</mat-icon> {{ filter }}
   </button>

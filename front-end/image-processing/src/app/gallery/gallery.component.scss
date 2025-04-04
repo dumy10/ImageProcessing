@@ -1,3 +1,5 @@
+@use "../../assets/themes/theme-mixins.scss" as mixins;
+
 .gallery {
   display: flex;
   flex-wrap: wrap;
@@ -10,16 +12,17 @@
   flex: 1 1 calc(50% - 1.25rem);
   max-width: calc(50% - 1.25rem);
   justify-content: space-between;
-  border: 1px solid #ccc;
+  @include mixins.themed-border;
   border-radius: 0.25rem;
   padding: 0.625rem;
   box-sizing: border-box;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  @include mixins.themed-card-background;
 }
 
 .pair:hover {
   transform: scale(1.02);
-  box-shadow: 0 0.25rem 0.625rem rgba(0, 0, 0, 0.15);
+  @include mixins.themed-shadow(2);
 }
 
 .image-container {
@@ -29,7 +32,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f0f0f0;
+  background-color: var(--background-color);
+  min-height: 200px;
+  overflow: hidden;
+
+  .dark-theme & {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
 }
 
 .image-container img {
@@ -38,12 +47,37 @@
   object-fit: contain;
   cursor: pointer;
   border-radius: 4px;
-  transition: transform 0.3s ease, filter 0.3s ease;
+  transition: transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.image-container img.loaded {
+  opacity: 1;
 }
 
 .image-container img:hover {
   transform: scale(1.05);
   filter: brightness(0.9);
+}
+
+.image-loading-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-lighter);
+  z-index: 1;
+
+  span {
+    margin-top: 10px;
+    color: var(--text-secondary-color);
+    font-size: 0.85rem;
+  }
 }
 
 .button-container {
@@ -61,7 +95,8 @@
 }
 
 .download-button,
-.edit-button {
+.edit-button,
+.tree-button {
   font-size: 1.2rem;
   color: white;
   transition: color 0.3s ease;
@@ -69,12 +104,73 @@
 }
 
 .download-button:hover,
-.edit-button:hover {
-  color: #ffcc00;
+.edit-button:hover,
+.tree-button:hover {
+  color: var(--accent-color);
+}
+
+.no-images-message {
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary-color);
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 3rem;
+    height: 3rem;
+    width: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    margin: 0;
+    max-width: 80%;
+    word-wrap: break-word;
+  }
 }
 
 mat-paginator {
   margin-top: 1rem;
+
+  ::ng-deep .mat-mdc-paginator-container {
+    color: var(--text-color);
+
+    .mat-mdc-paginator-range-label,
+    .mat-mdc-paginator-page-size-label {
+      color: var(--text-color);
+    }
+
+    .mat-mdc-select-value-text {
+      color: var(--text-color);
+    }
+
+    .mat-mdc-icon-button {
+      color: var(--text-color);
+
+      &.mat-mdc-button-disabled {
+        color: var(--disabled-text-color);
+      }
+    }
+
+    .mat-mdc-paginator-page-size-select {
+      .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+        .mdc-floating-label,
+      .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+        .mdc-text-field__input {
+        color: var(--text-color);
+      }
+    }
+  }
 }
 
 @media (max-width: 768px) {

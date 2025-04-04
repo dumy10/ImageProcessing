@@ -1,4 +1,17 @@
-<div class="container" [class.sidebar-collapsed]="sidebarCollapsed">
+<div
+  class="container"
+  [class.sidebar-collapsed]="sidebarCollapsed"
+  [class.error-state]="errorState && !image?.loaded"
+  [class.loading-state]="imageLoadTimeout && !image?.loaded"
+>
+  <app-error-banner
+    *ngIf="errorState && !image?.loaded"
+    [showBanner]="errorState"
+    [errorMessage]="errorMessage"
+    [actions]="errorActions"
+    (dismiss)="dismissError()"
+  ></app-error-banner>
+
   <!-- Filter sidebar component -->
   <app-filter-sidebar
     *ngIf="image?.loaded"
@@ -7,6 +20,7 @@
     [sidebarCollapsed]="sidebarCollapsed"
     [canUndo]="canUndo()"
     [canRedo]="canRedo()"
+    [isFilteringInProgress]="loading || isFilterOperation || showProgress"
     (filterSelected)="filterImage($event)"
     (toggleSidebarEvent)="toggleSidebar()"
     (downloadImageEvent)="downloadImage()"
@@ -15,19 +29,64 @@
   ></app-filter-sidebar>
 
   <!-- Main image panel -->
-  <div class="image-panel">
-    <div class="image-container">
+  <div
+    class="image-panel"
+    [class.full-page]="errorState && !image?.loaded"
+    [class.loading]="imageLoadTimeout && !image?.loaded"
+  >
+    <!-- Image display area with loading indicator -->
+    <div
+      class="image-container"
+      [class.full-page]="!image?.loaded || (imageLoadTimeout && !image?.loaded)"
+    >
+      <!-- Loading indicator shows during the delay period -->
+      <div
+        class="image-loading-container"
+        *ngIf="imageLoadTimeout && !image?.loaded"
+      >
+        <div class="image-loading-spinner">
+          <mat-icon class="rotating">sync</mat-icon>
+        </div>
+        <span class="image-loading-text">Attempting to load image...</span>
+      </div>
+
       <div class="image-display">
         <img
+          #imageElement
           [src]="imagePath"
           alt="Image to be processed"
           class="image"
           (error)="onImageError()"
           (load)="onImageLoad()"
         />
+
+        <!-- Progress overlay -->
+        <div class="filter-operation-overlay" *ngIf="showProgress">
+          <div class="filter-operation-container">
+            <div class="progress-bar-container">
+              <div class="progress-bar-wrapper">
+                <div
+                  class="progress-bar"
+                  [style.width.%]="progressPercentage"
+                ></div>
+              </div>
+              <div class="progress-text">
+                {{ progressPercentage }}% complete
+              </div>
+            </div>
+            <div class="filter-operation-spinner">
+              <mat-icon class="rotating">sync</mat-icon>
+            </div>
+            <span class="filter-operation-text">{{ loadingMessage }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<app-loading *ngIf="loading" [loading]="loading" [message]="loadingMessage" />
+<app-loading
+  *ngIf="loading && !image?.loaded"
+  [loading]="loading"
+  [message]="loadingMessage"
+/>

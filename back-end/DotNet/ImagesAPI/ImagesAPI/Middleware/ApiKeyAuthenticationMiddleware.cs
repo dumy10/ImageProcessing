@@ -17,11 +17,10 @@ namespace ImagesAPI.Middleware
     /// <param name="next">The next delegate in the pipeline</param>
     /// <param name="userSettings">User settings</param>
     /// <param name="cache">Memory cache</param>
-    public class ApiKeyAuthenticationMiddleware(RequestDelegate next, IUserSettings userSettings, IMemoryCache cache)
+    public class ApiKeyAuthenticationMiddleware(RequestDelegate next, IUserSettings userSettings)
     {
         private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
         private readonly IUserSettings _userSettings = userSettings ?? throw new ArgumentNullException(nameof(userSettings));
-        private readonly IMemoryCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         
         // Store rate limiting data
         private static readonly ConcurrentDictionary<string, RateLimitInfo> _rateLimits = new();

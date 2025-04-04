@@ -1,9 +1,11 @@
-<p>
-  <mat-toolbar>
-    <button mat-button routerLink=""><mat-icon>home</mat-icon> Home</button>
-    <button mat-button routerLink="/gallery">
-      <mat-icon>photo_library</mat-icon> Image Gallery
-    </button>
-  </mat-toolbar>
-</p>
+<mat-toolbar>
+  <button mat-button routerLink=""><mat-icon>home</mat-icon> Home</button>
+  <button mat-button routerLink="/gallery">
+    <mat-icon>photo_library</mat-icon> Image Gallery
+  </button>
+  <span class="spacer"></span>
+  <button mat-icon-button (click)="toggleTheme()" aria-label="Toggle theme">
+    <mat-icon>{{ isDarkTheme() ? "light_mode" : "dark_mode" }}</mat-icon>
+  </button>
+</mat-toolbar>
 <router-outlet></router-outlet>

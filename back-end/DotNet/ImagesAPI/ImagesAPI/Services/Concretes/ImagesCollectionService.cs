@@ -116,16 +116,23 @@ namespace ImagesAPI.Services.Concretes
         /// <param name="id">The identifier of the image to modify.</param>
         /// <param name="filter">The name of the filter to apply.</param>
         /// <param name="driveService">The drive service for image operations.</param>
+        /// <param name="progressTracker">Optional service for tracking progress updates.</param>
         /// <returns>A task representing the asynchronous operation, containing the modified image model.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the id or filter is null or empty.</exception>
         /// <exception cref="ArgumentException">Thrown when the image does not exist or the modified image is invalid.</exception>
-        public async Task<ImageModel?> ApplyFilterToImage(string id, string filter, IDriveService driveService)
+        public async Task<ImageModel?> ApplyFilterToImage(string id, string filter, IDriveService driveService, IProgressTrackerService? progressTracker = null)
         {
+            // Report initial status if progress tracking is enabled
+            await ReportProgressAsync(progressTracker, id, filter, 0, "Starting filter application");
+
             // Start tasks in parallel
             // 1. Get image model from database
             // 2. Get image stream from drive service
             var imageModelTask = Get(id);
             var imageStreamTask = driveService.GetStreamForImage(id);
+
+            // Report fetching progress if tracking is enabled
+            await ReportProgressAsync(progressTracker, id, filter, 5, "Fetching image data");
 
             // Wait for both tasks to complete
             await Task.WhenAll(imageModelTask, imageStreamTask);
@@ -133,6 +140,8 @@ namespace ImagesAPI.Services.Concretes
             // Check results
             var imageModel = imageModelTask.Result ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
             var sourceStream = imageStreamTask.Result ?? throw new ArgumentException($"The image with the id: {id}, does not exist.");
+
+            await ReportProgressAsync(progressTracker, id, filter, 10, "Image data fetched successfully");
 
             try
             {
@@ -142,6 +151,8 @@ namespace ImagesAPI.Services.Concretes
 
                 await sourceStream.ReadAsync(imageDataCopy.AsMemory(0, (int)sourceStream.Length));
                 sourceStream.Position = 0;
+
+                await ReportProgressAsync(progressTracker, id, filter, 15, "Preparing image data for processing");
 
                 // Create a new memory stream from the copied data for SKCodec
                 using var skCodecStream = new MemoryStream(imageDataCopy);
@@ -161,13 +172,38 @@ namespace ImagesAPI.Services.Concretes
                     imageModel.Name = "Unnamed - " + Guid.NewGuid().ToString() + extension;
                 }
 
+                await ReportProgressAsync(progressTracker, id, filter, 20, "Starting filter application");
+
                 var stopwatch = Stopwatch.StartNew();
-                
-                // Apply the filter to the image
-                ImageProcessor.GetFilteredImageData(imageDataCopy, filter.ToLower(), extension.ToLower(), out byte[] modifiedImageData);
-                
+
+                // Define progress callback if progress tracking is enabled
+                ProgressCallback? progressHandler = null;
+                if (progressTracker != null)
+                {
+                    // Track the highest reported progress to ensure we never go backwards
+                    var highestReportedProgress = new ThreadLocal<int>(() => 20);
+
+                    progressHandler = async progress =>
+                    {
+                        // Map the progress from native code (0-100) to our range (20-80)
+                        int mappedProgress = 20 + (int)(progress * 0.6);
+
+                        // Ensure progress never decreases
+                        if (mappedProgress > highestReportedProgress.Value)
+                        {
+                            highestReportedProgress.Value = mappedProgress;
+                            await ReportProgressAsync(progressTracker, id, filter, mappedProgress, $"Applying filter: {progress}% complete");
+                        }
+                    };
+                }
+
+                // Apply the filter with optional progress tracking
+                ImageProcessor.GetFilteredImageData(imageDataCopy, filter.ToLower(), extension.ToLower(), out byte[] modifiedImageData, progressHandler);
+
                 stopwatch.Stop();
                 Logging.Instance.LogMessage($"Filter {filter} application took {stopwatch.ElapsedMilliseconds}ms");
+
+                await ReportProgressAsync(progressTracker, id, filter, 85, "Filter applied successfully, validating result");
 
                 if (string.IsNullOrWhiteSpace(imageModel.ContentType))
                 {
@@ -205,6 +241,8 @@ namespace ImagesAPI.Services.Concretes
                     AppliedFilters = new List<string>(imageModel.AppliedFilters ?? []) { filter }
                 };
 
+                await ReportProgressAsync(progressTracker, id, filter, 90, "Uploading filtered image");
+
                 // Upload image and get URL in parallel
                 using (var uploadStream = new MemoryStream(modifiedImageData))
                 {
@@ -214,13 +252,17 @@ namespace ImagesAPI.Services.Concretes
 
                     // Get URL and save to database in parallel
                     var getUrlTask = driveService.GetImageURL(modifiedImageId);
-                    
+
                     // Await URL first since it's needed for the model
                     newImageModel.Url = await getUrlTask;
                 }
 
+                await ReportProgressAsync(progressTracker, id, filter, 95, "Saving to database");
+
                 // Save the image in the database
                 await Create(newImageModel);
+
+                await ReportProgressAsync(progressTracker, id, filter, 100, "Filter applied successfully");
 
                 Logging.Instance.LogMessage("Successfully applied filter, uploaded image, and saved to database.");
 
@@ -229,6 +271,10 @@ namespace ImagesAPI.Services.Concretes
             catch (Exception ex)
             {
                 Logging.Instance.LogError($"Error applying filter: {ex.Message}");
+
+                // Report error if progress tracking is enabled
+                await ReportProgressAsync(progressTracker, id, filter, -1, $"Error: {ex.Message}");
+
                 throw;
             }
             finally
@@ -237,6 +283,26 @@ namespace ImagesAPI.Services.Concretes
                 if (sourceStream != null)
                 {
                     await sourceStream.DisposeAsync();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to report progress through the tracker if available
+        /// </summary>
+        private static async Task ReportProgressAsync(IProgressTrackerService? progressTracker, string imageId, string filter, int progress, string message = "")
+        {
+            if (progressTracker != null)
+            {
+                try
+                {
+                    await progressTracker.ReportProgressAsync(imageId, filter, progress);
+                    Logging.Instance.LogMessage($"Progress update for image {imageId}, filter {filter}: {progress}% - {message}");
+                }
+                catch (Exception ex)
+                {
+                    // Log but don't fail the operation if progress reporting fails
+                    Logging.Instance.LogError($"Failed to report progress: {ex.Message}");
                 }
             }
         }

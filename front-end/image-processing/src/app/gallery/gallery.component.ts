@@ -5,14 +5,20 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageModel } from '../models/ImageModel';
 import { Tree, TreeNode } from '../models/tree';
 import { CacheService } from '../services/cache.service';
+import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
+import {
+  ErrorAction,
+  ErrorBannerComponent,
+} from '../shared/error-banner/error-banner.component';
 
 /**
  * GalleryComponent is a component that displays a gallery of images with pagination.
@@ -33,6 +39,8 @@ import { ImageService } from '../services/image.service';
     MatPaginatorModule,
     MatIconModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
+    ErrorBannerComponent,
   ],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss',
@@ -97,19 +105,39 @@ export class GalleryComponent implements OnInit, OnDestroy {
   private initialPreloadDone: boolean = false;
 
   /**
+   * Error state flag
+   * @type {boolean}
+   */
+  errorState: boolean = false;
+
+  /**
+   * Error message to display
+   * @type {string}
+   */
+  errorMessage: string = '';
+
+  /**
+   * Error actions for the banner
+   * @type {ErrorAction[]}
+   */
+  errorActions: ErrorAction[] = [];
+
+  /**
    * Constructor for GalleryComponent.
    * @param {MatDialog} dialog - The dialog service for opening dialogs.
    * @param {ImageService} imageService - Service for handling image operations.
    * @param {CacheService} cacheService - Service for caching images.
    * @param {Router} router - Router for navigating between pages.
    * @param {ActivatedRoute} route - The activated route for accessing URL parameters.
+   * @param {ErrorHandlingService} errorHandling - Service for handling errors.
    */
   constructor(
     private dialog: MatDialog,
     private imageService: ImageService,
     private cacheService: CacheService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private errorHandling: ErrorHandlingService
   ) {}
 
   /**
@@ -141,6 +169,10 @@ export class GalleryComponent implements OnInit, OnDestroy {
    * Loads the images from the server and sets up pagination.
    */
   loadImages(): void {
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
+
     const imagesSub = this.imageService.getImages().subscribe({
       next: (response: ImageModel[]) => {
         // Reset the imagePairs array
@@ -165,7 +197,15 @@ export class GalleryComponent implements OnInit, OnDestroy {
 
         if (this.imagePairs.length === 0) {
           this.loading = false;
-          alert('No filtered images found');
+          this.errorState = true;
+          this.errorMessage = 'No filtered images found';
+          this.errorActions = [
+            {
+              label: 'Retry',
+              icon: 'refresh',
+              action: () => this.loadImages(),
+            },
+          ];
           return;
         }
 
@@ -176,15 +216,32 @@ export class GalleryComponent implements OnInit, OnDestroy {
         this.performSmartPreloading();
       },
       error: (error: HttpErrorResponse) => {
-        if (error.status === 404) {
-          console.error('No images found', error);
-          this.loading = false;
-          alert(error.message || 'No images found');
-          return;
-        }
         console.error('Failed to fetch images', error);
         this.loading = false;
-        alert(error.message || 'An error occurred while fetching images.');
+
+        this.errorState = true;
+        if (error.status === 404) {
+          this.errorMessage = 'No images found';
+        } else {
+          this.errorMessage = this.errorHandling.getErrorMessageByStatus(
+            error,
+            'images'
+          );
+        }
+
+        this.errorActions = [
+          {
+            label: 'Retry',
+            icon: 'refresh',
+            action: () => this.loadImages(),
+          },
+        ];
+
+        this.errorHandling.showErrorWithRetry(
+          'Failed to load images',
+          this.errorHandling.getReadableErrorMessage(error),
+          () => this.loadImages()
+        );
       },
       complete: () => {
         this.loading = false;
@@ -320,22 +377,34 @@ export class GalleryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Opens a dialog to display the details of the given image.
-   * @param {ImageModel} image - The image for which to display the details.
+   * Opens a dialog to display the image hierarchy (vertical history).
+   * For full tree visualization, navigates to the dedicated image-tree view.
+   * @param {ImageModel} image - The image for which to display details.
    */
   openDialog(image: ImageModel): void {
     // Preload related images before opening the dialog
     this.preloadRelatedImages(image);
 
-    const dialogRef = this.dialog.open(ImageDialogComponent, {
-      data: {
-        tree: this.getImageTree(image),
-        imagePairs: this.imagePairs,
-      },
+    // Open a dialog showing the vertical hierarchy (history) of this image
+    const dialogRef = this.dialog.open(ImageHierarchyComponent, {
+      data: this.getImageHierarchy(image)
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      console.log('The dialog was closed');
+      console.log('The hierarchy dialog was closed');
+    });
+  }
+
+  /**
+   * Navigate to the dedicated image tree view page for the full tree visualization
+   * @param {ImageModel} image - The image for which to display the tree
+   */
+  viewImageTree(image: ImageModel): void {
+    this.router.navigate(['/image-tree', image.id], {
+      queryParams: {
+        page: this.currentPage,
+        pageSize: this.itemsPerPage
+      }
     });
   }
 
@@ -356,75 +425,34 @@ export class GalleryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Builds a tree structure of images based on their parent-child relationships.
-   * @param {ImageModel} image - The image for which to build the tree.
-   * @returns {Tree<ImageModel>} - The tree structure of images.
+   * Gets the image hierarchy for the given image (for vertical history).
+   * @param {ImageModel} image - The image for which to retrieve the hierarchy.
+   * @returns {ImageModel[]} - An array of images representing the hierarchy.
    */
-  getImageTree(image: ImageModel): Tree<ImageModel> {
-    const imageTree: Tree<ImageModel> = new Tree<ImageModel>();
-    
-    // First find the original (root) image to establish the tree's root
-    const originalImage = this.getOriginalImage(image);
-    if (!originalImage) {
-      console.error('Could not find original image for:', image);
-      return imageTree; // Return empty tree if original image not found
-    }
-    
-    // Create a map to store all nodes that are part of this image's lineage
-    const nodeMap: Map<string, TreeNode<ImageModel>> = new Map();
-    
-    // Find all images that share the same original image
-    const relevantPairs = this.imagePairs.filter((pair) => 
-      this.getOriginalImage(pair.filteredImage).id === originalImage.id
-    );
-    
-    if (relevantPairs.length === 0) {
-      // If no relevant pairs, just add the original image as a standalone node
-      const rootNode = new TreeNode<ImageModel>(originalImage);
-      imageTree.setRoot(rootNode);
-      return imageTree;
-    }
-    
-    // First pass: create nodes for all relevant images
-    relevantPairs.forEach(pair => {
-      // Only create nodes if they don't already exist in the map
-      if (!nodeMap.has(pair.originalImage.id)) {
-        nodeMap.set(pair.originalImage.id, new TreeNode<ImageModel>(pair.originalImage));
+  getImageHierarchy(image: ImageModel): ImageModel[] {
+    const imageHierarchy: ImageModel[] = [];
+    let currentImage = image;
+
+    // Keep adding parents to the hierarchy until we reach the root
+    while (true) {
+      imageHierarchy.unshift(currentImage);
+
+      if (!currentImage.parentId) {
+        break;
       }
-      if (!nodeMap.has(pair.filteredImage.id)) {
-        nodeMap.set(pair.filteredImage.id, new TreeNode<ImageModel>(pair.filteredImage));
+
+      const parentImage = this.imagePairs.find(
+        (imgPair) => imgPair.originalImage.id === currentImage.parentId
+      )?.originalImage;
+
+      if (!parentImage) {
+        break;
       }
-    });
-    
-    // Ensure the root is in the map (in case it wasn't part of any pair)
-    if (!nodeMap.has(originalImage.id)) {
-      nodeMap.set(originalImage.id, new TreeNode<ImageModel>(originalImage));
-    }
-    
-    // Set the root node
-    const rootNode = nodeMap.get(originalImage.id);
-    if (rootNode) {
-      imageTree.setRoot(rootNode);
+
+      currentImage = parentImage;
     }
 
-    // Second pass: establish parent-child relationships
-    relevantPairs.forEach(pair => {
-      const childNode = nodeMap.get(pair.filteredImage.id);
-      if (childNode && childNode.value.parentId) {
-        const parentNode = nodeMap.get(childNode.value.parentId);
-        if (parentNode) {
-          // Check if this child is already added to prevent duplicates
-          const alreadyAdded = parentNode.children.some(
-            existingChild => existingChild.value.id === childNode.value.id
-          );
-          if (!alreadyAdded) {
-            parentNode.addChild(childNode);
-          }
-        }
-      }
-    });
-
-    return imageTree;
+    return imageHierarchy;
   }
 
   /**
@@ -460,6 +488,9 @@ export class GalleryComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     this.loadingMessage = 'Downloading the image...';
+    this.errorState = false;
+    this.errorMessage = '';
+    this.errorActions = [];
 
     const downloadSub = this.imageService.downloadImage(image.id).subscribe({
       next: (response) => {
@@ -475,10 +506,26 @@ export class GalleryComponent implements OnInit, OnDestroy {
       },
       error: (error: HttpErrorResponse) => {
         console.error('Failed to download image', error);
-        alert(
-          error.message || 'An error occurred while downloading the image.'
-        );
         this.loading = false;
+
+        this.errorState = true;
+        this.errorMessage = `Failed to download image: ${this.errorHandling.getReadableErrorMessage(
+          error
+        )}`;
+
+        this.errorActions = [
+          {
+            label: 'Retry',
+            icon: 'refresh',
+            action: () => this.downloadImage(image),
+          },
+        ];
+
+        this.errorHandling.showErrorWithRetry(
+          'Download failed',
+          this.errorHandling.getReadableErrorMessage(error),
+          () => this.downloadImage(image)
+        );
       },
       complete: () => {
         this.loading = false;

@@ -145,7 +145,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ImagesProcessorTest.cpp" />
+    <ClCompile Include="ImagesProcessorBasicTests.cpp" />
+    <ClCompile Include="ImagesProcessorCallbackTests.cpp" />
+    <ClCompile Include="ImagesProcessorFilterTests.cpp" />
+    <ClCompile Include="ImagesProcessorPerformanceTests.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>

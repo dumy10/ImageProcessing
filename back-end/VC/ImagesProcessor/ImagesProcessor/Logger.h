@@ -44,8 +44,6 @@ public:
 	Logger& operator=(Logger&&) = delete; // Move assignment operator
 	Logger(Logger&&) = delete; // Move constructor
 
-
-
 private:
 	/**
 	 * @brief Private constructor to prevent instantiation.

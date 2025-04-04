@@ -10,12 +10,14 @@ import {
   tick,
 } from '@angular/core/testing';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
 import { ImageModel } from '../models/ImageModel';
 import { CacheService } from '../services/cache.service';
+import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
 import { GalleryComponent } from './gallery.component';
 
@@ -24,13 +26,27 @@ describe('GalleryComponent', () => {
   let fixture: ComponentFixture<GalleryComponent>;
   let imageService: ImageService;
   let cacheService: CacheService;
+  let errorHandlingService: jasmine.SpyObj<ErrorHandlingService>;
+  let matSnackBar: jasmine.SpyObj<MatSnackBar>;
 
   beforeEach(async () => {
+    // Create spy objects for ErrorHandlingService and MatSnackBar
+    const errorHandlingSpy = jasmine.createSpyObj('ErrorHandlingService', [
+      'showErrorWithRetry',
+      'showErrorWithActions',
+      'getReadableErrorMessage',
+      'getErrorMessageByStatus',
+    ]);
+
+    const snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+
     await TestBed.configureTestingModule({
       imports: [GalleryComponent, MatDialogModule, RouterModule.forRoot([])],
       providers: [
         ImageService,
         CacheService,
+        { provide: ErrorHandlingService, useValue: errorHandlingSpy },
+        { provide: MatSnackBar, useValue: snackBarSpy },
         provideHttpClientTesting(),
         provideHttpClient(withInterceptorsFromDi()),
         provideAnimationsAsync(),
@@ -41,6 +57,19 @@ describe('GalleryComponent', () => {
     component = fixture.componentInstance;
     imageService = TestBed.inject(ImageService);
     cacheService = TestBed.inject(CacheService);
+    errorHandlingService = TestBed.inject(
+      ErrorHandlingService
+    ) as jasmine.SpyObj<ErrorHandlingService>;
+    matSnackBar = TestBed.inject(MatSnackBar) as jasmine.SpyObj<MatSnackBar>;
+
+    // Setup default return values for error handling methods
+    errorHandlingService.getReadableErrorMessage.and.returnValue(
+      'Error message'
+    );
+    errorHandlingService.getErrorMessageByStatus.and.returnValue(
+      'Error by status'
+    );
+
     fixture.detectChanges();
   });
 
@@ -90,12 +119,12 @@ describe('GalleryComponent', () => {
     spyOn(imageService, 'downloadImage').and.returnValue(
       throwError(() => new Error('error'))
     );
-    spyOn(window, 'alert');
 
     component.downloadImage(image);
 
     expect(imageService.downloadImage).toHaveBeenCalledWith('1');
-    expect(window.alert).toHaveBeenCalledWith('error');
+    expect(errorHandlingService.showErrorWithRetry).toHaveBeenCalled();
+    expect(component.errorState).toBeTrue();
     expect(component.loading).toBeFalse();
   });
 
@@ -174,26 +203,23 @@ describe('GalleryComponent', () => {
 
   it('should handle no images found', () => {
     spyOn(imageService, 'getImages').and.returnValue(of([]));
-    spyOn(window, 'alert');
 
     component.loadImages();
 
     expect(component.imagePairs.length).toBe(0);
-    expect(window.alert).toHaveBeenCalledWith('No filtered images found');
+    expect(component.errorState).toBeTrue();
+    expect(component.errorMessage).toBe('No filtered images found');
     expect(component.loading).toBeFalse();
   });
 
   it('should handle error while fetching images', () => {
-    spyOn(imageService, 'getImages').and.returnValue(
-      throwError(() => new Error('An error occurred while fetching images.'))
-    );
-    spyOn(window, 'alert');
+    const error = new Error('An error occurred while fetching images.');
+    spyOn(imageService, 'getImages').and.returnValue(throwError(() => error));
 
     component.loadImages();
 
-    expect(window.alert).toHaveBeenCalledWith(
-      'An error occurred while fetching images.'
-    );
+    expect(errorHandlingService.showErrorWithRetry).toHaveBeenCalled();
+    expect(component.errorState).toBeTrue();
     expect(component.loading).toBeFalse();
   });
 
@@ -267,45 +293,7 @@ describe('GalleryComponent', () => {
     expect(routerSpy).toHaveBeenCalledWith(['/edit', '1']);
   });
 
-  it('should open dialog with image details', () => {
-    const dialogSpy = spyOn(component['dialog'], 'open').and.callThrough();
-    spyOn(component, 'preloadRelatedImages');
-
-    const image: ImageModel = {
-      id: '1',
-      url: 'test-url',
-      name: 'test-image',
-      parentId: undefined,
-      parentUrl: undefined,
-      width: 100,
-      height: 100,
-      appliedFilters: [],
-      loaded: false,
-    };
-    component.imagePairs = [
-      {
-        originalImage: image,
-        filteredImage: {
-          id: '2',
-          url: 'url2',
-          name: 'image2',
-          parentId: '1',
-          parentUrl: 'url1',
-          width: 100,
-          height: 100,
-          appliedFilters: [],
-          loaded: false,
-        },
-      },
-    ];
-
-    component.openDialog(image);
-
-    expect(dialogSpy).toHaveBeenCalled();
-    expect(component.preloadRelatedImages).toHaveBeenCalledWith(image);
-  });
-
-  it('should build image tree correctly', () => {
+  it('should build image hierarchy correctly', () => {
     const image: ImageModel = {
       id: '2',
       url: 'url2',
@@ -334,10 +322,11 @@ describe('GalleryComponent', () => {
       },
     ];
 
-    const tree = component.getImageTree(image);
+    const hierarchy = component.getImageHierarchy(image);
 
-    expect(tree.root?.value.id).toBe('1');
-    expect(tree.root?.children[0].value.id).toBe('2');
+    expect(hierarchy.length).toBe(2);
+    expect(hierarchy[0].id).toBe('1');
+    expect(hierarchy[1].id).toBe('2');
   });
 
   it('should retrieve original image correctly', () => {
@@ -408,7 +397,7 @@ describe('GalleryComponent', () => {
           parentUrl: 'url1',
           width: 100,
           height: 100,
-          appliedFilters: [],
+          appliedFilters: ['grayscale'],
           loaded: false,
         },
       },
@@ -416,11 +405,8 @@ describe('GalleryComponent', () => {
 
     component.openDialog(image);
 
-    expect(dialogSpy).toHaveBeenCalledWith(ImageDialogComponent, {
-      data: {
-        tree: jasmine.any(Object),
-        imagePairs: component.imagePairs,
-      },
+    expect(dialogSpy).toHaveBeenCalledWith(ImageHierarchyComponent, {
+      data: jasmine.any(Array),
     });
     expect(component.preloadRelatedImages).toHaveBeenCalledWith(image);
   });
@@ -605,5 +591,33 @@ describe('GalleryComponent', () => {
 
     // Verify all subscriptions were unsubscribed
     expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(2);
+  });
+
+  // Test for new viewImageTree method
+  it('should navigate to image tree view', () => {
+    const routerSpy = spyOn(component['router'], 'navigate');
+
+    const image: ImageModel = {
+      id: '1',
+      url: 'test-url',
+      name: 'test-image',
+      parentId: undefined,
+      parentUrl: undefined,
+      width: 100,
+      height: 100,
+      appliedFilters: [],
+      loaded: false,
+    };
+
+    component.currentPage = 2;
+    component.itemsPerPage = 8;
+    component.viewImageTree(image);
+
+    expect(routerSpy).toHaveBeenCalledWith(['/image-tree', '1'], {
+      queryParams: {
+        page: 2,
+        pageSize: 8,
+      },
+    });
   });
 });

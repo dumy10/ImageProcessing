@@ -36,6 +36,12 @@ export class TreeNode<T> {
   children: TreeNode<T>[] = [];
 
   /**
+   * The parent of the node.
+   * @type {TreeNode<T> | null}
+   */
+  parent: TreeNode<T> | null = null;
+
+  /**
    * Creates a new tree node.
    * @param {T} value - The value to store in the node.
    */
@@ -49,5 +55,6 @@ export class TreeNode<T> {
    */
   addChild(child: TreeNode<T>): void {
     this.children.push(child);
+    child.parent = this;
   }
 }

@@ -1,0 +1,112 @@
+@use "../../../assets/themes/theme-mixins.scss" as mixins;
+
+.error-banner {
+  background-color: rgba(244, 67, 54, 0.15);
+  border-left: 4px solid var(--warn-color);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  @include mixins.themed-shadow(1);
+
+  & {
+    animation: slide-down 0.3s ease-out;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .dark-theme & {
+    background-color: rgba(255, 82, 82, 0.25);
+  }
+
+  // Add root-level dark theme selector to cover all cases
+  :host-context(.dark-theme) & {
+    background-color: rgba(255, 82, 82, 0.25);
+  }
+
+  .error-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .error-icon {
+      color: #d32f2f;
+
+      .dark-theme & {
+        color: #ff6b6b;
+      }
+      
+      :host-context(.dark-theme) & {
+        color: #ff6b6b;
+      }
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.87);
+      
+      .dark-theme & {
+        color: rgba(255, 255, 255, 0.90) !important;
+      }
+      
+      :host-context(.dark-theme) & {
+        color: rgba(255, 255, 255, 0.90) !important;
+      }
+    }
+  }
+
+  .error-actions {
+    display: flex;
+    gap: 8px;
+
+    button {
+      min-width: auto;
+      padding: 4px 8px;
+      line-height: 24px;
+
+      &:first-child {
+        background-color: rgba(244, 67, 54, 0.2);
+        color: #d32f2f;
+
+        .dark-theme & {
+          background-color: rgba(255, 82, 82, 0.3);
+          color: #ff6b6b;
+        }
+        
+        :host-context(.dark-theme) & {
+          background-color: rgba(255, 82, 82, 0.3);
+          color: #ff6b6b;
+        }
+      }
+
+      &:nth-child(2) {
+        background-color: rgba(33, 150, 243, 0.2);
+        color: #1976d2;
+
+        .dark-theme & {
+          background-color: rgba(121, 134, 203, 0.3);
+          color: #90caf9;
+        }
+        
+        :host-context(.dark-theme) & {
+          background-color: rgba(121, 134, 203, 0.3);
+          color: #90caf9;
+        }
+      }
+    }
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

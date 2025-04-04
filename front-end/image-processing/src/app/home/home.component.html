@@ -4,12 +4,21 @@
       <h1>Image Processing</h1>
       <p>Upload an image and apply various filters to transform your photos.</p>
 
+      <app-error-banner
+        *ngIf="errorState"
+        [errorMessage]="errorMessage"
+        [showBanner]="errorState"
+        [actions]="errorActions"
+        (dismiss)="dismissError()"
+      ></app-error-banner>
+
       <div
         class="inner-box dropzone"
         (dragover)="onDragOver($event)"
         (dragleave)="onDragLeave($event)"
         (drop)="onDrop($event)"
         aria-label="Image drop zone"
+        [class.uploading]="showProgress"
       >
         <div
           class="editor-content"
@@ -37,6 +46,27 @@
           <p class="supported-formats">Supported formats: JPG, JPEG, PNG</p>
         </div>
 
+        <!-- Progress overlay for uploads -->
+        <div class="upload-progress-overlay" *ngIf="showProgress">
+          <div class="upload-progress-container">
+            <div class="progress-bar-container">
+              <div class="progress-bar-wrapper">
+                <div
+                  class="progress-bar"
+                  [style.width.%]="progressPercentage"
+                ></div>
+              </div>
+              <div class="progress-text">
+                {{ progressPercentage }}% complete
+              </div>
+            </div>
+            <div class="upload-progress-spinner">
+              <mat-icon>cloud_upload</mat-icon>
+            </div>
+            <span class="upload-progress-text">{{ loadingMessage }}</span>
+          </div>
+        </div>
+
         <input
           type="file"
           id="imageUpload"
@@ -50,4 +80,8 @@
   </div>
 </div>
 
-<app-loading *ngIf="loading" [loading]="loading" [message]="loadingMessage" />
+<app-loading
+  *ngIf="loading && !showProgress"
+  [loading]="loading"
+  [message]="loadingMessage"
+/>
