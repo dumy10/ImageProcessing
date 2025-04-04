@@ -8,24 +8,133 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
+  
+  <!-- Define preprocessor symbols based on OS -->
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <DefineConstants>WINDOWS</DefineConstants>
+  </PropertyGroup>
+  
+  <!-- Detect CI/CD environment -->
+  <PropertyGroup>
+    <!-- Check if we're running in GitHub Actions -->
+    <IsGitHubActions Condition="'$(GITHUB_ACTIONS)' == 'true'">true</IsGitHubActions>
+    <IsGitHubActions Condition="'$(GITHUB_ACTIONS)' != 'true'">false</IsGitHubActions>
+    
+    <!-- Set paths based on environment -->
+    <LocalDebugDllPath>..\..\VC\ImagesProcessor\build\bin\Debug\ImagesProcessor.dll</LocalDebugDllPath>
+    <LocalReleaseDllPath>..\..\VC\ImagesProcessor\build\bin\Release\ImagesProcessor.dll</LocalReleaseDllPath>
+    <CIDebugDllPath>..\..\..\build\bin\Debug\ImagesProcessor.dll</CIDebugDllPath>
+    <CIReleaseDllPath>..\..\..\build\bin\Release\ImagesProcessor.dll</CIReleaseDllPath>
+    
+    <LocalDebugSoPath>..\..\VC\ImagesProcessor\build\bin\libImagesProcessor.so</LocalDebugSoPath>
+    <LocalReleaseSoPath>..\..\VC\ImagesProcessor\build\bin\libImagesProcessor.so</LocalReleaseSoPath>
+    <CIDebugSoPath>..\..\..\build\bin\libImagesProcessor.so</CIDebugSoPath>
+    <CIReleaseSoPath>..\..\..\build\bin\libImagesProcessor.so</CIReleaseSoPath>
+  </PropertyGroup>
 
   <!-- Windows-specific paths -->
   <Target Name="CopyDependenciesWindows" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
-    <Copy Condition="'$(Configuration)' == 'Debug'" SourceFiles="..\..\VC\ImagesProcessor\build\bin\Debug\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
-    <Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="..\..\..\build\bin\Release\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
+    <!-- Local development -->
+    <Copy Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' != 'true'"
+          SourceFiles="$(LocalDebugDllPath)"
+          DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileCopied" />
+    </Copy>
+    <Message Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' != 'true'" 
+             Text="Copied local debug DLL: @(FileCopied)" 
+             Importance="high" />
+             
+    <Copy Condition="'$(Configuration)' == 'Release' And '$(IsGitHubActions)' != 'true'"
+          SourceFiles="$(LocalReleaseDllPath)"
+          DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileCopied" />
+    </Copy>
+    <Message Condition="'$(Configuration)' == 'Release' And '$(IsGitHubActions)' != 'true'" 
+             Text="Copied local release DLL: @(FileCopied)" 
+             Importance="high" />
+             
+    <!-- CI/CD environment -->
+    <Copy Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' == 'true'"
+          SourceFiles="$(CIDebugDllPath)"
+          DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileCopied" />
+    </Copy>
+    <Message Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' == 'true'" 
+             Text="Copied CI debug DLL: @(FileCopied)" 
+             Importance="high" />
+             
+    <Copy Condition="'$(Configuration)' == 'Release' And '$(IsGitHubActions)' == 'true'"
+          SourceFiles="$(CIReleaseDllPath)"
+          DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileCopied" />
+    </Copy>
+    <Message Condition="'$(Configuration)' == 'Release' And '$(IsGitHubActions)' == 'true'" 
+             Text="Copied CI release DLL: @(FileCopied)" 
+             Importance="high" />
   </Target>
 
   <!-- Linux-specific paths -->
   <Target Name="CopyDependenciesLinux" AfterTargets="Build" Condition="'$(OS)' != 'Windows_NT'">
-    <Copy Condition="'$(Configuration)' == 'Debug'" SourceFiles="..\..\VC\ImagesProcessor\build\bin\libImagesProcessor.so" DestinationFolder="$(OutDir)" />
-    <Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="..\..\..\build\bin\libImagesProcessor.so" DestinationFolder="$(OutDir)" />
+    <!-- Local development -->
+    <Copy Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' != 'true'"
+          SourceFiles="$(LocalDebugSoPath)"
+          DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileCopied" />
+    </Copy>
+    <Message Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' != 'true'" 
+             Text="Copied local debug SO: @(FileCopied)" 
+             Importance="high" />
+             
+    <Copy Condition="'$(Configuration)' == 'Release' And '$(IsGitHubActions)' != 'true'"
+          SourceFiles="$(LocalReleaseSoPath)"
+          DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileCopied" />
+    </Copy>
+    <Message Condition="'$(Configuration)' == 'Release' And '$(IsGitHubActions)' != 'true'" 
+             Text="Copied local release SO: @(FileCopied)" 
+             Importance="high" />
+             
+    <!-- CI/CD environment -->
+    <Copy Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' == 'true'"
+          SourceFiles="$(CIDebugSoPath)"
+          DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileCopied" />
+    </Copy>
+    <Message Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' == 'true'" 
+             Text="Copied CI debug SO: @(FileCopied)" 
+             Importance="high" />
+             
+    <Copy Condition="'$(Configuration)' == 'Release' And '$(IsGitHubActions)' == 'true'"
+          SourceFiles="$(CIReleaseSoPath)"
+          DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileCopied" />
+    </Copy>
+    <Message Condition="'$(Configuration)' == 'Release' And '$(IsGitHubActions)' == 'true'" 
+             Text="Copied CI release SO: @(FileCopied)" 
+             Importance="high" />
   </Target>
 
   <Target Name="LogResolvedPaths" BeforeTargets="Build">
-    <Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT'" Text="Resolved DLL Path: ..\..\VC\ImagesProcessor\build\bin\$(Configuration)\ImagesProcessor.dll" Importance="High" />
-    <Message Condition="'$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT'" Text="Resolved DLL Path: ..\..\..\build\bin\Release\ImagesProcessor.dll" Importance="High" />
-    <Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' != 'Windows_NT'" Text="Resolved SO Path: ..\..\VC\ImagesProcessor\build\bin\libImagesProcessor.so" Importance="High" />
-    <Message Condition="'$(Configuration)' == 'Release' And '$(OS)' != 'Windows_NT'" Text="Resolved SO Path: ..\..\..\build\bin\libImagesProcessor.so" Importance="High" />
+    <Message Condition="'$(IsGitHubActions)' == 'true'" Text="Building in GitHub Actions environment" Importance="High" />
+    <Message Condition="'$(IsGitHubActions)' != 'true'" Text="Building in local development environment" Importance="High" />
+    
+    <Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' != 'true'" 
+             Text="Will use local Debug DLL path: $(LocalDebugDllPath)" Importance="High" />
+    <Message Condition="'$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' != 'true'" 
+             Text="Will use local Release DLL path: $(LocalReleaseDllPath)" Importance="High" />
+    <Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' == 'true'" 
+             Text="Will use CI Debug DLL path: $(CIDebugDllPath)" Importance="High" />
+    <Message Condition="'$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' == 'true'" 
+             Text="Will use CI Release DLL path: $(CIReleaseDllPath)" Importance="High" />
+             
+    <Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' != 'true'" 
+             Text="Will use local Debug SO path: $(LocalDebugSoPath)" Importance="High" />
+    <Message Condition="'$(Configuration)' == 'Release' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' != 'true'" 
+             Text="Will use local Release SO path: $(LocalReleaseSoPath)" Importance="High" />
+    <Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' == 'true'" 
+             Text="Will use CI Debug SO path: $(CIDebugSoPath)" Importance="High" />
+    <Message Condition="'$(Configuration)' == 'Release' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' == 'true'" 
+             Text="Will use CI Release SO path: $(CIReleaseSoPath)" Importance="High" />
   </Target>
 
   <ItemGroup>
