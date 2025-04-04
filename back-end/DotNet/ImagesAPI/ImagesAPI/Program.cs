@@ -13,7 +13,7 @@ Env.Load();
 
 string[] variables = [
     "MONGODB_CONNECTION_STRING", "MONGODB_DATABASE_NAME", "MONGODB_COLLECTION_NAME", "MONGODB_USERS_COLLECTION_NAME", 
-    "DROPBOX_APP_KEY", "DROPBOX_APP_SECRET", "DROPBOX_REFRESH_TOKEN"
+    "DROPBOX_APP_KEY", "DROPBOX_APP_SECRET", "DROPBOX_REFRESH_TOKEN", "FRONTEND_ORIGIN"
     ];
 
 foreach (var variable in variables)
@@ -110,7 +110,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "CorsPolicy",
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:4200") // Origins are needed for SignalR
+                          policy.WithOrigins(Environment.GetEnvironmentVariable("FRONTEND_ORIGIN")!) // Origins are needed for SignalR
                                 .AllowAnyHeader()
                                 .AllowAnyMethod()
                                 .AllowCredentials();
