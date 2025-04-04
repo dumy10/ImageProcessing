@@ -59,6 +59,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libssl-dev
 
+      - name: Install SkiaSharp dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfontconfig1 libfreetype6 libgl1-mesa-dev libgif7 libpng16-16 libjpeg-turbo8
+          # Create symlinks that SkiaSharp looks for
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
+
+      # This step ensures SkiaSharp native libraries are available
+      - name: Install SkiaSharp.NativeAssets.Linux
+        run: |
+          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp.NativeAssets.Linux
+          dotnet restore back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj
+
       - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v1
         with:
