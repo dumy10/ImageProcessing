@@ -18,6 +18,10 @@
 		<IsGitHubActions Condition="'$(GITHUB_ACTIONS)' == 'true'">true</IsGitHubActions>
 		<IsGitHubActions Condition="'$(GITHUB_ACTIONS)' != 'true'">false</IsGitHubActions>
 		
+		<!-- Check if we're running in Docker -->
+		<IsDocker Condition="'$(RUNNING_IN_DOCKER)' == 'true'">true</IsDocker>
+		<IsDocker Condition="'$(RUNNING_IN_DOCKER)' != 'true'">false</IsDocker>
+		
 		<!-- Set paths based on environment -->
 		<LocalDebugDllPath>..\..\..\VC\ImagesProcessor\build\bin\Debug\ImagesProcessor.dll</LocalDebugDllPath>
 		<LocalReleaseDllPath>..\..\..\VC\ImagesProcessor\build\bin\Release\ImagesProcessor.dll</LocalReleaseDllPath>
@@ -28,10 +32,11 @@
 		<LocalReleaseSoPath>..\..\..\VC\ImagesProcessor\build\bin\libImagesProcessor.so</LocalReleaseSoPath>
 		<CIDebugSoPath>..\..\..\..\build\bin\libImagesProcessor.so</CIDebugSoPath>
 		<CIReleaseSoPath>..\..\..\..\build\bin\libImagesProcessor.so</CIReleaseSoPath>
+		<DockerSoPath>libImagesProcessor.so</DockerSoPath>
 	</PropertyGroup>
 
 	<!-- Windows-specific paths -->
-	<Target Name="CopyDependenciesWindows" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+	<Target Name="CopyDependenciesWindows" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT' And '$(IsDocker)' != 'true'">
 		<!-- Local development -->
 		<Copy Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' != 'true'"
 			  SourceFiles="$(LocalDebugDllPath)"
@@ -72,7 +77,7 @@
 	</Target>
 	
 	<!-- Linux-specific paths -->
-	<Target Name="CopyDependenciesLinux" AfterTargets="Build" Condition="'$(OS)' != 'Windows_NT'">
+	<Target Name="CopyDependenciesLinux" AfterTargets="Build" Condition="'$(OS)' != 'Windows_NT' And '$(IsDocker)' != 'true'">
 		<!-- Local development -->
 		<Copy Condition="'$(Configuration)' == 'Debug' And '$(IsGitHubActions)' != 'true'"
 			  SourceFiles="$(LocalDebugSoPath)"
@@ -115,24 +120,27 @@
 	<Target Name="LogResolvedPaths" BeforeTargets="Build">
 		<Message Condition="'$(IsGitHubActions)' == 'true'" Text="Building in GitHub Actions environment" Importance="High" />
 		<Message Condition="'$(IsGitHubActions)' != 'true'" Text="Building in local development environment" Importance="High" />
+		<Message Condition="'$(IsDocker)' == 'true'" Text="Building in Docker environment" Importance="High" />
 		
-		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' != 'true'" 
+		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' != 'true' And '$(IsDocker)' != 'true'" 
 				 Text="Will use local Debug DLL path: $(LocalDebugDllPath)" Importance="High" />
-		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' != 'true'" 
+		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' != 'true' And '$(IsDocker)' != 'true'" 
 				 Text="Will use local Release DLL path: $(LocalReleaseDllPath)" Importance="High" />
-		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' == 'true'" 
+		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' == 'true' And '$(IsDocker)' != 'true'" 
 				 Text="Will use CI Debug DLL path: $(CIDebugDllPath)" Importance="High" />
-		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' == 'true'" 
+		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' And '$(IsGitHubActions)' == 'true' And '$(IsDocker)' != 'true'" 
 				 Text="Will use CI Release DLL path: $(CIReleaseDllPath)" Importance="High" />
 				 
-		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' != 'true'" 
+		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' != 'true' And '$(IsDocker)' != 'true'" 
 				 Text="Will use local Debug SO path: $(LocalDebugSoPath)" Importance="High" />
-		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' != 'true'" 
+		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' != 'true' And '$(IsDocker)' != 'true'" 
 				 Text="Will use local Release SO path: $(LocalReleaseSoPath)" Importance="High" />
-		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' == 'true'" 
+		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' == 'true' And '$(IsDocker)' != 'true'" 
 				 Text="Will use CI Debug SO path: $(CIDebugSoPath)" Importance="High" />
-		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' == 'true'" 
+		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' != 'Windows_NT' And '$(IsGitHubActions)' == 'true' And '$(IsDocker)' != 'true'" 
 				 Text="Will use CI Release SO path: $(CIReleaseSoPath)" Importance="High" />
+		<Message Condition="'$(IsDocker)' == 'true'" 
+				 Text="In Docker environment, using SO path: $(DockerSoPath)" Importance="High" />
 	</Target>
 
 	<ItemGroup>
@@ -145,6 +153,12 @@
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 		<PackageReference Include="System.Drawing.Common" Version="9.0.0" />
 		<PackageReference Include="DotNetEnv" Version="3.1.1" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.3" />
 	</ItemGroup>
+	
+	<!-- Docker specific configuration -->
+	<PropertyGroup Condition="'$(RUNNING_IN_DOCKER)' == 'true'">
+		<DefineConstants>$(DefineConstants);DOCKER</DefineConstants>
+	</PropertyGroup>
 
 </Project>
