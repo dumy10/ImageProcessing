@@ -1,0 +1,159 @@
+/**
+ * Global Material Component Overrides
+ * This file contains high-specificity overrides for Angular Material components
+ * to ensure they properly respond to theme changes
+ */
+
+// Paginator overrides with high specificity
+body.dark-theme {
+  // Paginator container and text
+  .mat-mdc-paginator {
+    background-color: transparent !important;
+
+    .mat-mdc-paginator-container {
+      color: var(--text-color) !important;
+
+      .mat-mdc-paginator-range-label,
+      .mat-mdc-paginator-page-size-label,
+      .mat-mdc-paginator-page-size .mat-mdc-select-value-text {
+        color: var(--text-color) !important;
+      }
+    }
+
+    // Paginator dropdown and icons
+    .mat-mdc-paginator-page-size-select.mat-mdc-form-field-type-mat-select {
+      .mat-mdc-text-field-wrapper {
+        background-color: transparent !important;
+
+        .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+          .mdc-notched-outline__leading,
+        .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+          .mdc-notched-outline__notch,
+        .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+          .mdc-notched-outline__trailing {
+          border-color: var(--divider-color) !important;
+        }
+
+        .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+          .mdc-floating-label,
+        .mdc-text-field--outlined:not(.mdc-text-field--disabled)
+          .mdc-text-field__input {
+          color: var(--text-color) !important;
+        }
+      }
+    }
+
+    // Navigation buttons
+    .mat-mdc-icon-button {
+      color: var(--text-color) !important;
+
+      &.mat-mdc-button-disabled {
+        color: var(--disabled-text-color) !important;
+      }
+    }
+  }
+
+  // Dialog overrides
+  .mat-mdc-dialog-container {
+    .mdc-dialog__surface {
+      background-color: var(--card-background) !important;
+      color: var(--text-color) !important;
+    }
+
+    .mat-mdc-dialog-title,
+    .mat-mdc-dialog-content,
+    .mat-mdc-dialog-actions {
+      color: var(--text-color) !important;
+    }
+
+    // Dialog actions with even higher specificity for buttons
+    .mat-mdc-dialog-actions {
+      .mdc-button {
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+
+      .mat-mdc-button,
+      .mat-mdc-raised-button,
+      .mat-mdc-outlined-button,
+      .mat-mdc-unelevated-button {
+        color: rgba(255, 255, 255, 0.9) !important;
+
+        &.mat-primary {
+          color: white !important;
+        }
+
+        &.mat-accent {
+          color: white !important;
+        }
+
+        .mdc-button__label {
+          color: rgba(255, 255, 255, 0.9) !important;
+        }
+      }
+    }
+  }
+
+  // Select dropdown panel
+  .mat-mdc-select-panel,
+  .mat-mdc-select-panel.mat-mdc-select-panel {
+    background-color: var(--card-background) !important;
+
+    .mat-mdc-option {
+      color: var(--text-color) !important;
+
+      &:hover:not(.mat-mdc-option-disabled) {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+
+      &.mat-mdc-option-active {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+  }
+
+  // Form field overrides
+  .mat-mdc-form-field {
+    .mat-mdc-form-field-focus-overlay {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .mat-mdc-select-arrow,
+    .mat-mdc-select-value-text {
+      color: var(--text-color) !important;
+    }
+  }
+}
+
+// Target select dropdowns in overlays
+.cdk-overlay-container {
+  .cdk-overlay-pane .mat-mdc-select-panel {
+    background-color: var(--card-background) !important;
+
+    .mat-mdc-option {
+      color: var(--text-color) !important;
+
+      &:hover:not(.mat-mdc-option-disabled) {
+        background-color: rgba(0, 0, 0, 0.04) !important;
+      }
+
+      body.dark-theme & {
+        &:hover:not(.mat-mdc-option-disabled) {
+          background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+      }
+    }
+  }
+
+  // High specificity for dialog buttons in dialogs
+  .mat-mdc-dialog-container .mat-mdc-dialog-actions {
+    button,
+    .mat-mdc-button,
+    .mat-mdc-raised-button,
+    .mat-mdc-outlined-button,
+    .mat-mdc-unelevated-button {
+      .dark-theme & {
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+    }
+  }
+}
