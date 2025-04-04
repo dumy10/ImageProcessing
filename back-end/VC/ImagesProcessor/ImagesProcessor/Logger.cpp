@@ -83,8 +83,15 @@ std::tm Logger::GetLocalTime() noexcept
 	std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
 	// Convert time to local time
-	std::tm localTime;
+	std::tm localTime{};
+	
+#ifdef _WIN32
+	// Windows version
 	localtime_s(&localTime, &currentTime);
+#else
+	// POSIX version (Linux, macOS)
+	localtime_r(&currentTime, &localTime);
+#endif
 
 	return localTime;
 }
