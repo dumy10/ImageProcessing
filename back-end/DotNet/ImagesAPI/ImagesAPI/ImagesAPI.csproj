@@ -7,14 +7,23 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<Target Name="CopyDependencies" AfterTargets="Build">
+	<!-- Windows-specific paths -->
+	<Target Name="CopyDependenciesWindows" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
 		<Copy Condition="'$(Configuration)' == 'Debug'" SourceFiles="..\..\..\VC\ImagesProcessor\build\bin\Debug\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
 		<Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="..\..\..\..\build\bin\Release\ImagesProcessor.dll" DestinationFolder="$(OutDir)" />
 	</Target>
+	
+	<!-- Linux-specific paths -->
+	<Target Name="CopyDependenciesLinux" AfterTargets="Build" Condition="'$(OS)' != 'Windows_NT'">
+		<Copy Condition="'$(Configuration)' == 'Debug'" SourceFiles="..\..\..\VC\ImagesProcessor\build\bin\libImagesProcessor.so" DestinationFolder="$(OutDir)" />
+		<Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="..\..\..\..\build\bin\libImagesProcessor.so" DestinationFolder="$(OutDir)" />
+	</Target>
 
 	<Target Name="LogResolvedPaths" BeforeTargets="Build">
-		<Message Condition="'$(Configuration)' == 'Debug'" Text="Resolved DLL Path: ..\..\..\VC\ImagesProcessor\build\bin\$(Configuration)\ImagesProcessor.dll" Importance="High" />
-		<Message Condition="'$(Configuration)' == 'Release'" Text="Resolved DLL Path: ..\..\..\..\build\bin\Release\ImagesProcessor.dll" Importance="High" />
+		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT'" Text="Resolved DLL Path: ..\..\..\VC\ImagesProcessor\build\bin\$(Configuration)\ImagesProcessor.dll" Importance="High" />
+		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT'" Text="Resolved DLL Path: ..\..\..\..\build\bin\Release\ImagesProcessor.dll" Importance="High" />
+		<Message Condition="'$(Configuration)' == 'Debug' And '$(OS)' != 'Windows_NT'" Text="Resolved SO Path: ..\..\..\VC\ImagesProcessor\build\bin\libImagesProcessor.so" Importance="High" />
+		<Message Condition="'$(Configuration)' == 'Release' And '$(OS)' != 'Windows_NT'" Text="Resolved SO Path: ..\..\..\..\build\bin\libImagesProcessor.so" Importance="High" />
 	</Target>
 
 	<ItemGroup>

@@ -6,7 +6,8 @@ on:
       - main
 
 jobs:
-  test-backend:
+  test-backend-windows:
+    name: Test Backend on Windows
     runs-on: windows-latest
     permissions:
       contents: read #This is required for actions/checkout
@@ -38,6 +39,45 @@ jobs:
 
       - name: Run C# tests
         run: dotnet test back-end\DotNet\ImagesAPITests\ImagesAPITests.csproj --configuration Release --runtime win-x64
+
+  test-backend-linux:
+    name: Test Backend on Linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.x"
+
+      - name: Install required packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: "3.21.0"
+
+      - name: Configure CMake
+        run: cmake -S back-end/VC/ImagesProcessor -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build with CMake
+        run: cmake --build build --config Release
+
+      - name: Run C++ Tests
+        run: ./build/bin/ImagesProcessorTests
+
+      - name: Build with dotnet
+        run: dotnet build back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj --configuration Release
+
+      - name: Run C# tests
+        run: dotnet test back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj --configuration Release
 
   test-frontend:
     runs-on: ubuntu-latest

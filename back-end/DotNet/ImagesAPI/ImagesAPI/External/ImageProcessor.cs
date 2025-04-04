@@ -14,6 +14,11 @@ namespace ImagesAPI.External
     /// </summary>
     public static partial class ImageProcessor
     {
+        // Get the appropriate library name based on the OS
+        private static string LibraryName => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
+            ? "ImagesProcessor.dll" 
+            : "libImagesProcessor.so";
+
         /// <summary>
         /// Applies a specified filter to the input image data and outputs the filtered image data.
         /// </summary>
@@ -108,7 +113,7 @@ namespace ImagesAPI.External
         /// <param name="extension">The image file extension.</param>
         /// <param name="outputLength">The length of the output image data.</param>
         /// <param name="progressCallback">Optional callback function for progress updates.</param>
-        [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf8)]
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
         private static partial void ApplyFilter([In] byte[] imageData, int length, string filter, out IntPtr outputImageData, string extension, out int outputLength,
             [MarshalAs(UnmanagedType.FunctionPtr)] NativeProgressCallback? progressCallback);
@@ -117,7 +122,7 @@ namespace ImagesAPI.External
         /// Frees memory allocated by the unmanaged code.
         /// </summary>
         /// <param name="data">A pointer to the memory to free.</param>
-        [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf8)]
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
         private static partial void FreeMemory(ref IntPtr data);
     }
