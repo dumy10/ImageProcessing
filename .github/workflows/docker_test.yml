@@ -1,0 +1,57 @@
+name: Test Docker Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'back-end/DotNet/ImagesAPI/ImagesAPI/Dockerfile'
+      - '.github/workflows/docker_test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'back-end/DotNet/ImagesAPI/ImagesAPI/Dockerfile'
+      - '.github/workflows/docker_test.yml'
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  test-docker-build:
+    name: Test Docker Build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./back-end/DotNet/ImagesAPI/ImagesAPI/Dockerfile
+          push: false
+          load: true
+          tags: imagesapi-test:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Test Docker image
+        run: |
+          docker images
+          docker run --name imagesapi-test -d --rm imagesapi-test:latest
+          # Wait for container to initialize
+          sleep 10
+          # Check if container is still running (indicates successful startup)
+          CONTAINER_RUNNING=$(docker ps -q -f name=imagesapi-test)
+          if [ -z "$CONTAINER_RUNNING" ]; then
+            echo "Container failed to start or exited immediately"
+            docker logs imagesapi-test || true
+            exit 1
+          else
+            echo "Container started successfully"
+            # Show logs for debugging purposes
+            docker logs imagesapi-test
+            # Cleanup
+            docker stop imagesapi-test
+          fi

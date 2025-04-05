@@ -15,7 +15,7 @@ RUN apt-get update \
     libgl1-mesa-dev \
     libgif7 \
     libpng16-16 \
-    libjpeg-turbo8 \
+    libjpeg62-turbo \
     && rm -rf /var/lib/apt/lists/* \
     # Create symlinks that SkiaSharp looks for
     && ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
