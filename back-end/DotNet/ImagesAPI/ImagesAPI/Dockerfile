@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
 WORKDIR /app
-# Update port exposure to include 8080
+
 EXPOSE 80
 EXPOSE 443
 EXPOSE 8080
@@ -23,6 +23,7 @@ RUN apt-get update \
         procps \
         curl \
         strace \
+        file \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
@@ -48,6 +49,7 @@ RUN apt-get update \
         wget \
         pkg-config \
         libtbb-dev \
+        file \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy C++ project files
@@ -118,8 +120,9 @@ RUN chmod +x /app/libImagesProcessor.so \
     && ls -la /app/libImagesProcessor.so \
     && file /app/libImagesProcessor.so
 
-# Set the library path to help find the native libraries
-ENV LD_LIBRARY_PATH=/app:$LD_LIBRARY_PATH
+# Initialize LD_LIBRARY_PATH if it doesn't exist and then set the library path
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-}
+ENV LD_LIBRARY_PATH=/app:${LD_LIBRARY_PATH}
 
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
