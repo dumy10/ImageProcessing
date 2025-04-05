@@ -127,9 +127,8 @@ ENV LD_LIBRARY_PATH=/app:${LD_LIBRARY_PATH}
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
 
-# Set the port environment variable for ASP.NET Core
-# This will be overridden by Render's PORT environment variable in production
-ENV ASPNETCORE_URLS=http://+:8080;http://+:10000
+# Set default ASPNETCORE_URLS to a single port (will be overridden by startup script)
+ENV ASPNETCORE_URLS=http://+:8080
 
 # Additional settings to help with native library loading
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
@@ -139,17 +138,24 @@ COPY <<-EOT /app/startup.sh
 #!/bin/bash
 set -e
 
-# Use PORT from Render if available, otherwise default to 8080
+# Use PORT from Render if available
 if [ ! -z "\$PORT" ]; then
-  # Make sure we listen on both the main port and port 10000 for health checks
-  export ASPNETCORE_URLS="http://+:\$PORT;http://+:10000"
+  # Ensure we don't have duplicate ports in the URL string
+  # This is critical for Render which sometimes duplicates the port
+  export ASPNETCORE_URLS="http://+:\$PORT"
+  
+  # Don't add port 10000 if it's already the same as PORT
+  if [ "\$PORT" != "10000" ]; then
+    export ASPNETCORE_URLS="\$ASPNETCORE_URLS;http://+:10000"
+  fi
+  
   echo "Setting ASPNETCORE_URLS to \$ASPNETCORE_URLS"
 fi
 
 echo "Starting ImagesAPI application..."
 echo "Current directory: \$(pwd)"
 echo "Library path: \$LD_LIBRARY_PATH"
-echo "Starting application on ports: \${PORT:-8080} and 10000"
+echo "URLs: \$ASPNETCORE_URLS"
 
 # Run with exec to ensure proper signal handling
 exec dotnet ImagesAPI.dll
