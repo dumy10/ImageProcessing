@@ -117,6 +117,12 @@
 				 Importance="high" />
 	</Target>
 
+	<!-- Docker-specific paths - Skip copying since the .so file will be in the same directory -->
+	<Target Name="CopyDependenciesDocker" AfterTargets="Build" Condition="'$(IsDocker)' == 'true'">
+		<Message Text="In Docker environment - no need to copy native library as it will be placed in the output directory by Dockerfile" 
+				 Importance="high" />
+	</Target>
+
 	<Target Name="LogResolvedPaths" BeforeTargets="Build">
 		<Message Condition="'$(IsGitHubActions)' == 'true'" Text="Building in GitHub Actions environment" Importance="High" />
 		<Message Condition="'$(IsGitHubActions)' != 'true'" Text="Building in local development environment" Importance="High" />

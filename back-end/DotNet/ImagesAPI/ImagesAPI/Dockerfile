@@ -56,6 +56,8 @@ RUN cmake .. \
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
+# Set the environment variable to indicate Docker environment
+ENV RUNNING_IN_DOCKER=true
 
 # Install development dependencies for native libraries (libSkiaSharp)
 RUN apt-get update \
@@ -75,14 +77,20 @@ RUN apt-get update \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
 
 WORKDIR /src
+
+# Copy the native library from cpp-build - place it in the build tree before starting the build
+COPY --from=cpp-build /build-output/libImagesProcessor.so /src/
+
+# Restore dependencies first
 COPY ["back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj", "ImagesAPI/"]
 RUN dotnet restore "ImagesAPI/ImagesAPI.csproj"
+
+# Copy the rest of the source code
 COPY ["back-end/DotNet/ImagesAPI", "/src"]
+
+# Build the project
 WORKDIR "/src/ImagesAPI"
 RUN dotnet build "ImagesAPI.csproj" -c Release -o /app/build
-
-# Copy the native library from the cpp-build stage
-COPY --from=cpp-build /build-output/libImagesProcessor.so /app/build/
 
 FROM build AS publish
 RUN dotnet publish "ImagesAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
