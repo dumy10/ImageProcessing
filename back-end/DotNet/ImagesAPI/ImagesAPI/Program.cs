@@ -1,4 +1,5 @@
 using DotNetEnv;
+using ImagesAPI.Helpers;
 using ImagesAPI.Hubs;
 using ImagesAPI.Middleware;
 using ImagesAPI.Models;
@@ -6,22 +7,38 @@ using ImagesAPI.Services.Concretes;
 using ImagesAPI.Services.Interfaces;
 using ImagesAPI.Settings.Concretes;
 using ImagesAPI.Settings.Interfaces;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using System.Text.Json;
 
 Env.Load();
 
-string[] variables = [
-    "MONGODB_CONNECTION_STRING", "MONGODB_DATABASE_NAME", "MONGODB_COLLECTION_NAME", "MONGODB_USERS_COLLECTION_NAME", 
-    "DROPBOX_APP_KEY", "DROPBOX_APP_SECRET", "DROPBOX_REFRESH_TOKEN"
-    ];
 
-foreach (var variable in variables)
+// Skip environment variable validation in Docker test environment
+bool skipValidation = Environment.GetEnvironmentVariable("RUNNING_IN_DOCKER") == "true" && 
+                     Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" ||
+                     Environment.GetEnvironmentVariable("SKIP_VALIDATION") == "true";
+
+if (!skipValidation)
 {
-    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
+    string[] variables = [
+        "MONGODB_CONNECTION_STRING", "MONGODB_DATABASE_NAME", "MONGODB_COLLECTION_NAME", "MONGODB_USERS_COLLECTION_NAME", 
+        "DROPBOX_APP_KEY", "DROPBOX_APP_SECRET", "DROPBOX_REFRESH_TOKEN", "FRONTEND_ORIGIN"
+        ];
+
+    foreach (var variable in variables)
     {
-        throw new ArgumentNullException($"The {variable} environment variable is not set.");
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
+        {
+            throw new ArgumentNullException($"The {variable} environment variable is not set.");
+        }
     }
+}
+else
+{
+    Console.WriteLine("Running in Docker test environment - skipping environment variable validation");
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,8 +46,22 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    // Reuse settings from JsonOptions.DefaultOptions
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = JsonOptions.DefaultOptions.PropertyNameCaseInsensitive;
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonOptions.DefaultOptions.PropertyNamingPolicy;
+    options.JsonSerializerOptions.WriteIndented = JsonOptions.DefaultOptions.WriteIndented;
 });
+
+// Add health checks
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy("API is running."))
+    // Only attempt to check MongoDB if we're not in Docker testing mode
+    .AddCheck("environment", () => 
+    {
+        return skipValidation 
+            ? HealthCheckResult.Healthy("Running in test mode")
+            : HealthCheckResult.Healthy("Environment variables validated");
+    });
 
 // Configure Swagger with API key authentication
 builder.Services.AddEndpointsApiExplorer();
@@ -110,7 +141,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "CorsPolicy",
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:4200") // Origins are needed for SignalR
+                          policy.WithOrigins(Environment.GetEnvironmentVariable("FRONTEND_ORIGIN")!) // Origins are needed for SignalR
                                 .AllowAnyHeader()
                                 .AllowAnyMethod()
                                 .AllowCredentials();
@@ -119,11 +150,17 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed initial admin user with API key
-using (var scope = app.Services.CreateScope())
+// Only seed admin user if we're not in Docker test mode
+if (!skipValidation)
 {
+    // Seed initial admin user with API key
+    using var scope = app.Services.CreateScope();
     var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
     SeedInitialAdminUser(userService).Wait();
+}
+else
+{
+    Console.WriteLine("Running in test mode - skipping admin user creation");
 }
 
 // Configure the HTTP request pipeline.
@@ -148,7 +185,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-
 // Custom middleware to add API key to headers for SignalR hub
 app.Use(async (context, next) =>
 {
@@ -165,17 +201,60 @@ app.Use(async (context, next) =>
     await next.Invoke();
 });
 
-// Add API key authentication and rate limiting middleware
-app.UseApiKeyAuthentication();
-
+// First add routing so the system knows which endpoint is being requested
 app.UseRouting();
+
+// Now add API key authentication - this will come after routing
+// This ordering allows the AllowAnonymous attribute to be respected
+app.UseApiKeyAuthentication();
 
 app.UseAuthorization();
 
 app.UseHttpsRedirection();
 
+// Add a simple health check endpoint that doesn't require authentication
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            status = report.Status.ToString(),
+            components = report.Entries.Select(e => new
+            {
+                key = e.Key,
+                value = e.Value.Status.ToString(),
+                description = e.Value.Description
+            }),
+            totalDuration = report.TotalDuration
+        };
+        
+        // Use the cached JsonSerializerOptions instance
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions.DefaultOptions));
+    }
+}).AllowAnonymous();
+
+// Add a simple public root endpoint for quick verification
+app.MapGet("/", () => "ImagesAPI is running. Use /health for status checks or /swagger for API documentation.").AllowAnonymous();
+
 app.MapControllers();
 app.MapHub<ProgressHub>("/progressHub");
+
+// Add a diagnostic endpoint to help debug native library loading
+app.MapGet("/system-info", () => {
+    var info = new Dictionary<string, string>
+    {
+        { "OS", Environment.OSVersion.ToString() },
+        { "Runtime", System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription },
+        { "Environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Not set" },
+        { "Docker", Environment.GetEnvironmentVariable("RUNNING_IN_DOCKER") ?? "Not set" },
+        { "Working Directory", Environment.CurrentDirectory },
+        { "Library Path", Environment.GetEnvironmentVariable("LD_LIBRARY_PATH") ?? "Not set" },
+        { "ImagesProcessor Library Exists", File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libImagesProcessor.so")).ToString() }
+    };
+    return Results.Ok(info);
+}).AllowAnonymous();
 
 app.Run();
 

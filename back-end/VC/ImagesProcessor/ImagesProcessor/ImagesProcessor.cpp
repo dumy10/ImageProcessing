@@ -116,48 +116,38 @@ void ApplyFilter(const char* imageData, int length, const char* filter, unsigned
 
 void FreeMemory(unsigned char** data)
 {
-	Logger::GetInstance().LogMessage("FreeMemory Start");
-
-	if (!data || !(*data))
-	{
-		Logger::GetInstance().LogError("FreeMemory called with null data.");
+	if (!data || !*data)
 		return;
-	}
 
-	// Additional check: Ensure the pointer is within a valid range
-	if (!IsValidPointer(*data))
-	{
-		Logger::GetInstance().LogError("FreeMemory called with corrupted data pointer.");
-		return;
-	}
-
-	Logger::GetInstance().LogMessage("Freeing memory for received data.");
-
-	delete[](*data);
+	delete[] *data;
 	*data = nullptr;
-
-	Logger::GetInstance().LogMessage("FreeMemory End");
 }
 
 std::string ToLowerCase(const std::string& input)
 {
-	std::string result{ input };
-	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+	std::string result = input;
+	std::transform(result.begin(), result.end(), result.begin(),
+		[](unsigned char c) { return std::tolower(c); });
 	return result;
 }
 
 bool IsValidPointer(void* pointer)
 {
+#if defined(_WIN32) || defined(_WIN64)
+	// Windows-specific pointer validation
+	if (pointer == nullptr)
+		return false;
+
 	MEMORY_BASIC_INFORMATION mbi;
+	if (VirtualQuery(pointer, &mbi, sizeof(mbi)) == 0)
+		return false;
 
-	if (VirtualQuery(pointer, &mbi, sizeof(mbi)))
-	{
-		DWORD mask = (PAGE_READWRITE | PAGE_EXECUTE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_WRITECOPY);
-		bool isValid = (mbi.State == MEM_COMMIT) && (mbi.Protect & mask);
-		return isValid;
-	}
+	if (mbi.State != MEM_COMMIT)
+		return false;
 
-	Logger::GetInstance().LogError("The memory at address: " + std::to_string(reinterpret_cast<uintptr_t>(pointer)) + " is invalid.");
-
-	return false;
+	return true;
+#else
+	// Simple null check for Linux
+	return pointer != nullptr;
+#endif
 }

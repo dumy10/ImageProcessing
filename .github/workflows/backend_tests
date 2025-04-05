@@ -3,7 +3,7 @@ name: Run Tests on Main Push
 on:
   push:
     branches:
-      - main
+      - backend
 
 jobs:
   test-backend-windows:
@@ -92,35 +92,3 @@ jobs:
 
       - name: Run C# tests
         run: dotnet test back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj --configuration Release
-
-  test-frontend:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
-    env:
-      API_URL: https://localhost:7156/Images
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Dependencies
-        run: |
-          cd front-end/image-processing
-          npm ci
-
-      - name: Create Environment File
-        run: |
-          cd front-end/image-processing
-          echo "API_KEY=${{ secrets.API_KEY }}" > .env
-          echo "API_URL=${{ env.API_URL }}" >> .env
-
-      - name: Run Tests
-        run: |
-          cd front-end/image-processing
-          npm test

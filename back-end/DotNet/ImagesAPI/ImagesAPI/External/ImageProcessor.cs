@@ -22,7 +22,7 @@ namespace ImagesAPI.External
         /// <param name="extension">The file extension of the image.</param>
         /// <param name="outputImageData">The output image data as a byte array.</param>
         /// <param name="progressCallback">Optional callback function for progress updates.</param>
-        /// <exception cref="InvalidOperationException">Thrown when the output image data length does not match the expected length.</exception>"
+        /// <exception cref="InvalidOperationException">Thrown when the output image data length does not match the expected length.</exception>
         public static void GetFilteredImageData(byte[] imageData, string filter, string extension, out byte[] outputImageData, ProgressCallback? progressCallback = null)
         {
             IntPtr outputImageDataPtr = IntPtr.Zero;
@@ -108,7 +108,11 @@ namespace ImagesAPI.External
         /// <param name="extension">The image file extension.</param>
         /// <param name="outputLength">The length of the output image data.</param>
         /// <param name="progressCallback">Optional callback function for progress updates.</param>
+#if WINDOWS
         [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
+#else
+        [LibraryImport("libImagesProcessor.so", StringMarshalling = StringMarshalling.Utf8)]
+#endif
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
         private static partial void ApplyFilter([In] byte[] imageData, int length, string filter, out IntPtr outputImageData, string extension, out int outputLength,
             [MarshalAs(UnmanagedType.FunctionPtr)] NativeProgressCallback? progressCallback);
@@ -117,7 +121,11 @@ namespace ImagesAPI.External
         /// Frees memory allocated by the unmanaged code.
         /// </summary>
         /// <param name="data">A pointer to the memory to free.</param>
+#if WINDOWS
         [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
+#else
+        [LibraryImport("libImagesProcessor.so", StringMarshalling = StringMarshalling.Utf8)]
+#endif
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
         private static partial void FreeMemory(ref IntPtr data);
     }
