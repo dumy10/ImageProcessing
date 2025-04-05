@@ -57,7 +57,7 @@ void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	}
 
 	if (progressCallback)
-		progressCallback(70);	
+		progressCallback(70);
 
 	Logger::GetInstance().LogMessage("Canny filter applied successfully");
 }
@@ -191,16 +191,16 @@ void CannyFilter::DoubleThresholdAndHysteresis(const unsigned char* inputImage, 
 	{
 		unsigned char localMax = 0;
 #pragma omp for nowait
-		for (int i = 0; i < width * height; i++) 
+		for (int i = 0; i < width * height; i++)
 		{
-			if (inputImage[i] > localMax) 
+			if (inputImage[i] > localMax)
 			{
 				localMax = inputImage[i];
 			}
 		}
 #pragma omp critical
 		{
-			if (localMax > maxMagnitude) 
+			if (localMax > maxMagnitude)
 			{
 				maxMagnitude = localMax;
 			}
@@ -231,10 +231,13 @@ void CannyFilter::DoubleThresholdAndHysteresis(const unsigned char* inputImage, 
 				// Check 8-connected neighborhood for strong edges
 				bool hasStrongNeighbor = false;
 				// Replace std::any_of with a direct loop
-				for (int ky = -1; ky <= 1 && !hasStrongNeighbor; ++ky) {
-					for (int kx = -1; kx <= 1 && !hasStrongNeighbor; ++kx) {
+				for (int ky = -1; ky <= 1 && !hasStrongNeighbor; ky++)
+				{
+					for (int kx = -1; kx <= 1 && !hasStrongNeighbor; kx++)
+					{
 						int neighborIdx = (y + ky) * width + (x + kx);
-						if (neighborIdx >= 0 && neighborIdx < width * height && inputImage[neighborIdx] >= highThreshold) {
+						if (neighborIdx >= 0 && neighborIdx < width * height && inputImage[neighborIdx] >= highThreshold)
+						{
 							hasStrongNeighbor = true;
 						}
 					}
