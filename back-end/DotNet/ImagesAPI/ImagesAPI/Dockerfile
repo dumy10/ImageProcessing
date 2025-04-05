@@ -1,36 +1,37 @@
+# Set timezone and disable interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-# Set environment variables to avoid timezone prompt
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Etc/UTC
-
 # Install runtime dependencies required for SkiaSharp in the base image
-RUN apt-get update \
-    && apt-get install -y --allow-unauthenticated \
-    libfontconfig1 \
-    libfreetype6 \
-    libgl1-mesa-dev \
-    libgif7 \
-    libpng16-16 \
-    libjpeg62-turbo \
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --fix-missing \
+        tzdata \
+        libfontconfig1 \
+        libfreetype6 \
+        libgl1-mesa-dev \
+        libgif7 \
+        libpng16-16 \
+        libjpeg-turbo8 \
     && rm -rf /var/lib/apt/lists/* \
-    # Create symlinks that SkiaSharp looks for
     && ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
 
 # Build the C++ native libraries
 FROM ubuntu:22.04 AS cpp-build
-# Set environment variables to avoid timezone prompt in this stage too
-ENV DEBIAN_FRONTEND=noninteractive 
+ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
+
 WORKDIR /src
 
 # Install required packages for building C++ project
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --fix-missing \
+        tzdata \
         build-essential \
         ca-certificates \
         cmake \
@@ -53,24 +54,23 @@ RUN cmake .. \
     && cp bin/libImagesProcessor.so /build-output/
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-# Add environmental variables to avoid prompts
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
 # Install development dependencies for native libraries (libSkiaSharp)
-RUN apt-get update \
-    && apt-get install -y --allow-unauthenticated \
-    libc6-dev \
-    libfontconfig1-dev \
-    libfreetype6-dev \
-    libgl1-mesa-dev \
-    libglib2.0-dev \
-    libicu-dev \
-    libpng-dev \
-    libgif-dev \
-    libjpeg62-turbo-dev \
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --fix-missing \
+        tzdata \
+        libc6-dev \
+        libfontconfig1-dev \
+        libfreetype6-dev \
+        libgl1-mesa-dev \
+        libglib2.0-dev \
+        libicu-dev \
+        libpng-dev \
+        libgif-dev \
+        libjpeg62-turbo-dev \
     && rm -rf /var/lib/apt/lists/* \
-    # Create symlinks that SkiaSharp looks for during build
     && ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
 
