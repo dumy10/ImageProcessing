@@ -20,15 +20,24 @@ RUN apt-get update \
         libgif7 \
         libpng16-16 \
         libjpeg62-turbo \
+        # OpenMP dependency (required by libImagesProcessor.so)
+        libgomp1 \
         # SkiaSharp additional dependencies
         libicu-dev \
         libharfbuzz-dev \
         libglib2.0-0 \
         libdbus-1-3 \
+        # OpenCV runtime dependencies
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender1 \
         # For diagnostics
+        strace \
+        ldd \
+        file \
         procps \
         curl \
-        file \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
