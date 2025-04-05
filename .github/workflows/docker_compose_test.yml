@@ -1,0 +1,75 @@
+name: Test Docker Compose
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'back-end/DotNet/ImagesAPI/docker-compose.yml'
+      - 'back-end/DotNet/ImagesAPI/ImagesAPI/Dockerfile'
+      - '.github/workflows/docker_compose_test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'back-end/DotNet/ImagesAPI/docker-compose.yml'
+      - 'back-end/DotNet/ImagesAPI/ImagesAPI/Dockerfile'
+      - '.github/workflows/docker_compose_test.yml'
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  test-docker-compose:
+    name: Test Docker Compose
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create .env file with test values
+        run: |
+          cd back-end/DotNet/ImagesAPI
+          cat > .env << EOL
+          ASPNETCORE_ENVIRONMENT=Development
+          MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
+          MONGODB_DATABASE_NAME=imageprocessingdb_test
+          MONGODB_COLLECTION_NAME=imagescollection_test
+          MONGODB_USERS_COLLECTION_NAME=users_test
+          DROPBOX_APP_KEY=test_app_key
+          DROPBOX_APP_SECRET=test_app_secret
+          DROPBOX_REFRESH_TOKEN=test_refresh_token
+          FRONTEND_ORIGIN=http://localhost:4200
+          RUNNING_IN_DOCKER=true
+          EOL
+      
+      - name: Build and start Docker Compose services
+        run: |
+          cd back-end/DotNet/ImagesAPI
+          docker-compose build
+          docker-compose up -d
+      
+      - name: Wait for services to start
+        run: sleep 30
+      
+      - name: Check services health
+        run: |
+          cd back-end/DotNet/ImagesAPI
+          docker-compose ps
+          
+          # Check if containers are running
+          MONGO_RUNNING=$(docker-compose ps -q mongodb)
+          API_RUNNING=$(docker-compose ps -q imagesapi)
+          
+          if [ -z "$MONGO_RUNNING" ] || [ -z "$API_RUNNING" ]; then
+            echo "One or more containers failed to start"
+            docker-compose logs
+            exit 1
+          else
+            echo "All containers are running"
+            # Show logs for debugging
+            docker-compose logs
+          fi
+      
+      - name: Clean up
+        run: |
+          cd back-end/DotNet/ImagesAPI
+          docker-compose down -v
+        if: always() # Run even if previous steps fail
