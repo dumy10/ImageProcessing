@@ -120,8 +120,8 @@ RUN chmod +x /app/libImagesProcessor.so \
     && ls -la /app/libImagesProcessor.so \
     && file /app/libImagesProcessor.so
 
-# Initialize LD_LIBRARY_PATH if it doesn't exist and then set the library path
-ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-}
+# Initialize LD_LIBRARY_PATH and set the library path
+ENV LD_LIBRARY_PATH=""
 ENV LD_LIBRARY_PATH=/app:${LD_LIBRARY_PATH}
 
 # Set the environment variable to indicate Docker environment
@@ -138,15 +138,40 @@ COPY <<-EOT /app/startup.sh
 #!/bin/bash
 set -e
 
-# Use PORT from Render if available
-if [ ! -z "\$PORT" ]; then
-  # Ensure we don't have duplicate ports in the URL string
-  # This is critical for Render which sometimes duplicates the port
-  export ASPNETCORE_URLS="http://+:\$PORT"
+# Handle URL configuration - ensure we don't have duplicate ports
+# Render is specifically setting ASPNETCORE_URLS to "http://+:10000;http://+:10000" which causes conflicts
+if [ ! -z "\$ASPNETCORE_URLS" ]; then
+  # Clean up any duplicate URLs that may be in the environment
+  CLEAN_URLS=""
   
-  # Don't add port 10000 if it's already the same as PORT
-  if [ "\$PORT" != "10000" ]; then
-    export ASPNETCORE_URLS="\$ASPNETCORE_URLS;http://+:10000"
+  # Split the URLs by semicolon and deduplicate
+  IFS=';' read -ra URL_ARRAY <<< "\$ASPNETCORE_URLS"
+  declare -A SEEN_URLS
+  
+  for url in "\${URL_ARRAY[@]}"; do
+    # Skip empty URLs
+    if [ -z "\$url" ]; then
+      continue
+    fi
+    
+    # Only add each unique URL once
+    if [ -z "\${SEEN_URLS[\$url]}" ]; then
+      if [ -z "\$CLEAN_URLS" ]; then
+        CLEAN_URLS="\$url"
+      else
+        CLEAN_URLS="\$CLEAN_URLS;\$url"
+      fi
+      SEEN_URLS[\$url]=1
+    fi
+  done
+  
+  # If Render provides PORT, ensure we're using that
+  if [ ! -z "\$PORT" ]; then
+    # For Render, just use a single port for simplicity
+    export ASPNETCORE_URLS="http://+:\$PORT"
+  else
+    # Use the cleaned up URLs
+    export ASPNETCORE_URLS="\$CLEAN_URLS"
   fi
   
   echo "Setting ASPNETCORE_URLS to \$ASPNETCORE_URLS"
