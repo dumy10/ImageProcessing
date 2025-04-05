@@ -54,6 +54,7 @@ jobs:
             -e DROPBOX_REFRESH_TOKEN="${{ secrets.DROPBOX_REFRESH_TOKEN }}" \
             -e FRONTEND_ORIGIN="${{ secrets.FRONTEND_ORIGIN }}" \
             -e RUNNING_IN_DOCKER=true \
+            -e TEST_API_KEY="${{ secrets.TEST_API_KEY }}" \
             imagesapi-test:latest
           
           # Wait for container to initialize
@@ -88,8 +89,14 @@ jobs:
             echo "Container logs:"
             docker logs imagesapi-test
             
-            echo "Attempting to make a request to the API:"
-            curl -v http://localhost:8080/health || echo "Failed to connect to API endpoint"
+            echo "Attempting to make a request to the health endpoint (should not require authentication):"
+            curl -v http://localhost:8080/health || echo "Failed to connect to health endpoint"
+            
+            echo "Attempting to make a request to the root endpoint (should not require authentication):"
+            curl -v http://localhost:8080/ || echo "Failed to connect to root endpoint"
+            
+            echo "Attempting to make a request to a protected endpoint with API key:"
+            curl -v -H "X-API-Key: ${{ secrets.TEST_API_KEY || 'test-api-key' }}" http://localhost:8080/api/images || echo "Failed to connect to protected endpoint"
             
             echo "Container process list:"
             docker exec imagesapi-test ps aux || echo "Cannot execute process list"
