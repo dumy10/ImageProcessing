@@ -67,7 +67,10 @@
         </button>
       </div>
       <div class="panInstructions" *ngIf="hasOverflow">
-        <mat-icon>pan_tool</mat-icon> Click and drag to pan
+        <mat-icon *ngIf="!isMobileDevice">pan_tool</mat-icon>
+        <mat-icon *ngIf="isMobileDevice">touch_app</mat-icon>
+        {{ isMobileDevice ? "Touch and drag to pan" : "Click and drag to pan" }}
+        <span *ngIf="isMobileDevice" class="mobileHint">(Pinch to zoom)</span>
       </div>
     </div>
 
@@ -76,7 +79,10 @@
       class="timelineContainer"
       [class.has-overflow]="hasOverflow"
       [class.is-panning]="isPanning"
+      [class.mobile-device]="isMobileDevice"
+      [class.portrait-mode]="isPortraitOrientation"
       (mousedown)="startPanning($event)"
+      (touchstart)="startPanning($event)"
     >
       <div
         class="timelineTrack"
@@ -106,6 +112,7 @@
                 [style.left]="
                   data.length <= 2 ? (j % 2 === 0 ? '30%' : '70%') : '50%'
                 "
+                [style.max-width]="isMobileDevice ? '140px' : '150px'"
               >
                 <mat-icon
                   class="filterIcon"
@@ -214,7 +221,8 @@
         [attr.data-aspect-ratio]="imageModel.width / imageModel.height"
         [ngClass]="{
           'original-image': i === 0,
-          'final-image': i === getDisplayImages().length - 1
+          'final-image': i === getDisplayImages().length - 1,
+          'mobile-device': isMobileDevice
         }"
       >
         <!-- Step indicator badge -->
