@@ -35,6 +35,8 @@ RUN apt-get update \
 
 # Set environment variables for SkiaSharp native library loading
 ENV SKIA_FONTMGR=fontconfig
+# Make sure SkiaSharp knows we're using its Linux assets
+ENV SKIASHARP_NATIVE_ASSETS_PERSISTED=1
 
 # Build the C++ native libraries
 FROM ubuntu:22.04 AS cpp-build
