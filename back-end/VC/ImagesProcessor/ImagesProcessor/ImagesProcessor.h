@@ -38,6 +38,8 @@ IMAGESPROCESSOR_API void ApplyFilter(const char* imageData, int length, const ch
  */
 IMAGESPROCESSOR_API void FreeMemory(unsigned char** data);
 
+IMAGESPROCESSOR_API bool ProcessDummyTest();
+
 #ifdef __cplusplus
 }
 #endif

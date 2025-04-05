@@ -119,8 +119,25 @@ void FreeMemory(unsigned char** data)
 	if (!data || !*data)
 		return;
 
-	delete[] *data;
+	delete[] * data;
 	*data = nullptr;
+}
+
+bool ProcessDummyTest()
+{
+	try
+	{
+		std::string logMessage = "Dummy test passed.";
+		Logger::GetInstance().LogMessage(logMessage);
+
+		return true;
+	}
+	catch (const std::exception& e)
+	{
+		Logger::GetInstance().LogError("Dummy test failed: " + std::string{ e.what() });
+
+		return false;
+	}
 }
 
 std::string ToLowerCase(const std::string& input)

@@ -13,6 +13,88 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
 
+// Add diagnostic code at the start of Main
+// Log native library information
+try
+{
+    var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+    var logMessage = new System.Text.StringBuilder();
+    logMessage.AppendLine("---------- NATIVE DEPENDENCY DIAGNOSTIC INFO ----------");
+    logMessage.AppendLine($"Application directory: {appDirectory}");
+    logMessage.AppendLine($"Current directory: {Environment.CurrentDirectory}");
+    logMessage.AppendLine($"LD_LIBRARY_PATH: {Environment.GetEnvironmentVariable("LD_LIBRARY_PATH") ?? "not set"}");
+    logMessage.AppendLine($"RUNNING_IN_DOCKER: {Environment.GetEnvironmentVariable("RUNNING_IN_DOCKER") ?? "not set"}");
+    
+    // Check for ImagesProcessor native library
+    string[] possibleLibraryNames = [
+        "ImagesProcessor.dll", 
+        "libImagesProcessor.so", 
+        "libImagesProcessor.so.1"
+    ];
+    
+    foreach (var libraryName in possibleLibraryNames)
+    {
+        var libraryPath = Path.Combine(appDirectory, libraryName);
+        logMessage.AppendLine($"Checking for {libraryPath}: {File.Exists(libraryPath)}");
+    }
+    
+    // List all files in the application directory
+    logMessage.AppendLine("Files in application directory:");
+    try 
+    {
+        var files = Directory.GetFiles(appDirectory);
+        foreach (var file in files)
+        {
+            var fileInfo = new FileInfo(file);
+            logMessage.AppendLine($"- {fileInfo.Name} ({fileInfo.Length} bytes)");
+        }
+    }
+    catch (Exception ex)
+    {
+        logMessage.AppendLine($"Error listing files: {ex.Message}");
+    }
+    
+    // Test loading the library programmatically
+    try
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            logMessage.AppendLine("Attempting to load ImagesProcessor.dll");
+            var handle = System.Runtime.InteropServices.NativeLibrary.Load(
+                Path.Combine(appDirectory, "ImagesProcessor.dll"));
+            logMessage.AppendLine("Successfully loaded ImagesProcessor.dll");
+            System.Runtime.InteropServices.NativeLibrary.Free(handle);
+        }
+        else
+        {
+            logMessage.AppendLine("Attempting to load libImagesProcessor.so");
+            var handle = System.Runtime.InteropServices.NativeLibrary.Load(
+                Path.Combine(appDirectory, "libImagesProcessor.so"));
+            logMessage.AppendLine("Successfully loaded libImagesProcessor.so");
+            System.Runtime.InteropServices.NativeLibrary.Free(handle);
+        }
+    }
+    catch (Exception ex)
+    {
+        logMessage.AppendLine($"Error loading native library: {ex.Message}");
+        if (ex.InnerException != null)
+        {
+            logMessage.AppendLine($"Inner exception: {ex.InnerException.Message}");
+        }
+    }
+    
+    logMessage.AppendLine("---------- END DIAGNOSTIC INFO ----------");
+    Console.WriteLine(logMessage.ToString());
+    
+    // Also write to a file that will persist in the container
+    File.WriteAllText(Path.Combine(appDirectory, "native_library_diagnostic.log"), 
+        logMessage.ToString());
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error in diagnostic code: {ex.Message}");
+}
+
 Env.Load();
 
 

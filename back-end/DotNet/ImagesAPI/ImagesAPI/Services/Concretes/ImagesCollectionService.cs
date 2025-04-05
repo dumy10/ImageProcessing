@@ -238,7 +238,7 @@ namespace ImagesAPI.Services.Concretes
                     ParentUrl = imageModel.Url,
                     Width = skCodec.Info.Width,
                     Height = skCodec.Info.Height,
-                    AppliedFilters = new List<string>(imageModel.AppliedFilters ?? []) { filter }
+                    AppliedFilters = [.. imageModel.AppliedFilters ?? [], filter]
                 };
 
                 await ReportProgressAsync(progressTracker, id, filter, 90, "Uploading filtered image");
