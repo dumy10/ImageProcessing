@@ -19,6 +19,10 @@ RUN apt-get update \
         libgif7 \
         libpng16-16 \
         libjpeg62-turbo \
+        # Add tools for diagnostics
+        procps \
+        curl \
+        strace \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
@@ -54,7 +58,10 @@ WORKDIR /src/ImagesProcessor/BUILD
 RUN cmake -DBUILD_TESTS=OFF .. \
     && cmake --build . --config Release --target ImagesProcessor \
     && mkdir -p /build-output \
-    && cp bin/libImagesProcessor.so /build-output/
+    && cp bin/libImagesProcessor.so /build-output/ \
+    # Verify the library was built successfully
+    && ls -la /build-output/ \
+    && file /build-output/libImagesProcessor.so
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ENV DEBIAN_FRONTEND=noninteractive
@@ -103,12 +110,51 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 COPY --from=cpp-build /build-output/libImagesProcessor.so /app/
 
-# Make sure permissions are set correctly
-RUN chmod +x /app/libImagesProcessor.so
+# Create logs directory with appropriate permissions
+RUN mkdir -p /app/ImagesProcessorLogs && chmod 777 /app/ImagesProcessorLogs
+
+# Make sure permissions are set correctly and verify the library exists
+RUN chmod +x /app/libImagesProcessor.so \
+    && ls -la /app/libImagesProcessor.so \
+    && file /app/libImagesProcessor.so
+
+# Set the library path to help find the native libraries
+ENV LD_LIBRARY_PATH=/app:$LD_LIBRARY_PATH
 
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
 # Set the port environment variable for ASP.NET Core
 ENV ASPNETCORE_URLS=http://+:8080
+# Add Debug environment variables for better diagnostics
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV DOTNET_ENVIRONMENT=Development
+# Enable detailed error messages
+ENV ASPNETCORE_DETAILED_ERRORS=true
+# Additional settings to help with native library loading
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
-ENTRYPOINT ["dotnet", "ImagesAPI.dll"]
+# Use a shell wrapper to capture startup errors
+COPY <<-EOT /app/startup.sh
+#!/bin/bash
+set -e
+echo "Starting ImagesAPI application..."
+echo "Current directory: $(pwd)"
+echo "Files in directory:"
+ls -la
+echo "Library path: $LD_LIBRARY_PATH"
+echo "Checking native library:"
+if [ -f /app/libImagesProcessor.so ]; then
+    echo "Native library exists."
+    file /app/libImagesProcessor.so
+else
+    echo "Native library is missing!"
+fi
+echo "Starting application..."
+# Run with exec to ensure proper signal handling
+exec dotnet ImagesAPI.dll
+EOT
+
+RUN chmod +x /app/startup.sh
+
+# Use the startup script as entrypoint
+ENTRYPOINT ["/app/startup.sh"]

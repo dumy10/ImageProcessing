@@ -38,20 +38,52 @@ jobs:
       
       - name: Test Docker image
         run: |
+          echo "Showing all Docker images:"
           docker images
-          docker run --name imagesapi-test -d --rm imagesapi-test:latest
+          
+          echo "Starting container with explicit port mapping..."
+          # Map the container's 8080 port to host 8080 port
+          docker run --name imagesapi-test -d --rm -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development imagesapi-test:latest
+          
           # Wait for container to initialize
-          sleep 10
+          echo "Waiting for container to initialize (30s)..."
+          sleep 30
+          
           # Check if container is still running (indicates successful startup)
+          echo "Checking if container is running..."
           CONTAINER_RUNNING=$(docker ps -q -f name=imagesapi-test)
+          
           if [ -z "$CONTAINER_RUNNING" ]; then
             echo "Container failed to start or exited immediately"
-            docker logs imagesapi-test || true
+            
+            echo "Container logs (if available):"
+            docker logs imagesapi-test || echo "No logs available"
+            
+            echo "Container inspection details:"
+            docker inspect imagesapi-test || echo "Container no longer exists"
+            
+            echo "Getting container exit code and reason:"
+            docker inspect imagesapi-test --format='{{.State.ExitCode}}:{{.State.Error}}' || echo "Cannot get exit code"
+            
+            # Check if the container created any crash dumps or error logs
+            echo "Attempting to get any crash dumps..."
+            docker cp imagesapi-test:/app/ImagesProcessorLogs/. ./logs/ || echo "No logs directory or cannot access"
+            ls -la ./logs/ || echo "No logs to display"
+            
             exit 1
           else
-            echo "Container started successfully"
-            # Show logs for debugging purposes
+            echo "✅ Container started successfully!"
+            
+            echo "Container logs:"
             docker logs imagesapi-test
+            
+            echo "Attempting to make a request to the API:"
+            curl -v http://localhost:8080/health || echo "Failed to connect to API endpoint"
+            
+            echo "Container process list:"
+            docker exec imagesapi-test ps aux || echo "Cannot execute process list"
+            
             # Cleanup
+            echo "Stopping container..."
             docker stop imagesapi-test
           fi
