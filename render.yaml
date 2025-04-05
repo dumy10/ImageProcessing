@@ -43,8 +43,9 @@ services:
         value: 8080
       # Added to ensure ASPNETCORE_URLS is properly set
       - key: ASPNETCORE_URLS
-        value: http://+:8080
-    # Health check endpoint to verify service is running
+        value: http://+:8080;http://+:10000
+    # Health check endpoint and configuration for Render
     healthCheckPath: /health
+    healthCheckPort: 10000  # Explicitly set health check port to 10000
     # Auto-deploy when changes are pushed to the branch
     autoDeploy: true
