@@ -69,7 +69,7 @@ RUN apt-get update && apt-get upgrade -y \
         libicu-dev \
         libpng-dev \
         libgif-dev \
-        libjpeg62-turbo-dev \
+        libjpeg-dev \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
