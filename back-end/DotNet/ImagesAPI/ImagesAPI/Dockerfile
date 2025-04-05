@@ -22,6 +22,8 @@ RUN apt-get update \
         libjpeg62-turbo \
         # OpenMP dependency (required by libImagesProcessor.so)
         libgomp1 \
+        # TBB dependency for parallel algorithms (std::execution)
+        libtbb-dev \
         # SkiaSharp additional dependencies
         libicu-dev \
         libharfbuzz-dev \
