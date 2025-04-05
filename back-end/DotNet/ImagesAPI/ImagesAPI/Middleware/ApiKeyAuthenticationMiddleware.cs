@@ -25,6 +25,9 @@ namespace ImagesAPI.Middleware
         // Store rate limiting data
         private static readonly ConcurrentDictionary<string, RateLimitInfo> _rateLimits = new();
 
+        // List of paths that don't require authentication
+        private static readonly string[] _publicPaths = { "/health", "/" };
+
         /// <summary>
         /// Invokes the middleware
         /// </summary>
@@ -33,6 +36,16 @@ namespace ImagesAPI.Middleware
         /// <returns>A task representing the asynchronous operation</returns>
         public async Task InvokeAsync(HttpContext context, IUserService userService)
         {
+            // Skip authentication for public paths
+            string path = context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
+            if (_publicPaths.Any(p => path.Equals(p, StringComparison.OrdinalIgnoreCase)))
+            {
+                // Log that we're skipping auth for this path
+                Logging.Instance.LogMessage($"Skipping authentication for public path: {path}");
+                await _next(context);
+                return;
+            }
+
             // Check if API key is provided
             if (!context.Request.Headers.TryGetValue(_userSettings.ApiKeyHeaderName, out var apiKeyHeaderValues))
             {

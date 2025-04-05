@@ -4,10 +4,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
 WORKDIR /app
-# Update port exposure to include 8080
+# Update port exposure to include 8080 and 10000 (Render's internal health check port)
 EXPOSE 80
 EXPOSE 443
 EXPOSE 8080
+EXPOSE 10000
 
 # Install runtime dependencies required for SkiaSharp in the base image
 RUN apt-get update \
@@ -128,7 +129,7 @@ ENV RUNNING_IN_DOCKER=true
 
 # Set the port environment variable for ASP.NET Core
 # This will be overridden by Render's PORT environment variable in production
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://+:8080;http://+:10000
 
 # Additional settings to help with native library loading
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
@@ -140,13 +141,15 @@ set -e
 
 # Use PORT from Render if available, otherwise default to 8080
 if [ ! -z "\$PORT" ]; then
-  export ASPNETCORE_URLS=http://+:\$PORT
+  # Make sure we listen on both the main port and port 10000 for health checks
+  export ASPNETCORE_URLS="http://+:\$PORT;http://+:10000"
+  echo "Setting ASPNETCORE_URLS to \$ASPNETCORE_URLS"
 fi
 
 echo "Starting ImagesAPI application..."
 echo "Current directory: \$(pwd)"
 echo "Library path: \$LD_LIBRARY_PATH"
-echo "Starting application on port: \${PORT:-8080}"
+echo "Starting application on ports: \${PORT:-8080} and 10000"
 
 # Run with exec to ensure proper signal handling
 exec dotnet ImagesAPI.dll

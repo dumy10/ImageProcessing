@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   imagesapi:
     build:
@@ -23,7 +21,8 @@ services:
       - ASPNETCORE_URLS=http://+:80;http://+:8080
     # Healthcheck to ensure the API is running properly
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:80/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s

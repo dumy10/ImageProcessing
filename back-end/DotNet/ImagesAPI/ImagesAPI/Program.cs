@@ -201,10 +201,12 @@ app.Use(async (context, next) =>
     await next.Invoke();
 });
 
-// Add API key authentication and rate limiting middleware
-app.UseApiKeyAuthentication();
-
+// First add routing so the system knows which endpoint is being requested
 app.UseRouting();
+
+// Now add API key authentication - this will come after routing
+// This ordering allows the AllowAnonymous attribute to be respected
+app.UseApiKeyAuthentication();
 
 app.UseAuthorization();
 
@@ -232,6 +234,9 @@ app.MapHealthChecks("/health", new HealthCheckOptions
         await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions.DefaultOptions));
     }
 }).AllowAnonymous();
+
+// Add a simple public root endpoint for quick verification
+app.MapGet("/", () => "ImagesAPI is running. Use /health for status checks or /swagger for API documentation.").AllowAnonymous();
 
 app.MapControllers();
 app.MapHub<ProgressHub>("/progressHub");
