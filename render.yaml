@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: imagesapi
+    env: docker
+    region: frankfurt
+    plan: free
+    branch: backend  
+    dockerfilePath: back-end/DotNet/ImagesAPI/ImagesAPI/Dockerfile
+    buildFilter:
+      paths:
+        - back-end/DotNet/ImagesAPI/**
+        - back-end/VC/ImagesProcessor/**
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: MONGODB_CONNECTION_STRING
+        sync: false
+      - key: MONGODB_DATABASE_NAME
+        sync: false
+      - key: MONGODB_COLLECTION_NAME
+        sync: false
+      - key: MONGODB_USERS_COLLECTION_NAME
+        sync: false
+      - key: DROPBOX_APP_KEY
+        sync: false
+      - key: DROPBOX_APP_SECRET
+        sync: false
+      - key: DROPBOX_REFRESH_TOKEN
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: RUNNING_IN_DOCKER
+        value: true
+    healthCheckPath: /health
+    autoDeploy: true
