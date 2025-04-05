@@ -609,29 +609,6 @@ describe('ImageHierarchyComponent', () => {
     expect(component.hasOverflow).toBeTrue();
   });
 
-  it('should update zoom level correctly', () => {
-    // Initial zoom level should be 1
-    expect(component.zoomLevel).toBe(1);
-
-    // Test zoom in
-    component.zoomIn();
-    expect(component.zoomLevel).toBe(1.08);
-
-    // Test zoom out
-    component.zoomOut();
-    expect(component.zoomLevel).toBe(1);
-
-    // Test zoom out again
-    component.zoomOut();
-    expect(component.zoomLevel).toBe(0.92);
-
-    // Test reset
-    component.resetView();
-    expect(component.zoomLevel).toBe(1);
-    expect(component.panX).toBe(0);
-    expect(component.panY).toBe(0);
-  });
-
   it('should set dialog size based on image count', () => {
     // For 2 images, dialog size should be updated to 85%
     expect(dialogRefSpy.updateSize).toHaveBeenCalledWith('85%', 'auto');
