@@ -1,3 +1,5 @@
+# Render configuration for ImagesAPI service
+# This file defines how the application is deployed on Render
 services:
   - type: web
     name: imagesapi
@@ -10,9 +12,11 @@ services:
       paths:
         - back-end/DotNet/ImagesAPI/**
         - back-end/VC/ImagesProcessor/**
+    # Environment variables required by the application
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      # MongoDB connection details (set these in Render dashboard)
       - key: MONGODB_CONNECTION_STRING
         sync: false
       - key: MONGODB_DATABASE_NAME
@@ -21,17 +25,26 @@ services:
         sync: false
       - key: MONGODB_USERS_COLLECTION_NAME
         sync: false
+      # Dropbox API credentials (set these in Render dashboard)
       - key: DROPBOX_APP_KEY
         sync: false
       - key: DROPBOX_APP_SECRET
         sync: false
       - key: DROPBOX_REFRESH_TOKEN
         sync: false
+      # Frontend URL for CORS (set in Render dashboard)
       - key: FRONTEND_ORIGIN
         sync: false
+      # Runtime flags
       - key: RUNNING_IN_DOCKER
         value: true
+      # Port configuration (Render will use this)
       - key: PORT
         value: 8080
+      # Added to ensure ASPNETCORE_URLS is properly set
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+    # Health check endpoint to verify service is running
     healthCheckPath: /health
+    # Auto-deploy when changes are pushed to the branch
     autoDeploy: true

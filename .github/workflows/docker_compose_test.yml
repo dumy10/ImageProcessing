@@ -29,7 +29,8 @@ jobs:
           cd back-end/DotNet/ImagesAPI
           cat > .env << EOL
           ASPNETCORE_ENVIRONMENT=Development
-          MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
+          # Use a test MongoDB Atlas connection string or mock value for testing
+          MONGODB_CONNECTION_STRING=${{ secrets.TEST_MONGODB_CONNECTION_STRING || 'mongodb+srv://test:test@cluster0.mongodb.net/test' }}
           MONGODB_DATABASE_NAME=imageprocessingdb_test
           MONGODB_COLLECTION_NAME=imagescollection_test
           MONGODB_USERS_COLLECTION_NAME=users_test
@@ -54,22 +55,33 @@ jobs:
           cd back-end/DotNet/ImagesAPI
           docker compose ps
           
-          # Check if containers are running
-          MONGO_RUNNING=$(docker compose ps -q mongodb)
+          # Check if API container is running
           API_RUNNING=$(docker compose ps -q imagesapi)
           
-          if [ -z "$MONGO_RUNNING" ] || [ -z "$API_RUNNING" ]; then
-            echo "One or more containers failed to start"
+          if [ -z "$API_RUNNING" ]; then
+            echo "API container failed to start"
             docker compose logs
             exit 1
           else
-            echo "All containers are running"
+            echo "API container is running"
             # Show logs for debugging
             docker compose logs
+          fi
+          
+          # Test the API health endpoint
+          echo "Testing API health endpoint..."
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health || echo "failed")
+          
+          if [ "$STATUS_CODE" != "200" ]; then
+            echo "Health check failed! Status code: $STATUS_CODE"
+            docker compose logs imagesapi
+            exit 1
+          else
+            echo "Health check passed! Status code: $STATUS_CODE"
           fi
       
       - name: Clean up
         run: |
           cd back-end/DotNet/ImagesAPI
-          docker compose down -v
+          docker compose down
         if: always() # Run even if previous steps fail
