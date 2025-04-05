@@ -53,6 +53,10 @@ RUN cmake .. \
     && cp bin/libImagesProcessor.so /build-output/
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# Add environmental variables to avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
 # Install development dependencies for native libraries (libSkiaSharp)
 RUN apt-get update \
     && apt-get install -y --allow-unauthenticated \
@@ -64,7 +68,7 @@ RUN apt-get update \
     libicu-dev \
     libpng-dev \
     libgif-dev \
-    libjpeg-dev \
+    libjpeg62-turbo-dev \
     && rm -rf /var/lib/apt/lists/* \
     # Create symlinks that SkiaSharp looks for during build
     && ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \

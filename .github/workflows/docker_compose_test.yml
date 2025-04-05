@@ -43,8 +43,8 @@ jobs:
       - name: Build and start Docker Compose services
         run: |
           cd back-end/DotNet/ImagesAPI
-          docker-compose build
-          docker-compose up -d
+          docker compose build
+          docker compose up -d
       
       - name: Wait for services to start
         run: sleep 30
@@ -52,24 +52,24 @@ jobs:
       - name: Check services health
         run: |
           cd back-end/DotNet/ImagesAPI
-          docker-compose ps
+          docker compose ps
           
           # Check if containers are running
-          MONGO_RUNNING=$(docker-compose ps -q mongodb)
-          API_RUNNING=$(docker-compose ps -q imagesapi)
+          MONGO_RUNNING=$(docker compose ps -q mongodb)
+          API_RUNNING=$(docker compose ps -q imagesapi)
           
           if [ -z "$MONGO_RUNNING" ] || [ -z "$API_RUNNING" ]; then
             echo "One or more containers failed to start"
-            docker-compose logs
+            docker compose logs
             exit 1
           else
             echo "All containers are running"
             # Show logs for debugging
-            docker-compose logs
+            docker compose logs
           fi
       
       - name: Clean up
         run: |
           cd back-end/DotNet/ImagesAPI
-          docker-compose down -v
+          docker compose down -v
         if: always() # Run even if previous steps fail
