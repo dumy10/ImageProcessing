@@ -16,7 +16,7 @@ void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	std::vector<unsigned char> grayImage(width * height);
 
 #pragma omp parallel for
-	for (int i = 0; i < width * height; ++i)
+	for (int i = 0; i < width * height; i++)
 	{
 		if (channels > 1)
 		{
@@ -48,9 +48,9 @@ void CannyFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 
 	// 6. Copy to output image, expanding to original number of channels
 #pragma omp parallel for
-	for (int i = 0; i < width * height; ++i)
+	for (int i = 0; i < width * height; i++)
 	{
-		for (int c = 0; c < channels; ++c)
+		for (int c = 0; c < channels; c++)
 		{
 			outputImage[i * channels + c] = finalEdges[i];
 		}
@@ -186,7 +186,26 @@ void CannyFilter::DoubleThresholdAndHysteresis(const unsigned char* inputImage, 
 	static constexpr float highThresholdRatio = 0.3f;
 
 	// Find max gradient magnitude for thresholding
-	auto maxMagnitude = *std::max_element(std::execution::par_unseq, inputImage, inputImage + width * height);
+	unsigned char maxMagnitude = 0;
+#pragma omp parallel
+	{
+		unsigned char localMax = 0;
+#pragma omp for nowait
+		for (int i = 0; i < width * height; i++) 
+		{
+			if (inputImage[i] > localMax) 
+			{
+				localMax = inputImage[i];
+			}
+		}
+#pragma omp critical
+		{
+			if (localMax > maxMagnitude) 
+			{
+				maxMagnitude = localMax;
+			}
+		}
+	}
 
 	unsigned char lowThreshold = static_cast<unsigned char>(maxMagnitude * lowThresholdRatio);
 	unsigned char highThreshold = static_cast<unsigned char>(maxMagnitude * highThresholdRatio);
@@ -210,14 +229,16 @@ void CannyFilter::DoubleThresholdAndHysteresis(const unsigned char* inputImage, 
 			else if (pixelValue >= lowThreshold)
 			{
 				// Check 8-connected neighborhood for strong edges
-				auto hasStrongNeighbor = std::any_of(
-					inputImage + index - width - 1,
-					inputImage + index + width + 1,
-					[highThreshold](unsigned char neighbor)
-					{
-						return neighbor >= highThreshold;
+				bool hasStrongNeighbor = false;
+				// Replace std::any_of with a direct loop
+				for (int ky = -1; ky <= 1 && !hasStrongNeighbor; ++ky) {
+					for (int kx = -1; kx <= 1 && !hasStrongNeighbor; ++kx) {
+						int neighborIdx = (y + ky) * width + (x + kx);
+						if (neighborIdx >= 0 && neighborIdx < width * height && inputImage[neighborIdx] >= highThreshold) {
+							hasStrongNeighbor = true;
+						}
 					}
-				);
+				}
 
 				outputImage[index] = hasStrongNeighbor ? 255 : 0;
 			}
