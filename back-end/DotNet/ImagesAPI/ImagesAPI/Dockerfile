@@ -1,8 +1,8 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 # Set timezone and disable interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
