@@ -8,8 +8,8 @@ EXPOSE 80
 EXPOSE 443
 
 # Install runtime dependencies required for SkiaSharp in the base image
-RUN apt-get update && apt-get upgrade -y \
-    && apt-get install -y --fix-missing \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
         tzdata \
         libfontconfig1 \
         libfreetype6 \
@@ -18,8 +18,8 @@ RUN apt-get update && apt-get upgrade -y \
         libpng16-16 \
         libjpeg62-turbo \
     && rm -rf /var/lib/apt/lists/* \
-    && ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
-    && ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
+    && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
 
 # Build the C++ native libraries
 FROM ubuntu:22.04 AS cpp-build
@@ -29,8 +29,8 @@ ENV TZ=Etc/UTC
 WORKDIR /src
 
 # Install required packages for building C++ project
-RUN apt-get update && apt-get upgrade -y \
-    && apt-get install -y --fix-missing \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
         tzdata \
         build-essential \
         ca-certificates \
@@ -58,8 +58,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
 # Install development dependencies for native libraries (libSkiaSharp)
-RUN apt-get update && apt-get upgrade -y \
-    && apt-get install -y --fix-missing \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
         tzdata \
         libc6-dev \
         libfontconfig1-dev \
@@ -69,10 +69,10 @@ RUN apt-get update && apt-get upgrade -y \
         libicu-dev \
         libpng-dev \
         libgif-dev \
-        libjpeg-dev \
+        libjpeg62 \
     && rm -rf /var/lib/apt/lists/* \
-    && ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
-    && ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
+    && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
 
 WORKDIR /src
 COPY ["back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj", "ImagesAPI/"]
