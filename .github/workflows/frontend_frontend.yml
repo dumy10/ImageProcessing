@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      API_URL: https://localhost:7156/Images
+      API_URL: https://imagesapi-n2b6.onrender.com/Images
 
     steps:
       - name: Checkout Code
