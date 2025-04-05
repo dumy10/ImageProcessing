@@ -41,15 +41,16 @@ RUN apt-get update \
         libopencv-dev \
         wget \
         pkg-config \
+        libtbb-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy C++ project files
 COPY ["back-end/VC/ImagesProcessor", "/src/ImagesProcessor"]
 
-# Build the C++ project using CMake
+# Build the C++ project using CMake, but skip building tests
 WORKDIR /src/ImagesProcessor/BUILD
-RUN cmake .. \
-    && cmake --build . --config Release \
+RUN cmake -DBUILD_TESTS=OFF .. \
+    && cmake --build . --config Release --target ImagesProcessor \
     && mkdir -p /build-output \
     && cp bin/libImagesProcessor.so /build-output/
 
