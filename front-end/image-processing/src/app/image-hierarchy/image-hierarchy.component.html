@@ -2,7 +2,7 @@
   Image: {{ data.length ? data[data.length - 1].name : "Unknown" }}
 </h2>
 
-<div class="viewToggleContainer">
+<div class="viewToggleContainer" *ngIf="!isMobileDevice">
   <button
     mat-button
     class="viewToggleBtn"

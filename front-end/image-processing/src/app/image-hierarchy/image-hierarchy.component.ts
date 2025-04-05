@@ -63,11 +63,6 @@ export class ImageHierarchyComponent implements OnInit {
   displayCount: number = 3;
 
   /**
-   * Tracks whether the timeline view is active
-   */
-  timelineView: boolean = true;
-
-  /**
    * Math object exposed to the template
    */
   Math = Math;
@@ -137,6 +132,11 @@ export class ImageHierarchyComponent implements OnInit {
    * Whether the device is a mobile device (touch-based)
    */
   isMobileDevice: boolean = false;
+
+  /**
+   * Tracks whether the timeline view is active
+   */
+  timelineView: boolean = !this.isMobileDevice;
 
   /**
    * Whether the device is in portrait orientation
@@ -250,6 +250,9 @@ export class ImageHierarchyComponent implements OnInit {
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
           navigator.userAgent
         );
+
+      // Set timeline view based on device type
+      this.timelineView = !this.isMobileDevice;
 
       this.checkOrientation();
     }
