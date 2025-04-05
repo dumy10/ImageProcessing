@@ -16,7 +16,7 @@ RUN apt-get update && apt-get upgrade -y \
         libgl1-mesa-dev \
         libgif7 \
         libpng16-16 \
-        libjpeg-turbo8 \
+        libjpeg62-turbo \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
