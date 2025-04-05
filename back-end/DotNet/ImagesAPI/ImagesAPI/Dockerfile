@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
 WORKDIR /app
-
+# Update port exposure to include 8080
 EXPOSE 80
 EXPOSE 443
 EXPOSE 8080
@@ -22,7 +22,6 @@ RUN apt-get update \
         # Add tools for diagnostics
         procps \
         curl \
-        strace \
         file \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
@@ -126,56 +125,29 @@ ENV LD_LIBRARY_PATH=/app:${LD_LIBRARY_PATH}
 
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
+
 # Set the port environment variable for ASP.NET Core
+# This will be overridden by Render's PORT environment variable in production
 ENV ASPNETCORE_URLS=http://+:8080
-# Add Debug environment variables for better diagnostics
-ENV ASPNETCORE_ENVIRONMENT=Development
-ENV DOTNET_ENVIRONMENT=Development
-# Enable detailed error messages
-ENV ASPNETCORE_DETAILED_ERRORS=true
+
 # Additional settings to help with native library loading
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
-# Set mock environment variables for testing
-# These are required by the application to start
-ENV MONGODB_CONNECTION_STRING="mongodb://mongodb:27017"
-ENV MONGODB_DATABASE_NAME="imagesdb_test"
-ENV MONGODB_COLLECTION_NAME="images_test"
-ENV MONGODB_USERS_COLLECTION_NAME="users_test"
-ENV DROPBOX_APP_KEY="test_app_key"
-ENV DROPBOX_APP_SECRET="test_app_secret"
-ENV DROPBOX_REFRESH_TOKEN="test_refresh_token"
-ENV FRONTEND_ORIGIN="http://localhost:4200"
-
-# Create a .env file to load environment variables
-RUN echo "MONGODB_CONNECTION_STRING=mongodb://mongodb:27017" > /app/.env \
-    && echo "MONGODB_DATABASE_NAME=imagesdb_test" >> /app/.env \
-    && echo "MONGODB_COLLECTION_NAME=images_test" >> /app/.env \
-    && echo "MONGODB_USERS_COLLECTION_NAME=users_test" >> /app/.env \
-    && echo "DROPBOX_APP_KEY=test_app_key" >> /app/.env \
-    && echo "DROPBOX_APP_SECRET=test_app_secret" >> /app/.env \
-    && echo "DROPBOX_REFRESH_TOKEN=test_refresh_token" >> /app/.env \
-    && echo "FRONTEND_ORIGIN=http://localhost:4200" >> /app/.env
-
-# Use a shell wrapper to capture startup errors
+# Use a shell wrapper to capture startup errors and handle environment variables
 COPY <<-EOT /app/startup.sh
 #!/bin/bash
 set -e
-echo "Starting ImagesAPI application..."
-echo "Current directory: $(pwd)"
-echo "Files in directory:"
-ls -la
-echo "Library path: $LD_LIBRARY_PATH"
-echo "Environment variables:"
-env | sort
-echo "Checking native library:"
-if [ -f /app/libImagesProcessor.so ]; then
-    echo "Native library exists."
-    file /app/libImagesProcessor.so
-else
-    echo "Native library is missing!"
+
+# Use PORT from Render if available, otherwise default to 8080
+if [ ! -z "\$PORT" ]; then
+  export ASPNETCORE_URLS=http://+:\$PORT
 fi
-echo "Starting application..."
+
+echo "Starting ImagesAPI application..."
+echo "Current directory: \$(pwd)"
+echo "Library path: \$LD_LIBRARY_PATH"
+echo "Starting application on port: \${PORT:-8080}"
+
 # Run with exec to ensure proper signal handling
 exec dotnet ImagesAPI.dll
 EOT
