@@ -1,170 +1,35 @@
-name: Run Tests and Deploy to Render
-
-on:
-  push:
-    branches:
-      - backend
-
-jobs:
-  test-backend-windows:
-    name: Test Backend on Windows
-    runs-on: windows-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.x"
-
-      - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1
-        with:
-          cmake-version: "3.21.0"
-
-      - name: Configure CMake
-        run: cmake -S back-end/VC/ImagesProcessor -B build -G "Visual Studio 17 2022" -A x64
-
-      - name: Build with CMake
-        run: cmake --build build --config Release
-
-      - name: Run C++ Tests
-        run: build/bin/Release/ImagesProcessorTests.exe
-
-      - name: Build with dotnet
-        run: dotnet build back-end\DotNet\ImagesAPI\ImagesAPI\ImagesAPI.csproj --configuration Release --runtime win-x64
-
-      - name: Run C# tests
-        run: dotnet test back-end\DotNet\ImagesAPITests\ImagesAPITests.csproj --configuration Release --runtime win-x64
-
-  test-backend-linux:
-    name: Test Backend on Linux
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.x"
-
-      - name: Install required packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libssl-dev
-
-      - name: Install SkiaSharp dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libfontconfig1 libfreetype6 libgl1-mesa-dev libgif7 libpng16-16 libjpeg-turbo8
-          # Create symlinks that SkiaSharp looks for
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
-
-      # This step ensures SkiaSharp native libraries are available
-      - name: Install SkiaSharp.NativeAssets.Linux
-        run: |
-          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp.NativeAssets.Linux
-          dotnet restore back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj
-
-      - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1
-        with:
-          cmake-version: "3.21.0"
-
-      - name: Configure CMake
-        run: cmake -S back-end/VC/ImagesProcessor -B build -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build with CMake
-        run: cmake --build build --config Release
-
-      - name: Run C++ Tests
-        run: ./build/bin/ImagesProcessorTests
-
-      - name: Build with dotnet
-        run: dotnet build back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj --configuration Release
-
-      - name: Run C# tests
-        run: dotnet test back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj --configuration Release
-
-  deploy-to-render:
-    name: Deploy to Render
-    needs: [test-backend-windows, test-backend-linux]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.x"
-
-      - name: Install required packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libssl-dev
-
-      - name: Install SkiaSharp dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libfontconfig1 libfreetype6 libgl1-mesa-dev libgif7 libpng16-16 libjpeg-turbo8
-          # Create symlinks that SkiaSharp looks for
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
-
-      - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1
-        with:
-          cmake-version: "3.21.0"
-
-      - name: Configure CMake
-        run: cmake -S back-end/VC/ImagesProcessor -B build -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build with CMake
-        run: cmake --build build --config Release
-
-      - name: Copy native library to publish directory
-        run: |
-          mkdir -p publish
-          cp ./build/bin/libImagesProcessor.so publish/
-
-      - name: Build and publish .NET application
-        run: |
-          dotnet publish back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj \
-          --configuration Release \
-          --output ./publish \
-          -p:IsGitHubActions=true
-
-      - name: Create environment file
-        run: |
-          cd publish
-          echo "MONGODB_CONNECTION_STRING=${{ secrets.MONGODB_CONNECTION_STRING }}" > .env
-          echo "MONGODB_DATABASE_NAME=${{ secrets.MONGODB_DATABASE_NAME }}" >> .env
-          echo "MONGODB_COLLECTION_NAME=${{ secrets.MONGODB_COLLECTION_NAME }}" >> .env
-          echo "MONGODB_USERS_COLLECTION_NAME=${{ secrets.MONGODB_USERS_COLLECTION_NAME }}" >> .env
-          echo "API_KEY_HEADER_NAME=${{ secrets.API_KEY_HEADER_NAME }}" >> .env
-          echo "DEFAULT_RATE_LIMIT=${{ secrets.DEFAULT_RATE_LIMIT }}" >> .env
-          echo "DROPBOX_APP_KEY=${{ secrets.DROPBOX_APP_KEY }}" >> .env
-          echo "DROPBOX_APP_SECRET=${{ secrets.DROPBOX_APP_SECRET }}" >> .env
-          echo "DROPBOX_REFRESH_TOKEN=${{ secrets.DROPBOX_REFRESH_TOKEN }}" >> .env
-          echo "FRONTEND_ORIGIN=${{ secrets.FRONTEND_ORIGIN }}" >> .env
-
-      - name: Deploy to Render
-        uses: JorgeLNJunior/render-deploy@v1.5.0
-        with:
-          service_id: ${{ secrets.RENDER_SERVICE_ID }}
-          api_key: ${{ secrets.RENDER_API_KEY }}
-          use_github_token: false
-          deploy_hook_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-          wait: true
-          sleep: 30
-          deployment_path: publish
+services:
+  - type: web
+    name: imagesapi
+    env: docker
+    region: frankfurt
+    plan: free
+    branch: backend  
+    dockerfilePath: back-end/DotNet/ImagesAPI/ImagesAPI/Dockerfile
+    buildFilter:
+      paths:
+        - back-end/DotNet/ImagesAPI/**
+        - back-end/VC/ImagesProcessor/**
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: MONGODB_CONNECTION_STRING
+        sync: false
+      - key: MONGODB_DATABASE_NAME
+        sync: false
+      - key: MONGODB_COLLECTION_NAME
+        sync: false
+      - key: MONGODB_USERS_COLLECTION_NAME
+        sync: false
+      - key: DROPBOX_APP_KEY
+        sync: false
+      - key: DROPBOX_APP_SECRET
+        sync: false
+      - key: DROPBOX_REFRESH_TOKEN
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: RUNNING_IN_DOCKER
+        value: true
+    healthCheckPath: /health
+    autoDeploy: true
