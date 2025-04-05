@@ -31,5 +31,7 @@ services:
         sync: false
       - key: RUNNING_IN_DOCKER
         value: true
+      - key: PORT
+        value: 8080
     healthCheckPath: /health
     autoDeploy: true

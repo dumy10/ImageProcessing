@@ -4,8 +4,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
 WORKDIR /app
+# Update port exposure to include 8080
 EXPOSE 80
 EXPOSE 443
+EXPOSE 8080
 
 # Install runtime dependencies required for SkiaSharp in the base image
 RUN apt-get update \
@@ -106,5 +108,7 @@ RUN chmod +x /app/libImagesProcessor.so
 
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
+# Set the port environment variable for ASP.NET Core
+ENV ASPNETCORE_URLS=http://+:8080
 
 ENTRYPOINT ["dotnet", "ImagesAPI.dll"]
