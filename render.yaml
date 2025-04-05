@@ -38,11 +38,10 @@ services:
       # Runtime flags
       - key: RUNNING_IN_DOCKER
         value: true
-      # Port configuration (Render will use this)
-      - key: PORT
-        value: 10000
-      # Don't explicitly set ASPNETCORE_URLS, let the startup script handle it
+      # Note: PORT is automatically provided by Render
+      # We intentionally don't set ASPNETCORE_URLS to let our startup script handle it
     # Health check endpoint and configuration for Render
     healthCheckPath: /health
+    healthCheckPort: 10000  # This port will be automatically used by Render
     # Auto-deploy when changes are pushed to the branch
     autoDeploy: true

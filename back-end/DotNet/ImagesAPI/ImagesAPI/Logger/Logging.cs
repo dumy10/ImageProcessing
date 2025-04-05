@@ -10,6 +10,7 @@ namespace ImagesAPI.Logger
         private static readonly object _lock = new();
         private static Logging? _instance = null;
         private static string _logFile = string.Empty;
+        private static string _logDirectory = string.Empty;
 
         /// <summary>
         /// Gets the singleton instance of the Logger class.
@@ -21,27 +22,31 @@ namespace ImagesAPI.Logger
         /// </summary>
         private Logging()
         {
-            string executingAssemblyPath = Assembly.GetExecutingAssembly().Location;
-
-            // Get the directory where the executable is located
-            executingAssemblyPath = Path.GetDirectoryName(executingAssemblyPath) ?? string.Empty;
-
-            string logDirectory = Path.Combine(executingAssemblyPath, "ImagesProcessorLogs");
-
-            // Create a log file for the current execution of the program in order to avoid overwriting logs across different executions
-            _logFile = Path.Combine(logDirectory, $"ImagesAPI-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log");
-
-            if (!Directory.Exists(logDirectory))
+            try
             {
-                Directory.CreateDirectory(logDirectory);
-            }
+                string executingAssemblyPath = Assembly.GetExecutingAssembly().Location;
 
-            if (!File.Exists(_logFile))
+                // Get the directory where the executable is located
+                executingAssemblyPath = Path.GetDirectoryName(executingAssemblyPath) ?? string.Empty;
+
+                _logDirectory = Path.Combine(executingAssemblyPath, "ImagesProcessorLogs");
+
+                // Create a log file for the current execution of the program in order to avoid overwriting logs across different executions
+                _logFile = Path.Combine(_logDirectory, $"ImagesAPI-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log");
+
+                if (!Directory.Exists(_logDirectory))
+                {
+                    Directory.CreateDirectory(_logDirectory);
+                }
+
+                LogMessage("Logger initialized.");
+            }
+            catch (Exception ex)
             {
-                File.Create(_logFile).Dispose();
+                Console.WriteLine($"Error initializing logger: {ex.Message}");
+                // Fallback to Console logging if file logging fails
+                _logFile = string.Empty;
             }
-
-            LogMessage("Logger initialized.");
         }
 
         /// <summary>
@@ -64,25 +69,50 @@ namespace ImagesAPI.Logger
         /// </summary>
         private static void WriteLog(string level, string message)
         {
-            if (string.IsNullOrWhiteSpace(_logFile))
+            string logMessage = $"{{{level}}} {DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}";
+            
+            if (string.IsNullOrWhiteSpace(_logFile) || string.IsNullOrWhiteSpace(_logDirectory))
             {
-                throw new InvalidOperationException("Log file path is not set.");
+                return; // Skip file logging if paths not set
             }
 
+            // We'll try to log to file, but won't fail the application if we can't
             try
             {
                 lock (_lock)
                 {
-                    using StreamWriter writer = new(_logFile, true) { AutoFlush = true };
-                    writer.WriteLine($"{{{level}}} {DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}");
+                    // Use FileShare.ReadWrite to allow concurrent access
+                    using var fs = new FileStream(_logFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                    using var writer = new StreamWriter(fs) { AutoFlush = true };
+                    writer.WriteLine(logMessage);
+                }
+            }
+            catch (IOException ex)
+            {
+                // If the current log file is being used, create a new one with a unique timestamp
+                try 
+                {
+                    if (!string.IsNullOrEmpty(_logDirectory))
+                    {
+                        _logFile = Path.Combine(_logDirectory, $"ImagesAPI-{DateTime.Now:yyyy-MM-dd-HH-mm-ss-fff}.log");
+                        using (var fs = new FileStream(_logFile, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                        using (var writer = new StreamWriter(fs) { AutoFlush = true })
+                        {
+                            writer.WriteLine($"{{INFO}} {DateTime.Now:yyyy-MM-dd HH:mm:ss} - Created new log file due to access issue with previous file.");
+                            writer.WriteLine(logMessage);
+                        }
+                    }
+                }
+                catch 
+                {
+                    // If we still can't write to a file, give up on file logging but don't crash the app
+                    Console.WriteLine($"Failed to create new log file after IO exception: {ex.Message}");
                 }
             }
             catch (Exception ex)
             {
-                // Ignore exceptions
-                // If we execute a lots of operations sometimes it can't lock the file and will throw an exception, we can ignore it
-                Console.WriteLine("An error occured while trying to write a message to the log file.");
-                Console.WriteLine(ex.Message);
+                // Log any other exceptions to console but don't crash the application
+                Console.WriteLine($"Error writing to log file: {ex.Message}");
             }
         }
     }
