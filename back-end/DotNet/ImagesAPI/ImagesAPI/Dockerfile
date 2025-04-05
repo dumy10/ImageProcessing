@@ -33,8 +33,8 @@ RUN apt-get update \
         libxext6 \
         libxrender1 \
         # For diagnostics
+        libc-bin \
         strace \
-        ldd \
         file \
         procps \
         curl \
