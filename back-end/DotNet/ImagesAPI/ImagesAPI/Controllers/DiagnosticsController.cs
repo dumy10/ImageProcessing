@@ -1,6 +1,5 @@
 using ImagesAPI.External;
-using ImagesAPI.Logger;
-using Microsoft.AspNetCore.Authorization;
+using ImagesAPI.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using SkiaSharp;
 using System.Runtime.InteropServices;
@@ -10,14 +9,18 @@ namespace ImagesAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous] // Make this accessible without API key for easier testing
     public class DiagnosticsController : ControllerBase
     {
         [HttpGet("native-library-status")]
         public ActionResult GetNativeLibraryStatus()
         {
+            if (AuthHelper.IsAdmin(HttpContext))
+            {
+                return Unauthorized("Admin access required.");
+            }
+
             var result = new StringBuilder();
-            
+
             // Get basic environment information
             result.AppendLine("## Environment Information");
             result.AppendLine($"OS: {RuntimeInformation.OSDescription}");
@@ -28,26 +31,26 @@ namespace ImagesAPI.Controllers
             result.AppendLine($"ASPNETCORE_ENVIRONMENT: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "not set"}");
             result.AppendLine($"LD_LIBRARY_PATH: {Environment.GetEnvironmentVariable("LD_LIBRARY_PATH") ?? "not set"}");
             result.AppendLine();
-            
+
             // Check for library files
             string appPath = AppDomain.CurrentDomain.BaseDirectory;
             result.AppendLine("## Library Files");
             result.AppendLine($"Base Directory: {appPath}");
-            
+
             string[] libFiles = ["ImagesProcessor.dll", "libImagesProcessor.so", "libImagesProcessor.so.1"];
             foreach (var file in libFiles)
             {
                 string path = Path.Combine(appPath, file);
                 bool exists = System.IO.File.Exists(path);
                 result.AppendLine($"{file}: {(exists ? "EXISTS" : "NOT FOUND")}");
-                
+
                 if (exists)
                 {
                     var fileInfo = new FileInfo(path);
                     result.AppendLine($"  - Size: {fileInfo.Length} bytes");
                     result.AppendLine($"  - Last modified: {fileInfo.LastWriteTime}");
                     result.AppendLine($"  - Permissions: {fileInfo.Attributes}");
-                    
+
                     // For Linux, check file permissions with ldd if possible
                     if (OperatingSystem.IsLinux())
                     {
@@ -69,7 +72,7 @@ namespace ImagesAPI.Controllers
                             string fileOutput = process.StandardOutput.ReadToEnd();
                             process.WaitForExit();
                             result.AppendLine($"  - File info: {fileOutput.Trim()}");
-                            
+
                             // Use ldd to check dependencies
                             process = new System.Diagnostics.Process
                             {
@@ -95,10 +98,10 @@ namespace ImagesAPI.Controllers
                 }
             }
             result.AppendLine();
-            
+
             // Try to actually use the libraries
             result.AppendLine("## Library Loading Tests");
-            
+
             // Test SkiaSharp first - which we know works
             try
             {
@@ -113,7 +116,7 @@ namespace ImagesAPI.Controllers
                     result.AppendLine($"  Inner exception: {ex.InnerException.Message}");
                 }
             }
-            
+
             // Now test our native library
             try
             {
@@ -128,10 +131,10 @@ namespace ImagesAPI.Controllers
                 {
                     result.AppendLine($"  Inner exception: {ex.InnerException.Message}");
                 }
-                
+
                 result.AppendLine($"  Exception type: {ex.GetType().FullName}");
                 result.AppendLine($"  Stack trace: {ex.StackTrace}");
-                
+
                 // Check if it's a DllNotFoundException or EntryPointNotFoundException 
                 if (ex is DllNotFoundException || ex is EntryPointNotFoundException)
                 {
@@ -143,7 +146,7 @@ namespace ImagesAPI.Controllers
                     result.AppendLine("4. Library has dependencies that are not installed in the container");
                 }
             }
-            
+
             // Try to access log file if it exists
             try
             {
@@ -172,7 +175,7 @@ namespace ImagesAPI.Controllers
             {
                 result.AppendLine($"\n## Error accessing logs: {ex.Message}");
             }
-            
+
             // Send result as text
             return Content(result.ToString(), "text/plain");
         }
