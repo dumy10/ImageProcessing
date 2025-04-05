@@ -128,5 +128,14 @@ namespace ImagesAPI.External
 #endif
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
         private static partial void FreeMemory(ref IntPtr data);
+
+#if WINDOWS
+        [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
+#else
+        [LibraryImport("libImagesProcessor.so", StringMarshalling = StringMarshalling.Utf8)]
+#endif
+        [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+        [return: MarshalAs(unmanagedType: UnmanagedType.Bool)]
+        public static partial bool ProcessDummyTest();
     }
 }

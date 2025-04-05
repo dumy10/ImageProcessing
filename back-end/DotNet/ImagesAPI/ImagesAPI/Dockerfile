@@ -10,7 +10,7 @@ EXPOSE 443
 EXPOSE 8080
 EXPOSE 10000
 
-# Install runtime dependencies required for SkiaSharp in the base image
+# Install runtime dependencies required for SkiaSharp and other native libraries
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         tzdata \
@@ -20,13 +20,34 @@ RUN apt-get update \
         libgif7 \
         libpng16-16 \
         libjpeg62-turbo \
-        # Add tools for diagnostics
+        # OpenMP dependency (required by libImagesProcessor.so)
+        libgomp1 \
+        # TBB dependency for parallel algorithms (std::execution)
+        libtbb-dev \
+        # SkiaSharp additional dependencies
+        libicu-dev \
+        libharfbuzz-dev \
+        libglib2.0-0 \
+        libdbus-1-3 \
+        # OpenCV runtime dependencies
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender1 \
+        # For diagnostics
+        libc-bin \
+        strace \
+        file \
         procps \
         curl \
-        file \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
+
+# Set environment variables for SkiaSharp native library loading
+ENV SKIA_FONTMGR=fontconfig
+# Make sure SkiaSharp knows we're using its Linux assets
+ENV SKIASHARP_NATIVE_ASSETS_PERSISTED=1
 
 # Build the C++ native libraries
 FROM ubuntu:22.04 AS cpp-build

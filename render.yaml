@@ -38,6 +38,11 @@ services:
       # Runtime flags
       - key: RUNNING_IN_DOCKER
         value: true
+      # SkiaSharp configuration
+      - key: SKIA_FONTMGR
+        value: fontconfig
+      - key: SKIASHARP_NATIVE_ASSETS_PERSISTED
+        value: "1"
       # Note: PORT is automatically provided by Render
       # We intentionally don't set ASPNETCORE_URLS to let our startup script handle it
     # Health check endpoint and configuration for Render

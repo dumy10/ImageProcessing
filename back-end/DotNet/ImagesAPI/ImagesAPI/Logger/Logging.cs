@@ -70,7 +70,7 @@ namespace ImagesAPI.Logger
         private static void WriteLog(string level, string message)
         {
             string logMessage = $"{{{level}}} {DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}";
-            
+
             if (string.IsNullOrWhiteSpace(_logFile) || string.IsNullOrWhiteSpace(_logDirectory))
             {
                 return; // Skip file logging if paths not set
@@ -90,20 +90,18 @@ namespace ImagesAPI.Logger
             catch (IOException ex)
             {
                 // If the current log file is being used, create a new one with a unique timestamp
-                try 
+                try
                 {
                     if (!string.IsNullOrEmpty(_logDirectory))
                     {
                         _logFile = Path.Combine(_logDirectory, $"ImagesAPI-{DateTime.Now:yyyy-MM-dd-HH-mm-ss-fff}.log");
-                        using (var fs = new FileStream(_logFile, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
-                        using (var writer = new StreamWriter(fs) { AutoFlush = true })
-                        {
-                            writer.WriteLine($"{{INFO}} {DateTime.Now:yyyy-MM-dd HH:mm:ss} - Created new log file due to access issue with previous file.");
-                            writer.WriteLine(logMessage);
-                        }
+                        using var fs = new FileStream(_logFile, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+                        using var writer = new StreamWriter(fs) { AutoFlush = true };
+                        writer.WriteLine($"{{INFO}} {DateTime.Now:yyyy-MM-dd HH:mm:ss} - Created new log file due to access issue with previous file.");
+                        writer.WriteLine(logMessage);
                     }
                 }
-                catch 
+                catch
                 {
                     // If we still can't write to a file, give up on file logging but don't crash the app
                     Console.WriteLine($"Failed to create new log file after IO exception: {ex.Message}");

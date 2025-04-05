@@ -10,8 +10,12 @@ void InvertFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 		progressCallback(60);
 
 	const int size = width * height * channels;
-
-	std::transform(std::execution::par, inputImage, inputImage + size, outputImage, [](unsigned char pixel) { return pixel ^ 0xFF; });
+	
+#pragma omp parallel for
+	for (int i = 0; i < size; i++)
+	{
+		outputImage[i] = inputImage[i] ^ 0xFF;
+	}
 
 	if (progressCallback)
 		progressCallback(70);
