@@ -4,8 +4,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
 WORKDIR /app
+# Update port exposure to include 8080
 EXPOSE 80
 EXPOSE 443
+EXPOSE 8080
 
 # Install runtime dependencies required for SkiaSharp in the base image
 RUN apt-get update \
@@ -17,6 +19,10 @@ RUN apt-get update \
         libgif7 \
         libpng16-16 \
         libjpeg62-turbo \
+        # Add tools for diagnostics
+        procps \
+        curl \
+        file \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
@@ -42,6 +48,7 @@ RUN apt-get update \
         wget \
         pkg-config \
         libtbb-dev \
+        file \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy C++ project files
@@ -52,7 +59,10 @@ WORKDIR /src/ImagesProcessor/BUILD
 RUN cmake -DBUILD_TESTS=OFF .. \
     && cmake --build . --config Release --target ImagesProcessor \
     && mkdir -p /build-output \
-    && cp bin/libImagesProcessor.so /build-output/
+    && cp bin/libImagesProcessor.so /build-output/ \
+    # Verify the library was built successfully
+    && ls -la /build-output/ \
+    && file /build-output/libImagesProcessor.so
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ENV DEBIAN_FRONTEND=noninteractive
@@ -101,10 +111,48 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 COPY --from=cpp-build /build-output/libImagesProcessor.so /app/
 
-# Make sure permissions are set correctly
-RUN chmod +x /app/libImagesProcessor.so
+# Create logs directory with appropriate permissions
+RUN mkdir -p /app/ImagesProcessorLogs && chmod 777 /app/ImagesProcessorLogs
+
+# Make sure permissions are set correctly and verify the library exists
+RUN chmod +x /app/libImagesProcessor.so \
+    && ls -la /app/libImagesProcessor.so \
+    && file /app/libImagesProcessor.so
+
+# Initialize LD_LIBRARY_PATH if it doesn't exist and then set the library path
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-}
+ENV LD_LIBRARY_PATH=/app:${LD_LIBRARY_PATH}
 
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
 
-ENTRYPOINT ["dotnet", "ImagesAPI.dll"]
+# Set the port environment variable for ASP.NET Core
+# This will be overridden by Render's PORT environment variable in production
+ENV ASPNETCORE_URLS=http://+:8080
+
+# Additional settings to help with native library loading
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+
+# Use a shell wrapper to capture startup errors and handle environment variables
+COPY <<-EOT /app/startup.sh
+#!/bin/bash
+set -e
+
+# Use PORT from Render if available, otherwise default to 8080
+if [ ! -z "\$PORT" ]; then
+  export ASPNETCORE_URLS=http://+:\$PORT
+fi
+
+echo "Starting ImagesAPI application..."
+echo "Current directory: \$(pwd)"
+echo "Library path: \$LD_LIBRARY_PATH"
+echo "Starting application on port: \${PORT:-8080}"
+
+# Run with exec to ensure proper signal handling
+exec dotnet ImagesAPI.dll
+EOT
+
+RUN chmod +x /app/startup.sh
+
+# Use the startup script as entrypoint
+ENTRYPOINT ["/app/startup.sh"]

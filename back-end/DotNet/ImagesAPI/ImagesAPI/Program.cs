@@ -32,6 +32,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
+// Add health checks
+builder.Services.AddHealthChecks();
+
 // Configure Swagger with API key authentication
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -174,8 +177,26 @@ app.UseAuthorization();
 
 app.UseHttpsRedirection();
 
+// Add a simple health check endpoint that doesn't require authentication
+app.MapHealthChecks("/health").AllowAnonymous();
+
 app.MapControllers();
 app.MapHub<ProgressHub>("/progressHub");
+
+// Add a diagnostic endpoint to help debug native library loading
+app.MapGet("/system-info", () => {
+    var info = new Dictionary<string, string>
+    {
+        { "OS", Environment.OSVersion.ToString() },
+        { "Runtime", System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription },
+        { "Environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Not set" },
+        { "Docker", Environment.GetEnvironmentVariable("RUNNING_IN_DOCKER") ?? "Not set" },
+        { "Working Directory", Environment.CurrentDirectory },
+        { "Library Path", Environment.GetEnvironmentVariable("LD_LIBRARY_PATH") ?? "Not set" },
+        { "ImagesProcessor Library Exists", File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libImagesProcessor.so")).ToString() }
+    };
+    return Results.Ok(info);
+}).AllowAnonymous();
 
 app.Run();
 
