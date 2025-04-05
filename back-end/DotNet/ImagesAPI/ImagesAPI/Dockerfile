@@ -3,6 +3,10 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
+# Set environment variables to avoid timezone prompt
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
 # Install runtime dependencies required for SkiaSharp in the base image
 RUN apt-get update \
     && apt-get install -y --allow-unauthenticated \
@@ -19,6 +23,9 @@ RUN apt-get update \
 
 # Build the C++ native libraries
 FROM ubuntu:22.04 AS cpp-build
+# Set environment variables to avoid timezone prompt in this stage too
+ENV DEBIAN_FRONTEND=noninteractive 
+ENV TZ=Etc/UTC
 WORKDIR /src
 
 # Install required packages for building C++ project
