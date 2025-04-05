@@ -1,10 +1,11 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   Component,
   ElementRef,
   HostListener,
   Inject,
   OnInit,
+  PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -60,11 +61,6 @@ export class ImageHierarchyComponent implements OnInit {
    * Controls how many images are displayed in the hierarchy view
    */
   displayCount: number = 3;
-
-  /**
-   * Tracks whether the timeline view is active
-   */
-  timelineView: boolean = true;
 
   /**
    * Math object exposed to the template
@@ -127,13 +123,98 @@ export class ImageHierarchyComponent implements OnInit {
    */
   hasOverflow: boolean = false;
 
+  /**
+   * Device pixel ratio for DPI-aware rendering
+   */
+  devicePixelRatio: number = 1;
+
+  /**
+   * Whether the device is a mobile device (touch-based)
+   */
+  isMobileDevice: boolean = false;
+
+  /**
+   * Tracks whether the timeline view is active
+   */
+  timelineView: boolean = !this.isMobileDevice;
+
+  /**
+   * Whether the device is in portrait orientation
+   */
+  isPortraitOrientation: boolean = false;
+
+  private resizeTimeout: any = null;
+
   constructor(
     public dialogRef: MatDialogRef<ImageHierarchyComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: ImageModel[]
+    @Inject(MAT_DIALOG_DATA) public data: ImageModel[],
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    // Set the dialog width based on the number of images
-    if (data.length === 3 || data.length === 2) {
-      dialogRef.updateSize('90%', 'auto');
+    // Initialize device-specific variables
+    this.detectDeviceProperties();
+
+    // Set the dialog width based on the number of images and DPI
+    this.updateDialogSize();
+  }
+
+  /**
+   * Updates the dialog size based on DPI and number of images
+   */
+  private updateDialogSize(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Get base width depending on number of images
+      let baseWidth = '90%';
+      let baseMaxWidth = '1200px';
+
+      if (this.data.length <= 2) {
+        baseWidth = '85%';
+        baseMaxWidth = '900px';
+      } else if (this.data.length >= 5) {
+        baseWidth = '95%';
+        baseMaxWidth = '1400px';
+      }
+
+      // Scale width by DPI but cap it to avoid excessive sizes
+      const scaleFactor = Math.min(this.devicePixelRatio, 1.5);
+      const maxWidthValue = parseInt(baseMaxWidth, 10);
+      const scaledMaxWidth = `${Math.round(maxWidthValue * scaleFactor)}px`;
+
+      // Auto-height with max-height based on viewport and DPI
+      const viewportHeight = window.innerHeight;
+      const maxHeight = `${Math.min(Math.round(viewportHeight * 0.9), 800)}px`;
+
+      // Apply dialog size with DPI scaling
+      this.dialogRef.updateSize(baseWidth, 'auto');
+
+      // Use dialog's Element reference
+      try {
+        // Access the dialog through the ElementRef which is the closest container
+        const dialogElement = document.querySelector(
+          '.mat-mdc-dialog-container'
+        ) as HTMLElement;
+
+        if (dialogElement) {
+          if (this.isMobileDevice) {
+            // For mobile, set dialog position to take up more screen space
+            dialogElement.style.maxWidth = '98%';
+            dialogElement.style.maxHeight = maxHeight;
+          } else {
+            // For desktop, apply DPI scaling
+            dialogElement.style.maxWidth = scaledMaxWidth;
+            dialogElement.style.maxHeight = maxHeight;
+
+            // Scale padding based on DPI for better UI proportions
+            const basePadding = 16;
+            const scaledPadding = `${Math.round(
+              basePadding * Math.sqrt(scaleFactor)
+            )}px`;
+            dialogElement.style.padding = scaledPadding;
+          }
+        }
+      } catch (error) {
+        // Silently handle errors - dialog styling is non-critical
+        console.debug('Could not adjust dialog container styles based on DPI');
+      }
     }
   }
 
@@ -148,6 +229,71 @@ export class ImageHierarchyComponent implements OnInit {
     setTimeout(() => {
       this.fitToView();
     }, 100);
+
+    // Listen for orientation changes
+    if (isPlatformBrowser(this.platformId)) {
+      window.addEventListener('resize', this.onOrientationChange.bind(this));
+      this.checkOrientation();
+    }
+  }
+
+  /**
+   * Detect device properties like DPI and mobile status
+   */
+  private detectDeviceProperties(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Get device pixel ratio for DPI awareness
+      this.devicePixelRatio = window.devicePixelRatio || 1;
+
+      // Check if the device is a mobile/touch device
+      this.isMobileDevice =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+
+      // Set timeline view based on device type
+      this.timelineView = !this.isMobileDevice;
+
+      this.checkOrientation();
+    }
+  }
+
+  /**
+   * Check and update the device orientation
+   */
+  private checkOrientation(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.isPortraitOrientation = window.innerHeight > window.innerWidth;
+    }
+  }
+
+  /**
+   * Handle orientation changes
+   */
+  private onOrientationChange(): void {
+    this.checkOrientation();
+    // Adjust the view based on new orientation
+    setTimeout(() => {
+      // Update dialog size when window resizes or orientation changes
+      this.updateDialogSize();
+      this.calculateTimelineWidth();
+      this.fitToView();
+    }, 100);
+  }
+
+  /**
+   * Listen for window resize events to update dialog dimensions
+   */
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    // Throttle resize events
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+
+    this.resizeTimeout = setTimeout(() => {
+      this.updateDialogSize();
+    }, 200);
   }
 
   /**
@@ -161,13 +307,19 @@ export class ImageHierarchyComponent implements OnInit {
       this.timelineWidthMultiplier = 1;
     } else {
       // For more than 3 images, increase width proportionally
-      this.timelineWidthMultiplier = Math.max(1, imageCount / 3);
+      // Apply a larger multiplier on mobile in portrait mode to ensure better visibility
+      const mobileMultiplierBoost =
+        this.isMobileDevice && this.isPortraitOrientation ? 1.5 : 1;
+      this.timelineWidthMultiplier = Math.max(
+        1,
+        (imageCount / 3) * mobileMultiplierBoost
+      );
     }
 
     // Ensure it's at least 1 and not excessively large
     this.timelineWidthMultiplier = Math.min(
       Math.max(this.timelineWidthMultiplier, 1),
-      5
+      this.isMobileDevice ? 7 : 5 // Allow larger width on mobile
     );
 
     // Set overflow flag
@@ -226,6 +378,10 @@ export class ImageHierarchyComponent implements OnInit {
    * Checks if fewer images can be shown
    */
   canShowLess(): boolean {
+    if (this.data.length <= 1) {
+      return false;
+    }
+
     return this.displayCount > 1;
   }
 
@@ -373,15 +529,22 @@ export class ImageHierarchyComponent implements OnInit {
   /**
    * Mouse down event handler for starting panning
    */
-  startPanning(event: MouseEvent): void {
+  startPanning(event: MouseEvent | TouchEvent): void {
     if (!this.hasOverflow) return;
 
-    // Only enable panning with the primary mouse button
-    if (event.button !== 0) return;
-
-    this.isPanning = true;
-    this.panStartX = event.clientX - this.panX;
-    this.panStartY = event.clientY - this.panY;
+    // Handle both mouse and touch events
+    if (event instanceof MouseEvent) {
+      // Only enable panning with the primary mouse button
+      if (event.button !== 0) return;
+      this.isPanning = true;
+      this.panStartX = event.clientX - this.panX;
+      this.panStartY = event.clientY - this.panY;
+    } else if (event instanceof TouchEvent && event.touches.length === 1) {
+      // Single touch point for panning
+      this.isPanning = true;
+      this.panStartX = event.touches[0].clientX - this.panX;
+      this.panStartY = event.touches[0].clientY - this.panY;
+    }
 
     // Change cursor
     if (this.timelineContainer) {
@@ -392,14 +555,28 @@ export class ImageHierarchyComponent implements OnInit {
   }
 
   /**
-   * Mouse move event handler for panning
+   * Mouse/touch move event handler for panning
    */
   @HostListener('mousemove', ['$event'])
-  onMouseMove(event: MouseEvent): void {
+  @HostListener('touchmove', ['$event'])
+  onPanMove(event: MouseEvent | TouchEvent): void {
     if (!this.isPanning) return;
 
-    this.panX = event.clientX - this.panStartX;
-    this.panY = event.clientY - this.panStartY;
+    let clientX: number;
+    let clientY: number;
+
+    if (event instanceof MouseEvent) {
+      clientX = event.clientX;
+      clientY = event.clientY;
+    } else if (event instanceof TouchEvent) {
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    } else {
+      return;
+    }
+
+    this.panX = clientX - this.panStartX;
+    this.panY = clientY - this.panStartY;
 
     // Apply transform to the timeline track
     this.applyTransform();
@@ -408,10 +585,12 @@ export class ImageHierarchyComponent implements OnInit {
   }
 
   /**
-   * Mouse up event handler for stopping panning
+   * Mouse/touch up event handler for stopping panning
    */
   @HostListener('mouseup', ['$event'])
   @HostListener('mouseleave', ['$event'])
+  @HostListener('touchend', ['$event'])
+  @HostListener('touchcancel', ['$event'])
   stopPanning(): void {
     if (!this.isPanning) return;
 
@@ -433,17 +612,77 @@ export class ImageHierarchyComponent implements OnInit {
     // Prevent scrolling the page when interacting with the timeline
     event.preventDefault();
 
-    const delta = Math.sign(event.deltaY) * -0.1;
+    // Scale the delta by the device pixel ratio for consistent zooming across different DPI settings
+    const scaledDelta =
+      (Math.sign(event.deltaY) * -0.1) / this.devicePixelRatio;
     this.zoomLevel = Math.min(
       this.maxZoom,
-      Math.max(this.minZoom, this.zoomLevel + delta)
+      Math.max(this.minZoom, this.zoomLevel + scaledDelta)
     );
 
     this.applyTransform();
   }
 
   /**
-   * Apply current transform (zoom and pan) to the timeline track
+   * Handle touch-based pinch zoom
+   */
+  @HostListener('touchstart', ['$event'])
+  onTouchStart(event: TouchEvent): void {
+    if (event.touches.length === 2) {
+      // Two finger touch - prepare for pinch zoom
+      const dx = event.touches[0].clientX - event.touches[1].clientX;
+      const dy = event.touches[0].clientY - event.touches[1].clientY;
+      // Store the initial distance between fingers for pinch zoom reference
+      this._initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
+      this._initialZoomLevel = this.zoomLevel;
+      event.preventDefault();
+    }
+  }
+
+  private _initialPinchDistance: number = 0;
+  private _initialZoomLevel: number = 1;
+
+  /**
+   * Handle pinch zoom gesture
+   */
+  @HostListener('touchmove', ['$event'])
+  onPinchZoom(event: TouchEvent): void {
+    if (!this.timelineView || !this.hasOverflow || event.touches.length !== 2)
+      return;
+
+    // Calculate current distance between touch points
+    const dx = event.touches[0].clientX - event.touches[1].clientX;
+    const dy = event.touches[0].clientY - event.touches[1].clientY;
+    const currentDistance = Math.sqrt(dx * dx + dy * dy);
+
+    // If we have a valid initial distance and current distance
+    if (this._initialPinchDistance > 0 && currentDistance > 0) {
+      // Calculate zoom ratio and apply it
+      const ratio = currentDistance / this._initialPinchDistance;
+      const newZoomLevel = this._initialZoomLevel * ratio;
+
+      // Apply zoom level constraints
+      this.zoomLevel = Math.min(
+        this.maxZoom,
+        Math.max(this.minZoom, newZoomLevel)
+      );
+
+      // Apply the transform
+      this.applyTransform();
+      event.preventDefault();
+    }
+  }
+
+  @HostListener('touchend', ['$event'])
+  onTouchEnd(event: TouchEvent): void {
+    // Reset pinch zoom tracking when fingers are lifted
+    if (event.touches.length < 2) {
+      this._initialPinchDistance = 0;
+    }
+  }
+
+  /**
+   * Apply current transform (zoom and pan) to the timeline track, accounting for device DPI
    */
   applyTransform(): void {
     if (!this.timelineContainer) return;
@@ -452,7 +691,10 @@ export class ImageHierarchyComponent implements OnInit {
       '.timelineTrack'
     ) as HTMLElement;
     if (trackElement) {
-      trackElement.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoomLevel})`;
+      // Apply DPI-aware scaling to ensure consistent experience across devices
+      const dpiScaledPanX = this.panX / this.devicePixelRatio;
+      const dpiScaledPanY = this.panY / this.devicePixelRatio;
+      trackElement.style.transform = `translate(${dpiScaledPanX}px, ${dpiScaledPanY}px) scale(${this.zoomLevel})`;
     }
   }
 
@@ -471,7 +713,9 @@ export class ImageHierarchyComponent implements OnInit {
    * Zoom in by a preset increment
    */
   zoomIn(): void {
-    this.zoomLevel = Math.min(this.maxZoom, this.zoomLevel + 0.1);
+    // Scale the zoom increment by device pixel ratio for consistent experience
+    const zoomIncrement = 0.1 / this.devicePixelRatio;
+    this.zoomLevel = Math.min(this.maxZoom, this.zoomLevel + zoomIncrement);
     this.applyTransform();
   }
 
@@ -479,7 +723,9 @@ export class ImageHierarchyComponent implements OnInit {
    * Zoom out by a preset increment
    */
   zoomOut(): void {
-    this.zoomLevel = Math.max(this.minZoom, this.zoomLevel - 0.1);
+    // Scale the zoom increment by device pixel ratio for consistent experience
+    const zoomIncrement = 0.1 / this.devicePixelRatio;
+    this.zoomLevel = Math.max(this.minZoom, this.zoomLevel - zoomIncrement);
     this.applyTransform();
   }
 
@@ -503,14 +749,26 @@ export class ImageHierarchyComponent implements OnInit {
     const imageCount = this.data.length;
 
     // Dynamic scaling: more images = smaller zoom
+    // Scale zoom levels based on device pixel ratio for consistent appearance
+    const dpiScalingFactor = 1 / this.devicePixelRatio;
+
     if (imageCount > 10) {
-      this.zoomLevel = 0.2; // Very small zoom for very large trees
+      this.zoomLevel = 0.2 * dpiScalingFactor; // Very small zoom for very large trees
     } else if (imageCount > 7) {
-      this.zoomLevel = 0.3; // Small zoom for large trees
+      this.zoomLevel = 0.3 * dpiScalingFactor; // Small zoom for large trees
     } else if (imageCount > 5) {
-      this.zoomLevel = 0.5; // Medium zoom for medium trees
+      this.zoomLevel = 0.5 * dpiScalingFactor; // Medium zoom for medium trees
     } else {
-      this.zoomLevel = 0.7; // Larger zoom for smaller trees
+      this.zoomLevel = 0.7 * dpiScalingFactor; // Larger zoom for smaller trees
+    }
+
+    // Apply additional scaling for mobile devices to ensure visibility
+    if (this.isMobileDevice) {
+      if (this.isPortraitOrientation) {
+        this.zoomLevel *= 0.7; // Reduce zoom level in portrait mode on mobile
+      } else {
+        this.zoomLevel *= 0.9; // Smaller reduction in landscape mode
+      }
     }
 
     // Ensure zoom level is within bounds
@@ -561,7 +819,8 @@ export class ImageHierarchyComponent implements OnInit {
       const containerCenter = containerWidth / 2;
 
       // Calculate pan offset needed to center the middle node
-      this.panX = containerCenter - middleNodeOffsetLeft;
+      this.panX =
+        (containerCenter - middleNodeOffsetLeft) * this.devicePixelRatio;
 
       // Apply the transform with the new pan position
       this.applyTransform();
@@ -569,17 +828,30 @@ export class ImageHierarchyComponent implements OnInit {
   }
 
   /**
-   * Gets formatted tooltip text for an image with proper line breaks
+   * Gets formatted tooltip text for an image with proper line breaks and DPI-adjusted dimensions
    * @param imageModel The image model to create tooltip for
    * @returns Formatted tooltip text with newlines
    */
   getImageTooltip(imageModel: ImageModel): string {
-    let tooltip = `Size: ${imageModel.width}x${imageModel.height}`;
+    // Calculate physical dimensions (adjust by DPI to show actual device pixels)
+    const physicalWidth = Math.round(imageModel.width);
+    const physicalHeight = Math.round(imageModel.height);
+
+    let tooltip = `Size: ${physicalWidth}x${physicalHeight}`;
 
     if (imageModel.appliedFilters?.length) {
       tooltip += `\nFilters: ${imageModel.appliedFilters.join(', ')}`;
     }
 
     return tooltip;
+  }
+
+  /**
+   * Clean up event listeners
+   */
+  ngOnDestroy(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      window.removeEventListener('resize', this.onOrientationChange.bind(this));
+    }
   }
 }

@@ -24,23 +24,23 @@ try
     logMessage.AppendLine($"Current directory: {Environment.CurrentDirectory}");
     logMessage.AppendLine($"LD_LIBRARY_PATH: {Environment.GetEnvironmentVariable("LD_LIBRARY_PATH") ?? "not set"}");
     logMessage.AppendLine($"RUNNING_IN_DOCKER: {Environment.GetEnvironmentVariable("RUNNING_IN_DOCKER") ?? "not set"}");
-    
+
     // Check for ImagesProcessor native library
     string[] possibleLibraryNames = [
-        "ImagesProcessor.dll", 
-        "libImagesProcessor.so", 
+        "ImagesProcessor.dll",
+        "libImagesProcessor.so",
         "libImagesProcessor.so.1"
     ];
-    
+
     foreach (var libraryName in possibleLibraryNames)
     {
         var libraryPath = Path.Combine(appDirectory, libraryName);
         logMessage.AppendLine($"Checking for {libraryPath}: {File.Exists(libraryPath)}");
     }
-    
+
     // List all files in the application directory
     logMessage.AppendLine("Files in application directory:");
-    try 
+    try
     {
         var files = Directory.GetFiles(appDirectory);
         foreach (var file in files)
@@ -53,7 +53,7 @@ try
     {
         logMessage.AppendLine($"Error listing files: {ex.Message}");
     }
-    
+
     // Test loading the library programmatically
     try
     {
@@ -82,12 +82,12 @@ try
             logMessage.AppendLine($"Inner exception: {ex.InnerException.Message}");
         }
     }
-    
+
     logMessage.AppendLine("---------- END DIAGNOSTIC INFO ----------");
     Console.WriteLine(logMessage.ToString());
-    
+
     // Also write to a file that will persist in the container
-    File.WriteAllText(Path.Combine(appDirectory, "native_library_diagnostic.log"), 
+    File.WriteAllText(Path.Combine(appDirectory, "native_library_diagnostic.log"),
         logMessage.ToString());
 }
 catch (Exception ex)
@@ -99,14 +99,14 @@ Env.Load();
 
 
 // Skip environment variable validation in Docker test environment
-bool skipValidation = Environment.GetEnvironmentVariable("RUNNING_IN_DOCKER") == "true" && 
+bool skipValidation = Environment.GetEnvironmentVariable("RUNNING_IN_DOCKER") == "true" &&
                      Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" ||
                      Environment.GetEnvironmentVariable("SKIP_VALIDATION") == "true";
 
 if (!skipValidation)
 {
     string[] variables = [
-        "MONGODB_CONNECTION_STRING", "MONGODB_DATABASE_NAME", "MONGODB_COLLECTION_NAME", "MONGODB_USERS_COLLECTION_NAME", 
+        "MONGODB_CONNECTION_STRING", "MONGODB_DATABASE_NAME", "MONGODB_COLLECTION_NAME", "MONGODB_USERS_COLLECTION_NAME",
         "DROPBOX_APP_KEY", "DROPBOX_APP_SECRET", "DROPBOX_REFRESH_TOKEN", "FRONTEND_ORIGIN"
         ];
 
@@ -138,9 +138,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy("API is running."))
     // Only attempt to check MongoDB if we're not in Docker testing mode
-    .AddCheck("environment", () => 
+    .AddCheck("environment", () =>
     {
-        return skipValidation 
+        return skipValidation
             ? HealthCheckResult.Healthy("Running in test mode")
             : HealthCheckResult.Healthy("Environment variables validated");
     });
@@ -311,7 +311,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions
             }),
             totalDuration = report.TotalDuration
         };
-        
+
         // Use the cached JsonSerializerOptions instance
         await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions.DefaultOptions));
     }
@@ -324,7 +324,13 @@ app.MapControllers();
 app.MapHub<ProgressHub>("/progressHub");
 
 // Add a diagnostic endpoint to help debug native library loading
-app.MapGet("/system-info", () => {
+app.MapGet("/system-info", (HttpContext context) =>
+{
+    if (!AuthHelper.IsAdmin(context))
+    {
+        return Results.Unauthorized();
+    }
+
     var info = new Dictionary<string, string>
     {
         { "OS", Environment.OSVersion.ToString() },

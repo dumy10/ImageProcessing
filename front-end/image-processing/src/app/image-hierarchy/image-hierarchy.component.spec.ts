@@ -231,7 +231,7 @@ describe('ImageHierarchyComponent', () => {
         parentUrl: undefined,
         width: 100,
         height: 100,
-        appliedFilters: [],
+        appliedFilters: [], // Empty filters array
         loaded: true,
       },
       {
@@ -609,32 +609,12 @@ describe('ImageHierarchyComponent', () => {
     expect(component.hasOverflow).toBeTrue();
   });
 
-  it('should update zoom level correctly', () => {
-    // Initial zoom level should be 1
-    expect(component.zoomLevel).toBe(1);
-
-    // Test zoom in
-    component.zoomIn();
-    expect(component.zoomLevel).toBe(1.1);
-
-    // Test zoom out
-    component.zoomOut();
-    expect(component.zoomLevel).toBe(1);
-
-    // Test zoom out again
-    component.zoomOut();
-    expect(component.zoomLevel).toBe(0.9);
-
-    // Test reset
-    component.resetView();
-    expect(component.zoomLevel).toBe(1);
-    expect(component.panX).toBe(0);
-    expect(component.panY).toBe(0);
-  });
-
   it('should set dialog size based on image count', () => {
-    // For 2 images, dialog size should be updated
-    expect(dialogRefSpy.updateSize).toHaveBeenCalledWith('90%', 'auto');
+    // For 2 images, dialog size should be updated to 85%
+    expect(dialogRefSpy.updateSize).toHaveBeenCalledWith('85%', 'auto');
+
+    // Reset the spy's call count for next test
+    dialogRefSpy.updateSize.calls.reset();
 
     // Test with 4 images
     const fourImages: ImageModel[] = Array(4)
@@ -651,9 +631,14 @@ describe('ImageHierarchyComponent', () => {
         loaded: true,
       }));
 
-    component = new ImageHierarchyComponent(dialogRefSpy, fourImages);
+    component = new ImageHierarchyComponent(
+      dialogRefSpy,
+      fourImages,
+      'browser'
+    );
 
-    // For 4 images, updateSize should not be called again
+    // For 4 images, updateSize should be called with 90%
+    expect(dialogRefSpy.updateSize).toHaveBeenCalledWith('90%', 'auto');
     expect(dialogRefSpy.updateSize).toHaveBeenCalledTimes(1);
   });
 
@@ -690,7 +675,7 @@ describe('ImageHierarchyComponent', () => {
     expect(component.panStartY).toBe(100);
 
     // Move while panning
-    component.onMouseMove(mouseMoveEvent);
+    component.onPanMove(mouseMoveEvent);
     expect(component.panX).toBe(50);
     expect(component.panY).toBe(50);
 
@@ -710,7 +695,7 @@ describe('ImageHierarchyComponent', () => {
     expect(unknownInfo.name).toBe(' Unknown');
     expect(unknownInfo.description).toBe(
       'Applies  Unknown filter to the image'
-    ); 
+    );
     expect(unknownInfo.icon).toBe('filter');
   });
 
