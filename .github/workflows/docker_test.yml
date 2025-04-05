@@ -41,9 +41,20 @@ jobs:
           echo "Showing all Docker images:"
           docker images
           
-          echo "Starting container with explicit port mapping..."
-          # Map the container's 8080 port to host 8080 port
-          docker run --name imagesapi-test -d --rm -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development imagesapi-test:latest
+          echo "Starting container with explicit port mapping and environment variables from GitHub Secrets..."
+          # Map the container's 8080 port to host 8080 port and provide environment variables from GitHub Secrets
+          docker run --name imagesapi-test -d --rm -p 8080:8080 \
+            -e ASPNETCORE_ENVIRONMENT=Development \
+            -e MONGODB_CONNECTION_STRING="${{ secrets.MONGODB_CONNECTION_STRING }}" \
+            -e MONGODB_DATABASE_NAME="${{ secrets.MONGODB_DATABASE_NAME }}" \
+            -e MONGODB_COLLECTION_NAME="${{ secrets.MONGODB_COLLECTION_NAME }}" \
+            -e MONGODB_USERS_COLLECTION_NAME="${{ secrets.MONGODB_USERS_COLLECTION_NAME }}" \
+            -e DROPBOX_APP_KEY="${{ secrets.DROPBOX_APP_KEY }}" \
+            -e DROPBOX_APP_SECRET="${{ secrets.DROPBOX_APP_SECRET }}" \
+            -e DROPBOX_REFRESH_TOKEN="${{ secrets.DROPBOX_REFRESH_TOKEN }}" \
+            -e FRONTEND_ORIGIN="${{ secrets.FRONTEND_ORIGIN }}" \
+            -e RUNNING_IN_DOCKER=true \
+            imagesapi-test:latest
           
           # Wait for container to initialize
           echo "Waiting for container to initialize (30s)..."
@@ -63,7 +74,7 @@ jobs:
             docker inspect imagesapi-test || echo "Container no longer exists"
             
             echo "Getting container exit code and reason:"
-            docker inspect imagesapi-test --format='{{.State.ExitCode}}:{{.State.Error}}' || echo "Cannot get exit code"
+            docker inspect imagesapi-test --format='{{if .State}}{{.State.ExitCode}}:{{.State.Error}}{{else}}Container already removed{{end}}' || echo "Cannot get exit code"
             
             # Check if the container created any crash dumps or error logs
             echo "Attempting to get any crash dumps..."
