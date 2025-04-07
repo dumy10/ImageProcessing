@@ -14,7 +14,7 @@ namespace ImagesAPI.Controllers
         [HttpGet("native-library-status")]
         public ActionResult GetNativeLibraryStatus()
         {
-            if (AuthHelper.IsAdmin(HttpContext))
+            if (!AuthHelper.IsAdmin(HttpContext))
             {
                 return Unauthorized("Admin access required.");
             }
