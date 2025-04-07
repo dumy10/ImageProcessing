@@ -51,7 +51,7 @@ import {
   styleUrl: './edit-image.component.scss',
 })
 export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('imageElement') imageElement: ElementRef | undefined;
+  @ViewChild('imageElement') imageElement!: ElementRef<HTMLImageElement>;
 
   loading = false;
   loadingMessage = 'Loading the image...';
@@ -71,6 +71,7 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
   imageLoadDelayMs = 3000; // 3 seconds delay before showing error
   isFilterOperation = false; // Flag to distinguish between initial load and filter operation
   imageLoaded = false; // Track image loaded state separately
+  isImageTall = false; // Flag to detect tall images
 
   // Progress tracking variables
   progressPercentage = 0;
@@ -502,6 +503,13 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.image) {
       this.image.loaded = true;
+
+      // Check if the image is tall (height significantly greater than width)
+      if (this.imageElement && this.imageElement.nativeElement) {
+        const img = this.imageElement.nativeElement;
+        this.isImageTall = img.naturalHeight > img.naturalWidth * 1.5;
+      }
+
       // Force change detection to ensure UI updates
       this.cdr.detectChanges();
     }
@@ -642,6 +650,15 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('window:resize')
   onResize(): void {
     this.checkScreenSize();
+
+    if (
+      this.imageElement &&
+      this.imageElement.nativeElement &&
+      this.image?.loaded
+    ) {
+      const img = this.imageElement.nativeElement;
+      this.isImageTall = img.naturalHeight > img.naturalWidth * 1.5;
+    }
   }
 
   checkScreenSize(): void {
