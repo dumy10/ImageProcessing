@@ -186,9 +186,16 @@ export class ImageHierarchyComponent implements OnInit {
       // Apply dialog size with DPI scaling
       this.dialogRef.updateSize(baseWidth, 'auto');
 
-      // Use dialog's Element reference
+      // Set dialog position to center
+      this.dialogRef.updatePosition({
+        top: '',
+        bottom: '',
+        left: '',
+        right: '',
+      });
+
       try {
-        // Access the dialog through the ElementRef which is the closest container
+        // Access the dialog container
         const dialogElement = document.querySelector(
           '.mat-mdc-dialog-container'
         ) as HTMLElement;
@@ -198,10 +205,20 @@ export class ImageHierarchyComponent implements OnInit {
             // For mobile, set dialog position to take up more screen space
             dialogElement.style.maxWidth = '98%';
             dialogElement.style.maxHeight = maxHeight;
+            // Reset any previous positioning that might cause alignment issues
+            dialogElement.style.position = '';
+            dialogElement.style.left = '';
+            dialogElement.style.transform = '';
+            dialogElement.style.margin = '0 auto';
           } else {
-            // For desktop, apply DPI scaling
+            // For desktop, apply DPI scaling but use standard dialog positioning
             dialogElement.style.maxWidth = scaledMaxWidth;
             dialogElement.style.maxHeight = maxHeight;
+            // Reset any positioning that might interfere with centering
+            dialogElement.style.position = '';
+            dialogElement.style.left = '';
+            dialogElement.style.transform = '';
+            dialogElement.style.margin = '0 auto';
 
             // Scale padding based on DPI for better UI proportions
             const basePadding = 16;
@@ -210,6 +227,18 @@ export class ImageHierarchyComponent implements OnInit {
             )}px`;
             dialogElement.style.padding = scaledPadding;
           }
+        }
+
+        // Fix overlay pane positioning
+        const dialogOverlay = document.querySelector(
+          '.cdk-overlay-pane'
+        ) as HTMLElement;
+        if (dialogOverlay) {
+          // Allow Angular CDK to handle positioning
+          dialogOverlay.style.position = '';
+          dialogOverlay.style.left = '';
+          dialogOverlay.style.transform = '';
+          dialogOverlay.style.margin = '0 auto';
         }
       } catch (error) {
         // Silently handle errors - dialog styling is non-critical

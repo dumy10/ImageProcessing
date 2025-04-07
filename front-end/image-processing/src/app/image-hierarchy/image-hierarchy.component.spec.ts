@@ -19,6 +19,7 @@ describe('ImageHierarchyComponent', () => {
     dialogRefSpy = jasmine.createSpyObj('MatDialogRef', [
       'close',
       'updateSize',
+      'updatePosition',
     ]);
 
     // Create mock image data
