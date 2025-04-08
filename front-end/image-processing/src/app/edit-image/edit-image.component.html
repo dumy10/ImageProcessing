@@ -50,13 +50,14 @@
         <span class="image-loading-text">Attempting to load image...</span>
       </div>
 
-      <div class="image-display">
+      <div class="image-display" [class.mobile-view]="isMobileView">
         <img
           #imageElement
           [src]="imagePath"
           alt="Image to be processed"
           class="image"
           [class.tall-image]="isImageTall"
+          [class.mobile-image]="isMobileView"
           (error)="onImageError()"
           (load)="onImageLoad()"
         />
