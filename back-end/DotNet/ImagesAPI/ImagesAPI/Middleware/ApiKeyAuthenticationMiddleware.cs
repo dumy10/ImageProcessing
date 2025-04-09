@@ -2,7 +2,6 @@ using ImagesAPI.Logger;
 using ImagesAPI.Models;
 using ImagesAPI.Services.Interfaces;
 using ImagesAPI.Settings.Interfaces;
-using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
 using System.Net;
 
