@@ -26,7 +26,7 @@ namespace ImagesAPI.Middleware
         private static readonly ConcurrentDictionary<string, RateLimitInfo> _rateLimits = new();
 
         // List of paths that don't require authentication
-        private static readonly string[] _publicPaths = { "/health", "/" };
+        private static readonly HashSet<string> _publicPaths = ["/", "/progressHub/negotiate", "/progressHub"];
 
         /// <summary>
         /// Invokes the middleware
@@ -40,7 +40,6 @@ namespace ImagesAPI.Middleware
             string path = context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
             if (_publicPaths.Any(p => path.Equals(p, StringComparison.OrdinalIgnoreCase)))
             {
-                // Log that we're skipping auth for this path
                 Logging.Instance.LogMessage($"Skipping authentication for public path: {path}");
                 await _next(context);
                 return;

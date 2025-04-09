@@ -1,17 +1,22 @@
 #include "pch.h"
 #include "Logger.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+#define LOCALTIME(localTime, currentTime) localtime_s(&localTime, &currentTime)
+#else
+#define LOCALTIME(localTime, currentTime) localtime_r(&currentTime, &localTime)
+#endif
+
 std::ofstream Logger::m_logFile;
 std::mutex Logger::m_mutex;
-Logger* Logger::m_instance = nullptr;
+std::unique_ptr<Logger> Logger::m_instance;
+std::once_flag Logger::m_onceFlag;
 
 Logger& Logger::GetInstance()
 {
-	if (m_instance == nullptr)
-	{
-		m_instance = new Logger();
-		m_instance->LogMessage("Logger instance created");
-	}
+	std::call_once(m_onceFlag, []() {
+		m_instance.reset(new Logger());
+		});
 
 	return *m_instance;
 }
@@ -68,13 +73,6 @@ Logger::~Logger()
 	{
 		m_logFile.close();
 	}
-
-	// Delete the instance
-	if (m_instance != nullptr)
-	{
-		delete m_instance;
-		m_instance = nullptr;
-	}
 }
 
 std::tm Logger::GetLocalTime() noexcept
@@ -84,14 +82,7 @@ std::tm Logger::GetLocalTime() noexcept
 
 	// Convert time to local time
 	std::tm localTime{};
-	
-#ifdef _WIN32
-	// Windows version
-	localtime_s(&localTime, &currentTime);
-#else
-	// POSIX version (Linux, macOS)
-	localtime_r(&currentTime, &localTime);
-#endif
+	LOCALTIME(localTime, currentTime);
 
 	return localTime;
 }

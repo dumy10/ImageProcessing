@@ -26,12 +26,12 @@ namespace ImagesAPI.Controllers
 
         private static readonly SemaphoreSlim _cacheSemaphore = new(1, 1);
 
-        #region Cache Durations
+        #region Constants
         private const int CACHE_DURATION_SHORT = 5; // minutes
         private const int CACHE_DURATION_MEDIUM = 60; // minutes
-        #endregion
 
         private const int MAX_IMAGE_SIZE = 1024 * 1024 * 10; // 10 MB
+        #endregion
 
         /// <summary>
         /// Retrieves all images.
@@ -143,8 +143,7 @@ namespace ImagesAPI.Controllers
             bool useProgressTracking = trackProgress && progressTracker != null;
             string progressId = string.IsNullOrEmpty(tempId) ? Guid.NewGuid().ToString() : tempId;
 
-            Logging.Instance.LogMessage("Uploading image..."
-                + (useProgressTracking ? $" with progress tracking (ID: {progressId})" : ""));
+            Logging.Instance.LogMessage("Uploading image..." + (useProgressTracking ? $" with progress tracking (ID: {progressId})" : ""));
 
             if (image == null || image.Length == 0)
             {
@@ -290,8 +289,7 @@ namespace ImagesAPI.Controllers
         {
             bool useProgressTracking = trackProgress && progressTracker != null;
 
-            Logging.Instance.LogMessage($"Applying filter {filter} to image with ID {id}..."
-                + (useProgressTracking ? " with progress tracking" : ""));
+            Logging.Instance.LogMessage($"Applying filter {filter} to image with ID {id}..." + (useProgressTracking ? " with progress tracking" : ""));
 
             // Remove spaces and whitespace from the filter
             filter = filter.Replace(" ", string.Empty).ToLower();

@@ -121,12 +121,21 @@ namespace ImagesAPITests
             var user = new UserModel { Id = "1", Name = "Test User" };
             _mockUserService.Setup(service => service.Get("1")).ReturnsAsync(user);
 
+            // Setup admin user in HttpContext
+            _mockHttpContext.Setup(c => c.Items).Returns(new Dictionary<object, object?>
+            {
+                { "User", new UserModel { Id = "1", Name = AuthHelper.ADMIN_USER_NAME } }
+            });
+
             // Act
             var result = await _controller.GetUser("1");
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<UserModel>(okResult.Value);
+
+            // The return will be an object without the apiKey
+            var returnValue = Assert.IsType<UserDTO>(okResult.Value);
+
             Assert.Equal("1", returnValue.Id);
             Assert.Equal("Test User", returnValue.Name);
         }
@@ -136,6 +145,12 @@ namespace ImagesAPITests
         {
             // Arrange
             _mockUserService.Setup(service => service.Get("1")).ReturnsAsync((UserModel?)null);
+
+            // Setup admin user in HttpContext
+            _mockHttpContext.Setup(c => c.Items).Returns(new Dictionary<object, object?>
+            {
+                { "User", new UserModel { Id = "1", Name = AuthHelper.ADMIN_USER_NAME } }
+            });
 
             // Act
             var result = await _controller.GetUser("1");
@@ -345,6 +360,12 @@ namespace ImagesAPITests
             var updateUserDto = new UpdateUserDTO { Name = "Updated User", RateLimit = 100 };
 
             _mockUserService.Setup(service => service.Get(userId)).ReturnsAsync((UserModel?)null);
+
+            // Setup admin user in HttpContext
+            _mockHttpContext.Setup(c => c.Items).Returns(new Dictionary<object, object?>
+            {
+                { "User", new UserModel { Id = "1", Name = AuthHelper.ADMIN_USER_NAME } }
+            });
 
             // Act
             var result = await _controller.UpdateUser(userId, updateUserDto);
@@ -613,6 +634,12 @@ namespace ImagesAPITests
             var userId = "nonexistent";
 
             _mockUserService.Setup(service => service.Get(userId)).ReturnsAsync((UserModel?)null);
+
+            // Setup admin user in HttpContext
+            _mockHttpContext.Setup(c => c.Items).Returns(new Dictionary<object, object?>
+            {
+                { "User", new UserModel { Id = "1", Name = AuthHelper.ADMIN_USER_NAME } }
+            });
 
             // Act
             var result = await _controller.RegenerateApiKey(userId);

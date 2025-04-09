@@ -267,22 +267,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Custom middleware to add API key to headers for SignalR hub
-app.Use(async (context, next) =>
-{
-    if (context.Request.Path.StartsWithSegments("/progressHub"))
-    {
-        var apiKey = context.Request.Query["apiKey"];
-        if (!string.IsNullOrEmpty(apiKey))
-        {
-            // Add the API key to the headers so the existing middleware can process it
-            context.Request.Headers.Append("X-API-Key", apiKey);
-        }
-    }
-
-    await next.Invoke();
-});
-
 // First add routing so the system knows which endpoint is being requested
 app.UseRouting();
 
