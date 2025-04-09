@@ -219,6 +219,32 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 0);
   }
 
+  onImageLoad(): void {
+    // Clear any pending error timeout since the image loaded successfully
+    if (this.imageLoadTimeout) {
+      clearTimeout(this.imageLoadTimeout);
+      this.imageLoadTimeout = null;
+    }
+
+    // Set both component-level and model-level loaded flags
+    this.imageLoaded = true;
+
+    if (this.image) {
+      this.image.loaded = true;
+
+      // Check if the image is tall (height significantly greater than width)
+      if (this.imageElement && this.imageElement.nativeElement) {
+        const img = this.imageElement.nativeElement;
+
+        // Consider an image tall if height/width ratio > 1.3
+        this.isImageTall = img.naturalHeight / img.naturalWidth > 1.3;
+      }
+
+      // Force change detection to ensure UI updates
+      this.cdr.detectChanges();
+    }
+  }
+
   getIdFromUrl(): string | undefined {
     const url = window.location.href;
     const editIndex = url.indexOf('/edit/');
@@ -491,30 +517,6 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
     }, this.imageLoadDelayMs);
   }
 
-  onImageLoad(): void {
-    // Clear any pending error timeout since the image loaded successfully
-    if (this.imageLoadTimeout) {
-      clearTimeout(this.imageLoadTimeout);
-      this.imageLoadTimeout = null;
-    }
-
-    // Set both component-level and model-level loaded flags
-    this.imageLoaded = true;
-
-    if (this.image) {
-      this.image.loaded = true;
-
-      // Check if the image is tall (height significantly greater than width)
-      if (this.imageElement && this.imageElement.nativeElement) {
-        const img = this.imageElement.nativeElement;
-        this.isImageTall = img.naturalHeight > img.naturalWidth * 1.5;
-      }
-
-      // Force change detection to ensure UI updates
-      this.cdr.detectChanges();
-    }
-  }
-
   undoFilter(): void {
     if (!this.image) {
       console.error('No image to undo');
@@ -645,19 +647,46 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   toggleSidebar(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed;
+
+    // When sidebar state changes, trigger a recalculation of image display
+    // This helps ensure proper image sizing after sidebar toggle
+    setTimeout(() => {
+      this.recalculateImageDisplay();
+    }, 300); // Wait for the sidebar animation to complete
   }
 
-  @HostListener('window:resize')
-  onResize(): void {
-    this.checkScreenSize();
-
+  // Recalculate image display based on current image and container dimensions
+  private recalculateImageDisplay(): void {
     if (
       this.imageElement &&
       this.imageElement.nativeElement &&
       this.image?.loaded
     ) {
       const img = this.imageElement.nativeElement;
-      this.isImageTall = img.naturalHeight > img.naturalWidth * 1.5;
+      const aspectRatio = img.naturalHeight / img.naturalWidth;
+      this.isImageTall = aspectRatio > 1.3;
+
+      // Force change detection to update the UI
+      this.cdr.detectChanges();
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.checkScreenSize();
+
+    // Recalculate tall image status on window resize
+    if (
+      this.imageElement &&
+      this.imageElement.nativeElement &&
+      this.image?.loaded
+    ) {
+      const img = this.imageElement.nativeElement;
+
+      this.isImageTall = img.naturalHeight / img.naturalWidth > 1.3;
+
+      // Force change detection to update the UI with new dimensions
+      this.cdr.detectChanges();
     }
   }
 

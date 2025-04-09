@@ -75,6 +75,7 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
 
   /**
    * Controls the number of children displayed horizontally per node.
+   * Will be initialized based on root node's children count.
    */
   horizontalDisplayCount: number = 3;
 
@@ -218,6 +219,18 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
           this.maxHorizontalCount = this.calculateMaxChildrenCount(
             this.imageTree.root
           );
+
+          // Initialize horizontalDisplayCount based on root's children
+          const rootChildrenCount = this.imageTree.root.children.length;
+          this.horizontalDisplayCount = Math.min(rootChildrenCount, 3);
+          if (this.horizontalDisplayCount === 0) {
+            // If root has no children, default to 3 for future operations
+            this.horizontalDisplayCount = 3;
+          }
+
+          // We need to check if there are more nodes to show at the next level
+          // after building the tree, as the initial check might not be accurate
+          this.hasMoreNodesToShow = this.checkForNodesAtNextLevel();
         }
 
         this.loading = false;

@@ -8,6 +8,11 @@ namespace ImagesAPI.Hubs
     public class ProgressHub : Hub
     {
         /// <summary>
+        /// Name of the method to be called on the client side
+        /// </summary>
+        private const string MethodName = "ReceiveProgressUpdate";
+
+        /// <summary>
         /// Sends a progress update to all clients about an image processing operation
         /// </summary>
         /// <param name="imageId">ID of the image being processed</param>
@@ -15,7 +20,7 @@ namespace ImagesAPI.Hubs
         /// <param name="progress">Progress percentage (0-100)</param>
         public async Task SendProgressUpdate(string imageId, string filter, int progress)
         {
-            await Clients.All.SendAsync("ReceiveProgressUpdate", imageId, filter, progress);
+            await Clients.All.SendAsync(MethodName, imageId, filter, progress);
         }
     }
 }

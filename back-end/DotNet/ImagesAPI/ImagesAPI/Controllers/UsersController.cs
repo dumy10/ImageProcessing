@@ -45,7 +45,7 @@ namespace ImagesAPI.Controllers
             catch (Exception ex)
             {
                 Logging.Instance.LogError($"Error retrieving users: {ex.Message}");
-                return StatusCode(500, "An error occurred while retrieving users");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving users");
             }
         }
 
@@ -63,17 +63,36 @@ namespace ImagesAPI.Controllers
         {
             try
             {
+                // Check if the current user is an admin or the user themselves
+                var currentUser = AuthHelper.GetCurrentUser(HttpContext);
+                if (currentUser?.Id != id && !AuthHelper.IsAdmin(HttpContext))
+                {
+                    Logging.Instance.LogWarning($"Unauthorized attempt to access user {id} by non-admin user");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You can only view your own user data unless you are an administrator" });
+                }
+
+
                 var user = await _userService.Get(id);
                 if (user == null)
                 {
                     return NotFound($"User with ID {id} not found");
                 }
-                return Ok(user);
+
+                // Send only the user data without the API key
+                var userData = new UserDTO
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    RateLimit = user.RateLimit,
+                    IsActive = user.IsActive
+                };
+
+                return Ok(userData);
             }
             catch (Exception ex)
             {
                 Logging.Instance.LogError($"Error retrieving user: {ex.Message}");
-                return StatusCode(500, "An error occurred while retrieving the user");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the user");
             }
         }
 
@@ -128,7 +147,7 @@ namespace ImagesAPI.Controllers
             catch (Exception ex)
             {
                 Logging.Instance.LogError($"Error creating user: {ex.Message}");
-                return StatusCode(500, "An error occurred while creating the user");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the user");
             }
         }
 
@@ -153,22 +172,22 @@ namespace ImagesAPI.Controllers
                 return BadRequest("User data is required");
             }
 
+            // Get the current user
+            var currentUser = AuthHelper.GetCurrentUser(HttpContext);
+
+            // Allow users to update their own data or admin to update any user
+            if (currentUser?.Id != id && !AuthHelper.IsAdmin(HttpContext))
+            {
+                Logging.Instance.LogWarning($"Unauthorized attempt to update user {id} by non-admin user");
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "You can only update your own user data unless you are an administrator" });
+            }
+
             try
             {
                 var existingUser = await _userService.Get(id);
                 if (existingUser == null)
                 {
                     return NotFound($"User with ID {id} not found");
-                }
-
-                // Get the current user
-                var currentUser = AuthHelper.GetCurrentUser(HttpContext);
-                
-                // Allow users to update their own data or admin to update any user
-                if (currentUser?.Id != id && !AuthHelper.IsAdmin(HttpContext))
-                {
-                    Logging.Instance.LogWarning($"Unauthorized attempt to update user {id} by non-admin user");
-                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You can only update your own user data unless you are an administrator" });
                 }
 
                 // Prevent non-admins from changing their name to "Admin User"
@@ -199,7 +218,7 @@ namespace ImagesAPI.Controllers
             catch (Exception ex)
             {
                 Logging.Instance.LogError($"Error updating user: {ex.Message}");
-                return StatusCode(500, "An error occurred while updating the user");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the user");
             }
         }
 
@@ -216,6 +235,14 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteUser(string id)
         {
+
+            // Check if the current user is an admin
+            if (!AuthHelper.IsAdmin(HttpContext))
+            {
+                Logging.Instance.LogWarning($"Unauthorized attempt to delete a user by non-admin user");
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Only administrators can delete users" });
+            }
+
             try
             {
                 var user = await _userService.Get(id);
@@ -224,20 +251,13 @@ namespace ImagesAPI.Controllers
                     return NotFound($"User with ID {id} not found");
                 }
 
-                // Check if the current user is an admin
-                if (!AuthHelper.IsAdmin(HttpContext))
-                {
-                    Logging.Instance.LogWarning($"Unauthorized attempt to delete a user by non-admin user");
-                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "Only administrators can delete users" });
-                }
-
                 await _userService.Delete(id);
                 return NoContent();
             }
             catch (Exception ex)
             {
                 Logging.Instance.LogError($"Error deleting user: {ex.Message}");
-                return StatusCode(500, "An error occurred while deleting the user");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while deleting the user");
             }
         }
 
@@ -254,6 +274,17 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> RegenerateApiKey(string id)
         {
+
+            // Get the current user
+            var currentUser = AuthHelper.GetCurrentUser(HttpContext);
+
+            // Allow users to regenerate their own API key or admin to regenerate any user's key
+            if (currentUser?.Id != id && !AuthHelper.IsAdmin(HttpContext))
+            {
+                Logging.Instance.LogWarning($"Unauthorized attempt to regenerate API key for user {id} by non-admin user");
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "You can only regenerate your own API key unless you are an administrator" });
+            }
+
             try
             {
                 var user = await _userService.Get(id);
@@ -262,25 +293,15 @@ namespace ImagesAPI.Controllers
                     return NotFound($"User with ID {id} not found");
                 }
 
-                // Get the current user
-                var currentUser = AuthHelper.GetCurrentUser(HttpContext);
-                
-                // Allow users to regenerate their own API key or admin to regenerate any user's key
-                if (currentUser?.Id != id && !AuthHelper.IsAdmin(HttpContext))
-                {
-                    Logging.Instance.LogWarning($"Unauthorized attempt to regenerate API key for user {id} by non-admin user");
-                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You can only regenerate your own API key unless you are an administrator" });
-                }
-
                 user.ApiKey = _userService.GenerateApiKey();
                 await _userService.Update(id, user);
-                
+
                 return Ok(new { apiKey = user.ApiKey });
             }
             catch (Exception ex)
             {
                 Logging.Instance.LogError($"Error regenerating API key: {ex.Message}");
-                return StatusCode(500, "An error occurred while regenerating the API key");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while regenerating the API key");
             }
         }
     }

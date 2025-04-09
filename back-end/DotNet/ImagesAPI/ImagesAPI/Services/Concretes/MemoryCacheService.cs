@@ -77,8 +77,7 @@ namespace ImagesAPI.Services.Concretes
         /// <inheritdoc/>
         public void Set<T>(string key, T? value, int absoluteExpirationMinutes = 60)
         {
-            var cacheEntryOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromMinutes(absoluteExpirationMinutes));
+            var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(absoluteExpirationMinutes));
 
             // Set size based on content type
             if (value is byte[] byteArray)
