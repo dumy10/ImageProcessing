@@ -26,7 +26,7 @@ namespace ImagesAPI.Middleware
         private static readonly ConcurrentDictionary<string, RateLimitInfo> _rateLimits = new();
 
         // List of paths that don't require authentication
-        private static readonly HashSet<string> _publicPaths = ["/", "/progressHub/negotiate", "/progressHub"];
+        private static readonly HashSet<string> _publicPaths = ["/", "/health", "/progressHub/negotiate", "/progressHub"];
 
         /// <summary>
         /// Invokes the middleware
