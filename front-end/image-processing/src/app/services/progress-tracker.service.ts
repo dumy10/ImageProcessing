@@ -33,13 +33,10 @@ export class ProgressTrackerService {
     if (!this.connectionEstablished && !this.isConnecting) {
       this.isConnecting = true;
 
-      // Add API key as a query parameter in the URL instead of using headers
-      const hubUrlWithAuth = `${this.hubUrl}?apiKey=${environment.apiKey}`;
-
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrlWithAuth)
+        .withUrl(this.hubUrl)
         .withAutomaticReconnect()
-        .configureLogging(signalR.LogLevel.Information)
+        .configureLogging(signalR.LogLevel.None)
         .build();
 
       this.connectionPromise = this.hubConnection

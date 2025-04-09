@@ -16,6 +16,11 @@ namespace ImagesAPI.Services.Concretes
         private readonly IMongoCollection<UserModel> _users;
         private readonly ICacheService _cacheService;
 
+        #region Constants
+        private const int DefaultCacheDuration = 30; // Default cache duration in minutes
+        private const string CacheKeyPrefix = "user_apikey_";
+        #endregion
+
         /// <summary>
         /// Initializes a new instance of the UserService class
         /// </summary>
@@ -45,9 +50,9 @@ namespace ImagesAPI.Services.Concretes
                 return null;
 
             // Try to get the user from cache first
-            string cacheKey = $"user_apikey_{apiKey}";
-            
-            return await _cacheService.GetOrCreateAsync<UserModel?>(cacheKey, async () => 
+            string cacheKey = $"{CacheKeyPrefix}{apiKey}";
+
+            return await _cacheService.GetOrCreateAsync<UserModel?>(cacheKey, async () =>
             {
                 try
                 {
@@ -58,7 +63,7 @@ namespace ImagesAPI.Services.Concretes
                     Logging.Instance.LogError($"Error validating API key: {ex.Message}");
                     return null;
                 }
-            }, 30); // Cache for 30 minutes
+            }, DefaultCacheDuration); // Cache for 30 minutes
         }
 
         /// <summary>
@@ -92,7 +97,7 @@ namespace ImagesAPI.Services.Concretes
             var user = await Get(id);
             if (user != null)
             {
-                _cacheService.Remove($"user_apikey_{user.ApiKey}");
+                _cacheService.Remove($"{CacheKeyPrefix}{user.ApiKey}");
             }
 
             var result = await _users.DeleteOneAsync(user => user.Id == id);
@@ -130,12 +135,12 @@ namespace ImagesAPI.Services.Concretes
             var existingUser = await Get(id);
             if (existingUser != null)
             {
-                _cacheService.Remove($"user_apikey_{existingUser.ApiKey}");
+                _cacheService.Remove($"{CacheKeyPrefix}{existingUser.ApiKey}");
             }
 
             model.Id = id;
             var result = await _users.ReplaceOneAsync(user => user.Id == id, model);
-            
+
             if (!result.IsAcknowledged || result.ModifiedCount == 0)
             {
                 return false;

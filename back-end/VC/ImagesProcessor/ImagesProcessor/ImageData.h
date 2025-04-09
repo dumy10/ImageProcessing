@@ -63,9 +63,10 @@ private:
 	 *
 	 * @param outputImage Pointer to the output image data.
 	 * @param encodedData Pointer to the vector to store the encoded data.
+	 * @param progressCallback Optional callback function for progress updates.
 	 * @return True if the image data was written successfully, false otherwise.
 	 */
-	[[nodiscard]] bool WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, ProgressCallback progressCallback) const;
+	[[nodiscard]] bool WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, ProgressCallback progressCallback = nullptr) const;
 
 	/**
 	 * @brief Applies a specified filter to the image data.

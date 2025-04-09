@@ -108,11 +108,7 @@ namespace ImagesAPI.External
         /// <param name="extension">The image file extension.</param>
         /// <param name="outputLength">The length of the output image data.</param>
         /// <param name="progressCallback">Optional callback function for progress updates.</param>
-#if WINDOWS
-        [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
-#else
-        [LibraryImport("libImagesProcessor.so", StringMarshalling = StringMarshalling.Utf8)]
-#endif
+        [LibraryImport(Platform.LibraryName, StringMarshalling = StringMarshalling.Utf8)]
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
         private static partial void ApplyFilter([In] byte[] imageData, int length, string filter, out IntPtr outputImageData, string extension, out int outputLength,
             [MarshalAs(UnmanagedType.FunctionPtr)] NativeProgressCallback? progressCallback);
@@ -121,21 +117,33 @@ namespace ImagesAPI.External
         /// Frees memory allocated by the unmanaged code.
         /// </summary>
         /// <param name="data">A pointer to the memory to free.</param>
-#if WINDOWS
-        [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
-#else
-        [LibraryImport("libImagesProcessor.so", StringMarshalling = StringMarshalling.Utf8)]
-#endif
+        [LibraryImport(Platform.LibraryName, StringMarshalling = StringMarshalling.Utf8)]
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
         private static partial void FreeMemory(ref IntPtr data);
 
-#if WINDOWS
-        [LibraryImport("ImagesProcessor.dll", StringMarshalling = StringMarshalling.Utf8)]
-#else
-        [LibraryImport("libImagesProcessor.so", StringMarshalling = StringMarshalling.Utf8)]
-#endif
+        /// <summary>
+        /// Dummy test function to check if the library is loaded correctly.
+        /// </summary>
+        /// <returns></returns>
+        [LibraryImport(Platform.LibraryName, StringMarshalling = StringMarshalling.Utf8)]
         [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
         [return: MarshalAs(unmanagedType: UnmanagedType.Bool)]
         public static partial bool ProcessDummyTest();
+
+        /// <summary>
+        /// Platform-specific constants for library loading
+        /// </summary>
+        private static class Platform
+        {
+            /// <summary>
+            /// The name of the library to load based on the platform
+            /// </summary>
+            public const string LibraryName =
+                #if WINDOWS
+                    "ImagesProcessor.dll";
+                #else
+                    "libImagesProcessor.so";
+                #endif
+        }
     }
 }

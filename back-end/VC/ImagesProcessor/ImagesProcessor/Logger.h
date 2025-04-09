@@ -44,16 +44,16 @@ public:
 	Logger& operator=(Logger&&) = delete; // Move assignment operator
 	Logger(Logger&&) = delete; // Move constructor
 
+	/**
+	* @brief Public destructor required for unique_ptr.
+	*/
+	~Logger();
+
 private:
 	/**
 	 * @brief Private constructor to prevent instantiation.
 	 */
 	Logger();
-
-	/**
-	* @brief Private destructor to prevent deletion.
-	*/
-	~Logger();
 
 	/**
 	 * @brief Gets the local time.
@@ -64,7 +64,7 @@ private:
 
 	/*
 	* @brief Gets the local time as a string.
-	* 
+	*
 	* @return The local time as a string.
 	*/
 	static std::string GetLocalTimeAsString() noexcept;
@@ -79,7 +79,8 @@ private:
 
 	static std::ofstream m_logFile; ///< Log file stream.
 	static std::mutex m_mutex; ///< Mutex for thread-safe logging.
-	static Logger* m_instance; ///< Singleton instance of the Logger.
+	static std::unique_ptr<Logger> m_instance; ///< Singleton instance of the Logger.
+	static std::once_flag m_onceFlag; ///< Flag for creating the singleton instance.
 };
 
 #pragma warning(pop)
