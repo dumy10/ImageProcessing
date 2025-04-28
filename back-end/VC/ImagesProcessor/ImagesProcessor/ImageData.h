@@ -22,12 +22,6 @@ static stbi_write_func* kWriteCallback = [](void* context, void* data, int size)
 static const size_t kImageQuality = 100; ///< Quality of the jpg image.
 
 /**
- * @brief Callback function type for reporting progress.
- * @param progress Progress value between 0 and 100.
- */
-typedef void (*ProgressCallback)(int progress);
-
-/**
  * @brief Class for handling image data and applying filters.
  */
 class ImageData
@@ -55,7 +49,7 @@ public:
 	 * @param outputLength Pointer to the length of the output data.
 	 * @param progressCallback Optional callback function for progress updates.
 	 */
-	void FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength, ProgressCallback progressCallback = nullptr) const;
+	void FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength, const ProgressCallback& progressCallback = nullptr) const;
 
 private:
 	/**
@@ -66,7 +60,7 @@ private:
 	 * @param progressCallback Optional callback function for progress updates.
 	 * @return True if the image data was written successfully, false otherwise.
 	 */
-	[[nodiscard]] bool WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, ProgressCallback progressCallback = nullptr) const;
+	[[nodiscard]] bool WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, const ProgressCallback& progressCallback = nullptr) const;
 
 	/**
 	 * @brief Applies a specified filter to the image data.
@@ -76,7 +70,7 @@ private:
 	 * @param progressCallback Optional callback function for progress updates.
 	 * @return True if the filter was applied successfully, false otherwise.
 	 */
-	[[nodiscard]] bool ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage, ProgressCallback progressCallback = nullptr) const;
+	[[nodiscard]] bool ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage, const ProgressCallback& progressCallback = nullptr) const;
 private:
 	std::string m_extension; ///< File extension of the image.
 	unsigned char* m_imageData; ///< Pointer to the image data.

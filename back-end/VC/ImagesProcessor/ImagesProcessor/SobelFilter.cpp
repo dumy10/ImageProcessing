@@ -4,12 +4,11 @@
 
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
-void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
+void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, const ProgressCallback& progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Applying Sobel filter");
 
-	if (progressCallback)
-		progressCallback(60);
+	ReportProgressIfNeeded(progressCallback, 60);
 
 	// Sobel filter kernels
 	static constexpr int kernelX[3][3] = { { -1, 0, 1 },{ -2, 0, 2 },{ -1, 0, 1 } };
@@ -64,8 +63,7 @@ void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 		}
 	}
 
-	if (progressCallback)
-		progressCallback(70);
+	ReportProgressIfNeeded(progressCallback, 70);
 
 	Logger::GetInstance().LogMessage("Sobel filter applied successfully");
 }

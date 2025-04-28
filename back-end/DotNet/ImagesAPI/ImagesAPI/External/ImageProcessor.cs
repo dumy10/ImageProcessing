@@ -139,11 +139,11 @@ namespace ImagesAPI.External
             /// The name of the library to load based on the platform
             /// </summary>
             public const string LibraryName =
-                #if WINDOWS
+#if WINDOWS
                     "ImagesProcessor.dll";
-                #else
+#else
                     "libImagesProcessor.so";
-                #endif
+#endif
         }
     }
 }

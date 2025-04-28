@@ -27,7 +27,7 @@ ImageData::~ImageData()
 	}
 }
 
-void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength, ProgressCallback progressCallback) const
+void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, int* outputLength, const ProgressCallback& progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Filtering image data with filter: " + std::to_string(static_cast<int>(filter)));
 
@@ -41,8 +41,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	}
 
 	// Report progress at 75% - image filtered, now encoding
-	if (progressCallback)
-		progressCallback(75);
+	ReportProgressIfNeeded(progressCallback, 75);
 
 	std::vector<unsigned char> encodedData;
 
@@ -57,28 +56,25 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	Logger::GetInstance().LogMessage("Image data written to memory successfully");
 
 	// Report progress at 90% - image encoded, now copying
-	if (progressCallback)
-		progressCallback(90);
+	ReportProgressIfNeeded(progressCallback, 90);
 
 	*outputLength = static_cast<int>(encodedData.size());
 	*outputData = new unsigned char[*outputLength];
 
 	std::memcpy(*outputData, encodedData.data(), *outputLength);
 
-	if (progressCallback)
-		progressCallback(95);
+	ReportProgressIfNeeded(progressCallback, 100);
 
 	Logger::GetInstance().LogMessage("Image data filtered successfully");
 }
 
-[[nodiscard]] bool ImageData::ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage, ProgressCallback progressCallback) const
+[[nodiscard]] bool ImageData::ApplyFilter(EDefinedFilters filterType, unsigned char* outputImage, const ProgressCallback& progressCallback) const
 {
 	try
 	{
 		std::unique_ptr<IFilter> filter = FilterFactory::CreateFilter(filterType);
 
-		if (progressCallback)
-			progressCallback(50);
+		ReportProgressIfNeeded(progressCallback, 50);
 
 		filter->Apply(m_imageData, outputImage, m_width, m_height, m_channels, progressCallback);
 		return true;
@@ -90,7 +86,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	}
 }
 
-[[nodiscard]] bool ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, ProgressCallback progressCallback) const
+[[nodiscard]] bool ImageData::WriteToMemory(unsigned char* outputImage, std::vector<unsigned char>* encodedData, const ProgressCallback& progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Writing image data to memory");
 
@@ -101,8 +97,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 	bool success = false;
 	EAllowedExtensions extension = g_kAllowedExtensions.find(m_extension)->second;
 
-	if (progressCallback)
-		progressCallback(80);
+	ReportProgressIfNeeded(progressCallback, 80);
 
 	switch (extension)
 	{
@@ -119,8 +114,7 @@ void ImageData::FilterImage(EDefinedFilters filter, unsigned char** outputData, 
 		break;
 	}
 
-	if (progressCallback)
-		progressCallback(85);
+	ReportProgressIfNeeded(progressCallback, 85);
 
 	return success;
 }
