@@ -134,8 +134,8 @@ RUN chmod +x /app/libImagesProcessor.so \
     && ls -la /app/libImagesProcessor.so \
     && file /app/libImagesProcessor.so
 
-# Initialize LD_LIBRARY_PATH and set the library path
-ENV LD_LIBRARY_PATH="/app:${LD_LIBRARY_PATH}"
+# Initialize LD_LIBRARY_PATH 
+ENV LD_LIBRARY_PATH="/app"
 
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
