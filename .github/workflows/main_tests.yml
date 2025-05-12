@@ -182,40 +182,41 @@ jobs:
 
           if [ -z "$CONTAINER_RUNNING" ]; then
             echo "Container failed to start or exited immediately"
-            
+
             echo "Container logs (if available):"
             docker logs imagesapi-test || echo "No logs available"
-            
+
             echo "Container inspection details:"
             docker inspect imagesapi-test || echo "Container no longer exists"
-            
+
             echo "Getting container exit code and reason:"
             docker inspect imagesapi-test --format='{{if .State}}{{.State.ExitCode}}:{{.State.Error}}{{else}}Container already removed{{end}}' || echo "Cannot get exit code"
-            
+
             # Check if the container created any crash dumps or error logs
             echo "Attempting to get any crash dumps..."
             docker cp imagesapi-test:/app/ImagesProcessorLogs/. ./logs/ || echo "No logs directory or cannot access"
             ls -la ./logs/ || echo "No logs to display"
-            
+
             exit 1
           else
             echo "✅ Container started successfully!"
-            
+
             echo "Container logs:"
             docker logs imagesapi-test
-            
+
             echo "Attempting to make a request to the health endpoint (should not require authentication):"
             curl -v http://localhost:8080/health || echo "Failed to connect to health endpoint"
-            
+
             echo "Attempting to make a request to the root endpoint (should not require authentication):"
             curl -v http://localhost:8080/ || echo "Failed to connect to root endpoint"
-            
+
             echo "Attempting to make a request to a protected endpoint with API key:"
-            curl -v -H "X-API-Key: ${{ secrets.TEST_API_KEY || 'test-api-key' }}" http://localhost:8080/api/images || echo "Failed to connect to protected endpoint"
-            
+            curl -v -H "X-API-Key: ${{ secrets.TEST_API_KEY }}" http://localhost:8080/api/images || echo "Failed to connect to protected endpoint"
+
             echo "Container process list:"
             docker exec imagesapi-test ps aux || echo "Cannot execute process list"
-            
+
             # Cleanup
             echo "Stopping container..."
             docker stop imagesapi-test
+          fi
