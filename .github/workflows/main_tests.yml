@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-  # Allow manual triggering for Docker tests
-  workflow_dispatch:
 
 jobs:
   test-backend-windows:
