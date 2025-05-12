@@ -4,50 +4,38 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
 WORKDIR /app
-# Update port exposure to include 8080 and 10000 (Render's internal health check port)
 EXPOSE 80
 EXPOSE 443
 EXPOSE 8080
 EXPOSE 10000
 
-# Install runtime dependencies required for SkiaSharp and other native libraries
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Install dependencies in a single command to reduce layers
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        apt-utils \
+        apt-transport-https \
+        ca-certificates \
         tzdata \
+        # Basic font and image libraries
         libfontconfig1 \
         libfreetype6 \
-        libgl1-mesa-dev \
-        libgif7 \
+        libjpeg62 \
         libpng16-16 \
-        libjpeg62-turbo \
-        # OpenMP dependency (required by libImagesProcessor.so)
+        # Parallel processing libraries
         libgomp1 \
-        # TBB dependency for parallel algorithms (std::execution)
-        libtbb-dev \
-        # SkiaSharp additional dependencies
-        libicu-dev \
-        libharfbuzz-dev \
-        libglib2.0-0 \
-        libdbus-1-3 \
-        # OpenCV runtime dependencies
-        libglib2.0-0 \
-        libsm6 \
-        libxext6 \
-        libxrender1 \
-        # For diagnostics
-        libc-bin \
+        # Diagnostic tools
         strace \
         file \
         procps \
         curl \
     && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
+    && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so || true \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so || true
 
 # Set environment variables for SkiaSharp native library loading
 ENV SKIA_FONTMGR=fontconfig
-# Make sure SkiaSharp knows we're using its Linux assets
 ENV SKIASHARP_NATIVE_ASSETS_PERSISTED=1
+ENV SKIASHARP_VERSION=3.116.1
 
 # Build the C++ native libraries
 FROM ubuntu:22.04 AS cpp-build
@@ -91,32 +79,37 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
+ENV SKIASHARP_VERSION=3.116.1
 
-# Install development dependencies for native libraries (libSkiaSharp)
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Install the minimum required dependencies for building
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        apt-utils \
+        apt-transport-https \
+        ca-certificates \
         tzdata \
+        # Basic development libraries
         libc6-dev \
         libfontconfig1-dev \
         libfreetype6-dev \
-        libgl1-mesa-dev \
-        libglib2.0-dev \
-        libicu-dev \
+        libjpeg62-dev \
         libpng-dev \
-        libgif-dev \
-        libjpeg62 \
     && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
+    && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so || true \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so || true
 
 WORKDIR /src
 
-# Copy the native library from cpp-build - place it in the build tree before starting the build
+# Copy the native library from cpp-build
 COPY --from=cpp-build /build-output/libImagesProcessor.so /src/
 
 # Restore dependencies first
 COPY ["back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj", "ImagesAPI/"]
-RUN dotnet restore "ImagesAPI/ImagesAPI.csproj"
+RUN dotnet restore "ImagesAPI/ImagesAPI.csproj" \
+    # Pin SkiaSharp version 
+    && dotnet add ImagesAPI/ImagesAPI.csproj package SkiaSharp --version ${SKIASHARP_VERSION} \
+    && dotnet add ImagesAPI/ImagesAPI.csproj package SkiaSharp.NativeAssets.Linux --version ${SKIASHARP_VERSION} \
+    && dotnet restore "ImagesAPI/ImagesAPI.csproj"
 
 # Copy the rest of the source code
 COPY ["back-end/DotNet/ImagesAPI", "/src"]
@@ -141,18 +134,18 @@ RUN chmod +x /app/libImagesProcessor.so \
     && ls -la /app/libImagesProcessor.so \
     && file /app/libImagesProcessor.so
 
-# Initialize LD_LIBRARY_PATH and set the library path
-ENV LD_LIBRARY_PATH=""
-ENV LD_LIBRARY_PATH=/app:${LD_LIBRARY_PATH}
+# Initialize LD_LIBRARY_PATH 
+ENV LD_LIBRARY_PATH="/app"
 
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
 
-# Set default ASPNETCORE_URLS to a single port (will be overridden by startup script)
+# Set default ASPNETCORE_URLS to a single port
 ENV ASPNETCORE_URLS=http://+:8080
 
 # Additional settings to help with native library loading
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+ENV SKIASHARP_VERSION=3.116.1
 
 # Use a shell wrapper to capture startup errors and handle environment variables
 COPY <<-EOT /app/startup.sh
@@ -160,42 +153,12 @@ COPY <<-EOT /app/startup.sh
 set -e
 
 # Handle URL configuration - ensure we don't have duplicate ports
-# Render is specifically setting ASPNETCORE_URLS to "http://+:10000;http://+:10000" which causes conflicts
-if [ ! -z "\$ASPNETCORE_URLS" ]; then
-  # Clean up any duplicate URLs that may be in the environment
-  CLEAN_URLS=""
-  
-  # Split the URLs by semicolon and deduplicate
-  IFS=';' read -ra URL_ARRAY <<< "\$ASPNETCORE_URLS"
-  declare -A SEEN_URLS
-  
-  for url in "\${URL_ARRAY[@]}"; do
-    # Skip empty URLs
-    if [ -z "\$url" ]; then
-      continue
-    fi
-    
-    # Only add each unique URL once
-    if [ -z "\${SEEN_URLS[\$url]}" ]; then
-      if [ -z "\$CLEAN_URLS" ]; then
-        CLEAN_URLS="\$url"
-      else
-        CLEAN_URLS="\$CLEAN_URLS;\$url"
-      fi
-      SEEN_URLS[\$url]=1
-    fi
-  done
-  
-  # If Render provides PORT, ensure we're using that
-  if [ ! -z "\$PORT" ]; then
-    # For Render, just use a single port for simplicity
-    export ASPNETCORE_URLS="http://+:\$PORT"
-  else
-    # Use the cleaned up URLs
-    export ASPNETCORE_URLS="\$CLEAN_URLS"
-  fi
-  
+if [ ! -z "\$PORT" ]; then
+  # For hosting platforms that provide PORT environment variable
+  export ASPNETCORE_URLS="http://+:\$PORT"
   echo "Setting ASPNETCORE_URLS to \$ASPNETCORE_URLS"
+else 
+  echo "Using default ASPNETCORE_URLS: \$ASPNETCORE_URLS"
 fi
 
 echo "Starting ImagesAPI application..."

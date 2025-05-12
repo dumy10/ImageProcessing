@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   test-backend-windows:
@@ -67,11 +68,14 @@ jobs:
           sudo ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so
           sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
 
-      # This step ensures SkiaSharp native libraries are available
       - name: Install SkiaSharp.NativeAssets.Linux
         run: |
-          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp.NativeAssets.Linux
+          dotnet add back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj package SkiaSharp --version 3.116.1
+          dotnet add back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj package SkiaSharp.NativeAssets.Linux --version 3.116.1
+          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp --version 3.116.1
+          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp.NativeAssets.Linux --version 3.116.1
           dotnet restore back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj
+          dotnet restore back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj
 
       - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v1
@@ -94,6 +98,7 @@ jobs:
         run: dotnet test back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj --configuration Release
 
   test-frontend:
+    name: Test Frontend
     runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
@@ -124,3 +129,94 @@ jobs:
         run: |
           cd front-end/image-processing
           npm test
+
+  test-docker-build:
+    name: Test Docker Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./back-end/DotNet/ImagesAPI/ImagesAPI/Dockerfile
+          push: false
+          load: true
+          tags: imagesapi-test:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image
+        run: |
+          echo "Showing all Docker images:"
+          docker images
+
+          echo "Starting container with explicit port mapping and environment variables from GitHub Secrets..."
+          # Map the container's 8080 port to host 8080 port and provide environment variables from GitHub Secrets
+          docker run --name imagesapi-test -d --rm -p 8080:8080 \
+            -e ASPNETCORE_ENVIRONMENT=Development \
+            -e MONGODB_CONNECTION_STRING="${{ secrets.MONGODB_CONNECTION_STRING }}" \
+            -e MONGODB_DATABASE_NAME="${{ secrets.MONGODB_DATABASE_NAME }}" \
+            -e MONGODB_COLLECTION_NAME="${{ secrets.MONGODB_COLLECTION_NAME }}" \
+            -e MONGODB_USERS_COLLECTION_NAME="${{ secrets.MONGODB_USERS_COLLECTION_NAME }}" \
+            -e DROPBOX_APP_KEY="${{ secrets.DROPBOX_APP_KEY }}" \
+            -e DROPBOX_APP_SECRET="${{ secrets.DROPBOX_APP_SECRET }}" \
+            -e DROPBOX_REFRESH_TOKEN="${{ secrets.DROPBOX_REFRESH_TOKEN }}" \
+            -e FRONTEND_ORIGIN="${{ secrets.FRONTEND_ORIGIN }}" \
+            -e RUNNING_IN_DOCKER=true \
+            -e TEST_API_KEY="${{ secrets.TEST_API_KEY }}" \
+            imagesapi-test:latest
+
+          # Wait for container to initialize
+          echo "Waiting for container to initialize (30s)..."
+          sleep 30
+
+          # Check if container is still running (indicates successful startup)
+          echo "Checking if container is running..."
+          CONTAINER_RUNNING=$(docker ps -q -f name=imagesapi-test)
+
+          if [ -z "$CONTAINER_RUNNING" ]; then
+            echo "Container failed to start or exited immediately"
+
+            echo "Container logs (if available):"
+            docker logs imagesapi-test || echo "No logs available"
+
+            echo "Container inspection details:"
+            docker inspect imagesapi-test || echo "Container no longer exists"
+
+            echo "Getting container exit code and reason:"
+            docker inspect imagesapi-test --format='{{if .State}}{{.State.ExitCode}}:{{.State.Error}}{{else}}Container already removed{{end}}' || echo "Cannot get exit code"
+
+            # Check if the container created any crash dumps or error logs
+            echo "Attempting to get any crash dumps..."
+            docker cp imagesapi-test:/app/ImagesProcessorLogs/. ./logs/ || echo "No logs directory or cannot access"
+            ls -la ./logs/ || echo "No logs to display"
+
+            exit 1
+          else
+            echo "✅ Container started successfully!"
+
+            echo "Container logs:"
+            docker logs imagesapi-test
+
+            echo "Attempting to make a request to the health endpoint (should not require authentication):"
+            curl -v http://localhost:8080/health || echo "Failed to connect to health endpoint"
+
+            echo "Attempting to make a request to the root endpoint (should not require authentication):"
+            curl -v http://localhost:8080/ || echo "Failed to connect to root endpoint"
+
+            echo "Attempting to make a request to a protected endpoint with API key:"
+            curl -v -H "X-API-Key: ${{ secrets.TEST_API_KEY }}" http://localhost:8080/api/images || echo "Failed to connect to protected endpoint"
+
+            echo "Container process list:"
+            docker exec imagesapi-test ps aux || echo "Cannot execute process list"
+
+            # Cleanup
+            echo "Stopping container..."
+            docker stop imagesapi-test
+          fi
