@@ -23,27 +23,45 @@ RUN apt-get update && \
         libfreetype6 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install graphics libraries
+# Install graphics libraries individually to isolate potential issues
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libgl1-mesa-dev \
-        libgif7 \
-        libpng16-16 \
-        libjpeg-turbo8 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends libgl1 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libgif7 || apt-get install -y --no-install-recommends libgif && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libpng16-16 || apt-get install -y --no-install-recommends libpng || \
+    apt-get install -y --no-install-recommends libpng-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libjpeg-turbo8 || apt-get install -y --no-install-recommends libjpeg-turbo || \
+    apt-get install -y --no-install-recommends libjpeg && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install parallel processing libraries
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libgomp1 \
-        libtbb-dev \
+        libtbb2 || apt-get install -y --no-install-recommends libtbb-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install additional SkiaSharp dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libicu-dev \
-        libharfbuzz-dev \
+        libicu-dev || apt-get install -y --no-install-recommends libicu70 || apt-get install -y --no-install-recommends libicu67 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libharfbuzz-dev || apt-get install -y --no-install-recommends libharfbuzz0b \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         libglib2.0-0 \
         libdbus-1-3 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -135,31 +153,51 @@ RUN apt-get update && \
 # Install font dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libfontconfig1-dev \
-        libfreetype6-dev \
+        libfontconfig1-dev || apt-get install -y --no-install-recommends libfontconfig-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install graphics libraries
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libgl1-mesa-dev \
-        libglib2.0-dev \
-        libpng-dev \
-        libgif-dev \
+        libfreetype6-dev || apt-get install -y --no-install-recommends libfreetype-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install graphics libraries individually with fallbacks
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libgl1-mesa-dev || apt-get install -y --no-install-recommends libgl-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libglib2.0-dev || apt-get install -y --no-install-recommends libglib2.0-0 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libpng-dev || apt-get install -y --no-install-recommends libpng16-16 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libgif-dev || apt-get install -y --no-install-recommends libgif7 || apt-get install -y --no-install-recommends libgif \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install JPEG libraries
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libjpeg-turbo8 \
-        libjpeg-turbo8-dev \
+        libjpeg-turbo8 || apt-get install -y --no-install-recommends libjpeg-turbo \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libjpeg-turbo8-dev || apt-get install -y --no-install-recommends libjpeg-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install additional text rendering libraries
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libicu-dev \
-        libharfbuzz-dev \
+        libicu-dev || apt-get install -y --no-install-recommends libicu70 || apt-get install -y --no-install-recommends libicu67 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libharfbuzz-dev || apt-get install -y --no-install-recommends libharfbuzz0b \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create required symbolic links
