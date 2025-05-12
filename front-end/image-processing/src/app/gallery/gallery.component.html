@@ -7,10 +7,17 @@
 ></app-error-banner>
 
 <div class="gallery">
-  <article class="pair" *ngFor="let imagePair of paginatedImagePairs">
+  <article
+    class="pair"
+    *ngFor="let imagePair of paginatedImagePairs; let i = index"
+    [attr.data-index]="i"
+  >
     <div
       class="image-container"
-      *ngFor="let image of [imagePair.originalImage, imagePair.filteredImage]"
+      *ngFor="
+        let image of [imagePair.originalImage, imagePair.filteredImage];
+        let isFiltered = index
+      "
     >
       <!-- Loading placeholder that shows when image is not loaded -->
       <div class="image-loading-placeholder" *ngIf="!image.loaded">
@@ -27,16 +34,50 @@
         (error)="onImageError(image)"
         (load)="onImageLoad(image)"
       />
+
+      <!-- Image type badge -->
+      <span class="image-badge" *ngIf="image.loaded">
+        {{ isFiltered ? "Filtered" : "Original" }}
+      </span>
+
+      <!-- Action buttons -->
       <div class="button-container" *ngIf="image.loaded">
-        <button (click)="downloadImage(image)" aria-label="Download image">
+        <button
+          (click)="downloadImage(image)"
+          aria-label="Download image"
+          matTooltip="Download"
+        >
           <mat-icon class="download-button">download</mat-icon>
         </button>
-        <button (click)="editImage(image)" aria-label="Edit image">
+        <button
+          (click)="editImage(image)"
+          aria-label="Edit image"
+          matTooltip="Edit"
+        >
           <mat-icon class="edit-button">edit</mat-icon>
         </button>
-        <button (click)="viewImageTree(image)" aria-label="View image tree">
+        <button
+          (click)="viewImageTree(image)"
+          aria-label="View image tree"
+          matTooltip="View History"
+        >
           <mat-icon class="tree-button">account_tree</mat-icon>
         </button>
+      </div>
+
+      <!-- Image details overlay -->
+      <div class="image-details" *ngIf="image.loaded">
+        <h4 [matTooltip]="image.name || 'Unnamed Image'">
+          {{ image.name || "Unnamed Image" }}
+        </h4>
+        <p *ngIf="image.appliedFilters && image.appliedFilters.length">
+          <mat-icon class="details-icon">filter_list</mat-icon>
+          {{ image.appliedFilters.join(", ") }}
+        </p>
+        <p>
+          <mat-icon class="details-icon">aspect_ratio</mat-icon>
+          {{ image.width }} × {{ image.height }}
+        </p>
       </div>
     </div>
   </article>
@@ -55,7 +96,7 @@
   id="paginator"
   [length]="imagePairs.length"
   [pageSize]="itemsPerPage"
-  [pageSizeOptions]="[6, 12, 26]"
+  [pageSizeOptions]="pageSizeOptions"
   (page)="onPageChange($event)"
   [showFirstLastButtons]="true"
   *ngIf="imagePairs.length > 0"

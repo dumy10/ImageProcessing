@@ -5,6 +5,7 @@
     "ng": "ng",
     "config-env": "node config-env.js",
     "start": "npm run config-env && ng serve",
+    "dev": "npm run config-env && ng serve",
     "build": "npm run config-env && ng build",
     "deploy": "npm run config-env && ng build --configuration production && npx angular-cli-ghpages --dir=dist/image-processing --no-silent",
     "watch": "npm run config-env && ng build --watch --configuration development",

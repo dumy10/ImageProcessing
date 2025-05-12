@@ -2,15 +2,8 @@
 #include "pch.h"
 #include "ImageData.h"
 #include "libdefine.h"
-#include "AllFilters.h"
 
 constexpr size_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length allowed. 10 MB
-
-/**
- * @brief Callback function type for reporting progress.
- * @param progress Progress value between 0 and 100.
- */
-typedef void (*ProgressCallback)(int progress);
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,17 +41,12 @@ extern "C" {
 #endif
 
 /**
- * @brief Converts a string to lowercase.
+ * @brief Validates the parameters received by the ApplyFilter function.
  *
- * @param input The string to convert.
- * @return The lowercase string.
+ * @param imageData Pointer to the image data.
+ * @param length Length of the image data.
+ * @param filter Name of the filter to apply.
+ * @param extension File extension of the image.
+ * @return True if the parameters are valid, false otherwise.
  */
-std::string ToLowerCase(const std::string& input);
-
-/**
- * @brief Checks if a pointer is valid.
- *
- * @param pointer The pointer to check.
- * @return True if the pointer is valid, false otherwise.
- */
-bool IsValidPointer(void* pointer);
+bool ValidateParameters(const char* imageData, int length, const char* filter, const char* extension);

@@ -4,12 +4,11 @@
 
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
-void KaleidoscopeFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
+void KaleidoscopeFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, const ProgressCallback& progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Applying kaleidoscope filter");
 
-	if (progressCallback)
-		progressCallback(60);
+	ReportProgressIfNeeded(progressCallback, 60);
 
 	static constexpr int numReflections = 6;  // Number of mirrored segments (adjustable for different effects)
 	const int centerX = width / 2;
@@ -45,8 +44,7 @@ void KaleidoscopeFilter::Apply(const unsigned char* inputImage, unsigned char* o
 		}
 	}
 
-	if (progressCallback)
-		progressCallback(70);
+	ReportProgressIfNeeded(progressCallback, 70);
 
 	Logger::GetInstance().LogMessage("Kaleidoscope filter applied");
 }

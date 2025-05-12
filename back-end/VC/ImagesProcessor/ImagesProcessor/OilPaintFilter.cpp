@@ -4,12 +4,11 @@
 
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
-void OilPaintFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
+void OilPaintFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, const ProgressCallback& progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Applying oil paint filter");
 
-	if (progressCallback)
-		progressCallback(60);
+	ReportProgressIfNeeded(progressCallback, 60);
 
 	static constexpr int filterRadius = 4;
 	static constexpr int intensityLevels = 256;
@@ -103,8 +102,7 @@ void OilPaintFilter::Apply(const unsigned char* inputImage, unsigned char* outpu
 		}
 	}
 
-	if (progressCallback)
-		progressCallback(70);
+	ReportProgressIfNeeded(progressCallback, 70);
 
 	Logger::GetInstance().LogMessage("Oil paint filter applied");
 }
