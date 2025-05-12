@@ -428,7 +428,7 @@ describe('GalleryComponent', () => {
     component.ngOnInit();
 
     expect(component.currentPage).toBe(0);
-    expect(component.itemsPerPage).toBe(6);
+    expect(component.itemsPerPage).toBe(8);
   });
 
   // New tests for caching and preloading

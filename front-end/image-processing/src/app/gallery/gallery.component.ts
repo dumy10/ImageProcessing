@@ -6,12 +6,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageModel } from '../models/ImageModel';
-import { Tree, TreeNode } from '../models/tree';
 import { CacheService } from '../services/cache.service';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
@@ -40,6 +40,7 @@ import {
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
     ErrorBannerComponent,
   ],
   templateUrl: './gallery.component.html',
@@ -84,7 +85,13 @@ export class GalleryComponent implements OnInit, OnDestroy {
    * Number of items to display per page.
    * @type {number}
    */
-  itemsPerPage: number = 6;
+  itemsPerPage: number = 8;
+
+  /**
+   * Array of page size options for the paginator.
+   * @type {number[]}
+   */
+  pageSizeOptions: number[] = [8, 16, 24];
 
   /**
    * Total number of pages in the pagination.
@@ -146,7 +153,7 @@ export class GalleryComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const paramsSub = this.route.queryParams.subscribe((params) => {
       this.currentPage = params['page'] ? +params['page'] : 0;
-      this.itemsPerPage = params['pageSize'] ? +params['pageSize'] : 6;
+      this.itemsPerPage = params['pageSize'] ? +params['pageSize'] : 8;
       this.onPageChange({
         pageIndex: this.currentPage,
         pageSize: this.itemsPerPage,
@@ -387,7 +394,7 @@ export class GalleryComponent implements OnInit, OnDestroy {
 
     // Open a dialog showing the vertical hierarchy (history) of this image
     const dialogRef = this.dialog.open(ImageHierarchyComponent, {
-      data: this.getImageHierarchy(image)
+      data: this.getImageHierarchy(image),
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -403,8 +410,8 @@ export class GalleryComponent implements OnInit, OnDestroy {
     this.router.navigate(['/image-tree', image.id], {
       queryParams: {
         page: this.currentPage,
-        pageSize: this.itemsPerPage
-      }
+        pageSize: this.itemsPerPage,
+      },
     });
   }
 

@@ -4,12 +4,11 @@
 
 #pragma warning(disable : 6993) // Suppress warning about OpenMP not being supported in this configuration
 
-void GlitchFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, ProgressCallback progressCallback) const
+void GlitchFilter::Apply(const unsigned char* inputImage, unsigned char* outputImage, int width, int height, int channels, const ProgressCallback& progressCallback) const
 {
 	Logger::GetInstance().LogMessage("Applying glitch filter to the image");
 
-	if (progressCallback)
-		progressCallback(60);
+	ReportProgressIfNeeded(progressCallback, 60);
 
 	// Copy the input image to the output image
 #pragma omp parallel for
@@ -70,8 +69,7 @@ void GlitchFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 		}
 	}
 
-	if (progressCallback)
-		progressCallback(70);
+	ReportProgressIfNeeded(progressCallback, 70);
 
 	Logger::GetInstance().LogMessage("Glitch filter applied");
 }

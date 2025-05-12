@@ -42,5 +42,7 @@
 // Include the Logger Singleton class in every component that includes the precompiled header
 #include "Logger.h"
 
+// Helper methods
+#include "Helpers.h"
 
 #endif //PCH_H
