@@ -19,7 +19,8 @@ RUN apt-get update \
         libgl1-mesa-dev \
         libgif7 \
         libpng16-16 \
-        libjpeg62-turbo \
+        # Using libjpeg-turbo8 instead of libjpeg62-turbo for better SkiaSharp compatibility
+        libjpeg-turbo8 \
         # OpenMP dependency (required by libImagesProcessor.so)
         libgomp1 \
         # TBB dependency for parallel algorithms (std::execution)
@@ -30,7 +31,6 @@ RUN apt-get update \
         libglib2.0-0 \
         libdbus-1-3 \
         # OpenCV runtime dependencies
-        libglib2.0-0 \
         libsm6 \
         libxext6 \
         libxrender1 \
@@ -48,6 +48,8 @@ RUN apt-get update \
 ENV SKIA_FONTMGR=fontconfig
 # Make sure SkiaSharp knows we're using its Linux assets
 ENV SKIASHARP_NATIVE_ASSETS_PERSISTED=1
+# Set SkiaSharp version compatibility
+ENV SKIASHARP_VERSION=2.88.6
 
 # Build the C++ native libraries
 FROM ubuntu:22.04 AS cpp-build
@@ -91,6 +93,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
+# Set SkiaSharp version for the build environment
+ENV SKIASHARP_VERSION=2.88.6
 
 # Install development dependencies for native libraries (libSkiaSharp)
 RUN apt-get update \
@@ -104,7 +108,11 @@ RUN apt-get update \
         libicu-dev \
         libpng-dev \
         libgif-dev \
-        libjpeg62 \
+        # Using libjpeg-turbo8 instead of libjpeg62 for better SkiaSharp compatibility
+        libjpeg-turbo8 \
+        libjpeg-turbo8-dev \
+        # Additional SkiaSharp dependencies
+        libharfbuzz-dev \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
     && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
@@ -116,7 +124,11 @@ COPY --from=cpp-build /build-output/libImagesProcessor.so /src/
 
 # Restore dependencies first
 COPY ["back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj", "ImagesAPI/"]
-RUN dotnet restore "ImagesAPI/ImagesAPI.csproj"
+RUN dotnet restore "ImagesAPI/ImagesAPI.csproj" \
+    # Pin SkiaSharp version to ensure compatibility
+    && dotnet add ImagesAPI/ImagesAPI.csproj package SkiaSharp --version ${SKIASHARP_VERSION} \
+    && dotnet add ImagesAPI/ImagesAPI.csproj package SkiaSharp.NativeAssets.Linux --version ${SKIASHARP_VERSION} \
+    && dotnet restore "ImagesAPI/ImagesAPI.csproj"
 
 # Copy the rest of the source code
 COPY ["back-end/DotNet/ImagesAPI", "/src"]
@@ -153,6 +165,8 @@ ENV ASPNETCORE_URLS=http://+:8080
 
 # Additional settings to help with native library loading
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+# Ensure SkiaSharp uses the correct version of native libraries
+ENV SKIASHARP_VERSION=2.88.6
 
 # Use a shell wrapper to capture startup errors and handle environment variables
 COPY <<-EOT /app/startup.sh
