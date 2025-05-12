@@ -10,46 +10,67 @@ EXPOSE 443
 EXPOSE 8080
 EXPOSE 10000
 
-# Install runtime dependencies required for SkiaSharp and other native libraries
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Update package lists and install minimum required dependencies first
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends apt-utils apt-transport-https ca-certificates && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install SkiaSharp dependencies in smaller batches to isolate potential issues
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         tzdata \
         libfontconfig1 \
         libfreetype6 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install graphics libraries
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         libgl1-mesa-dev \
         libgif7 \
         libpng16-16 \
-        # Using libjpeg-turbo8 instead of libjpeg62-turbo for better SkiaSharp compatibility
         libjpeg-turbo8 \
-        # OpenMP dependency (required by libImagesProcessor.so)
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install parallel processing libraries
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         libgomp1 \
-        # TBB dependency for parallel algorithms (std::execution)
         libtbb-dev \
-        # SkiaSharp additional dependencies
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install additional SkiaSharp dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         libicu-dev \
         libharfbuzz-dev \
         libglib2.0-0 \
         libdbus-1-3 \
-        # OpenCV runtime dependencies
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install X11 dependencies and diagnostic tools
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         libsm6 \
         libxext6 \
         libxrender1 \
-        # For diagnostics
         libc-bin \
         strace \
         file \
         procps \
         curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create required symbolic links
+RUN ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so || true && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so || true
 
 # Set environment variables for SkiaSharp native library loading
 ENV SKIA_FONTMGR=fontconfig
 # Make sure SkiaSharp knows we're using its Linux assets
 ENV SKIASHARP_NATIVE_ASSETS_PERSISTED=1
 # Set SkiaSharp version compatibility
-ENV SKIASHARP_VERSION=2.88.6
+ENV SKIASHARP_VERSION=3.116.1
 
 # Build the C++ native libraries
 FROM ubuntu:22.04 AS cpp-build
@@ -94,7 +115,7 @@ ENV TZ=Etc/UTC
 # Set the environment variable to indicate Docker environment
 ENV RUNNING_IN_DOCKER=true
 # Set SkiaSharp version for the build environment
-ENV SKIASHARP_VERSION=2.88.6
+ENV SKIASHARP_VERSION=3.116.1
 
 # Install development dependencies for native libraries (libSkiaSharp)
 RUN apt-get update \
@@ -166,7 +187,7 @@ ENV ASPNETCORE_URLS=http://+:8080
 # Additional settings to help with native library loading
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 # Ensure SkiaSharp uses the correct version of native libraries
-ENV SKIASHARP_VERSION=2.88.6
+ENV SKIASHARP_VERSION=3.116.1
 
 # Use a shell wrapper to capture startup errors and handle environment variables
 COPY <<-EOT /app/startup.sh

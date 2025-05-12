@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   test-backend-windows:
@@ -67,13 +68,12 @@ jobs:
           sudo ln -s /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so
           sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
 
-      # Install a compatible version of SkiaSharp libraries
       - name: Install SkiaSharp.NativeAssets.Linux
         run: |
-          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp --version 2.88.6
-          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp.NativeAssets.Linux --version 2.88.6
-          dotnet add back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj package SkiaSharp --version 2.88.6
-          dotnet add back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj package SkiaSharp.NativeAssets.Linux --version 2.88.6
+          dotnet add back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj package SkiaSharp --version 3.116.1
+          dotnet add back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj package SkiaSharp.NativeAssets.Linux --version 3.116.1
+          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp --version 3.116.1
+          dotnet add back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj package SkiaSharp.NativeAssets.Linux --version 3.116.1
           dotnet restore back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj
           dotnet restore back-end/DotNet/ImagesAPI/ImagesAPI/ImagesAPI.csproj
 
@@ -98,6 +98,7 @@ jobs:
         run: dotnet test back-end/DotNet/ImagesAPITests/ImagesAPITests.csproj --configuration Release
 
   test-frontend:
+    name: Test Frontend
     runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
