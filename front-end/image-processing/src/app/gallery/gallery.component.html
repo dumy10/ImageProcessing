@@ -70,9 +70,16 @@
         <h4 [matTooltip]="image.name || 'Unnamed Image'">
           {{ image.name || "Unnamed Image" }}
         </h4>
-        <p *ngIf="image.appliedFilters && image.appliedFilters.length">
+        <p
+          *ngIf="image.appliedFilters && image.appliedFilters.length"
+          [matTooltip]="image.appliedFilters.join(', ')"
+        >
           <mat-icon class="details-icon">filter_list</mat-icon>
-          {{ image.appliedFilters.join(", ") }}
+          {{
+            image.appliedFilters.join(", ").length > 20
+              ? image.appliedFilters.join(", ").substring(0, 20) + "..."
+              : image.appliedFilters.join(", ")
+          }}
         </p>
         <p>
           <mat-icon class="details-icon">aspect_ratio</mat-icon>
