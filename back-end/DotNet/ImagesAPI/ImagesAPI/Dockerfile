@@ -117,26 +117,54 @@ ENV RUNNING_IN_DOCKER=true
 # Set SkiaSharp version for the build environment
 ENV SKIASHARP_VERSION=3.116.1
 
-# Install development dependencies for native libraries (libSkiaSharp)
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Install base development dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        apt-utils \
+        apt-transport-https \
+        ca-certificates \
         tzdata \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install C development libraries
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         libc6-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install font dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         libfontconfig1-dev \
         libfreetype6-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install graphics libraries
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         libgl1-mesa-dev \
         libglib2.0-dev \
-        libicu-dev \
         libpng-dev \
         libgif-dev \
-        # Using libjpeg-turbo8 instead of libjpeg62 for better SkiaSharp compatibility
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install JPEG libraries
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         libjpeg-turbo8 \
         libjpeg-turbo8-dev \
-        # Additional SkiaSharp dependencies
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install additional text rendering libraries
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libicu-dev \
         libharfbuzz-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create required symbolic links
+RUN ln -sf /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 /usr/lib/x86_64-linux-gnu/libfontconfig.so || true && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libfreetype.so.6 /usr/lib/x86_64-linux-gnu/libfreetype.so || true
 
 WORKDIR /src
 
