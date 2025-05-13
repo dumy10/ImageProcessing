@@ -20,13 +20,13 @@ void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 	for (int y = 0; y < height; y++)
 	{
 		// Pre-allocate arrays
-		std::array<float, 3> sumX = { 0.0f, 0.0f, 0.0f };
-		std::array<float, 3> sumY = { 0.0f, 0.0f, 0.0f };
+		std::vector<float> sumX(channels, 0.0f);
+		std::vector<float> sumY(channels, 0.0f);
 		for (int x = 0; x < width; x++)
 		{
 			// Reset arrays for each pixel
-			sumX.fill(0.0f);
-			sumY.fill(0.0f);
+			std::fill(sumX.begin(), sumX.end(), 0.0f);
+			std::fill(sumY.begin(), sumY.end(), 0.0f);
 
 			// Convolution with boundary checking
 			for (int i = -1; i <= 1; i++)
