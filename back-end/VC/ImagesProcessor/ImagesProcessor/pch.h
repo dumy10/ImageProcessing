@@ -45,4 +45,7 @@
 // Helper methods
 #include "Helpers.h"
 
+// Global defines
+#include "Defines.h"
+
 #endif //PCH_H

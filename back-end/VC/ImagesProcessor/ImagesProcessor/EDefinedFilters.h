@@ -22,36 +22,3 @@ enum class EDefinedFilters : uint8_t
 	MOSAIC,						///< Mosaic filter.
 	GLITCH,						///< Glitch filter.
 };
-
-/**
- * @brief Defined image filters.
- *
- * Supported filters:
- * - grayscale
- * - invert
- * - blur
- * - sobel
- * - canny
- * - fliphorizontal
- * - flipvertical
- * - sepia
- * - oilpaint
- * - kaleidoscope
- * - mosaic
- * - glitch
- */
-static const std::unordered_map<std::string, EDefinedFilters> g_kDefinedFilters =
-{
-	{"grayscale", EDefinedFilters::GRAYSCALE},
-	{"invert", EDefinedFilters::INVERT},
-	{"blur", EDefinedFilters::BLUR},
-	{"sobel", EDefinedFilters::SOBEL},
-	{"canny", EDefinedFilters::CANNY},
-	{"fliphorizontal", EDefinedFilters::FLIPHORIZONTAL},
-	{"flipvertical", EDefinedFilters::FLIPVERTICAL},
-	{"sepia", EDefinedFilters::SEPIA},
-	{"oilpaint", EDefinedFilters::OILPAINT},
-	{"kaleidoscope", EDefinedFilters::KALEIDOSCOPE},
-	{"mosaic", EDefinedFilters::MOSAIC},
-	{"glitch", EDefinedFilters::GLITCH},
-};

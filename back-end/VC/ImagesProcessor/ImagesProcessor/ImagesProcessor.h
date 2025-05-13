@@ -3,8 +3,6 @@
 #include "ImageData.h"
 #include "libdefine.h"
 
-constexpr size_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length allowed. 10 MB
-
 #ifdef __cplusplus
 extern "C" {
 #endif
