@@ -1,0 +1,131 @@
+# Project settings
+PROJECT_NAME           = "ImageProcessing"
+PROJECT_BRIEF          = "Image Processing Application"
+PROJECT_NUMBER         = "1.0"
+
+# Language support
+FILE_PATTERNS          = *.cpp *.h *.hpp *.cs *.ts *.tsx *.js *.jsx
+EXTENSION_MAPPING      = cs=csharp ts=typescript tsx=typescript js=javascript jsx=javascript
+
+# Improved documentation for C# and TypeScript
+OPTIMIZE_OUTPUT_JAVA   = YES  # Helps with C# parsing
+JAVADOC_AUTOBRIEF      = YES  # For C# XML comments
+EXTRACT_PACKAGE        = YES  # For namespaces
+EXTRACT_STATIC         = YES  # For static methods
+EXTRACT_LOCAL_CLASSES  = YES  # For nested classes
+
+# Input directories
+INPUT                  = ./README.md \
+                         ./back-end/DotNet/ImagesAPI \
+                         ./back-end/VC/ImagesProcessor \
+                         ./front-end/image-processing/src
+RECURSIVE              = YES
+                         
+# Exclude patterns for files and directories
+EXCLUDE_PATTERNS       = */external/* \
+                         */packages/* \
+                         */environments/* \
+                         */bin/* \
+                         */obj/* \
+                         */node_modules/* \
+                         */.vs/* \
+                         */ImagesProcessorTests/* \
+                         */ImagesAPITests/* \
+                         *.spec.ts \
+                         *.test.ts \
+                         *test.cpp \
+                         *Test.h \
+                         *test.h \
+                         */e2e/* \
+                         */karma.conf.js \
+                         */polyfills.ts
+
+# Output configuration
+OUTPUT_DIRECTORY       = "./docs/doxygen"
+
+# Parsing settings
+OPTIMIZE_OUTPUT_FOR_C  = NO
+OPTIMIZE_OUTPUT_JAVA   = YES  # Helps with C# parsing
+JAVADOC_AUTOBRIEF      = YES  # For C# XML comments
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+VERBATIM_HEADERS       = YES
+
+# For TypeScript and C# support
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_PACKAGE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_LOCAL_METHODS  = YES
+EXTRACT_ANON_NSPACES   = YES
+SHOW_USED_FILES        = YES
+SHOW_NAMESPACES        = YES
+
+# TypeScript specific settings
+OPTIMIZE_FOR_JAVASCRIPT = YES
+JAVASCRIPT_SCOPE        = YES  
+JSC_ROOT_DIR           = ./front-end/image-processing/src
+SOURCE_BROWSER         = YES
+STRIP_CODE_COMMENTS    = NO
+CASE_SENSE_NAMES       = YES
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+
+# Process TypeScript classes as C++ to better handle class documentation
+EXTENSION_MAPPING     += ts=c++
+
+# Disable INPUT_FILTER which requires sed on Windows
+INPUT_FILTER           = 
+FILTER_SOURCE_FILES    = NO
+
+# Output formats
+GENERATE_HTML          = YES
+GENERATE_LATEX         = YES
+HTML_OUTPUT            = html
+GENERATE_TREEVIEW      = YES
+HTML_HEADER           =
+HTML_FOOTER           =
+HTML_TIMESTAMP        = YES
+
+# Improve class documentation
+INHERIT_DOCS           = YES
+USE_MDFILE_AS_MAINPAGE = README.md
+BUILTIN_STL_SUPPORT    = YES
+CPP_CLI_SUPPORT        = YES
+SIP_SUPPORT            = NO
+TYPEDEF_HIDES_STRUCT   = YES
+GENERATE_TODOLIST      = YES
+EXCLUDE_SYMLINKS       = NO
+FULL_PATH_NAMES        = YES
+SHORT_NAMES            = NO
+
+# Add class diagram settings
+HIDE_UNDOC_RELATIONS   = NO
+HAVE_DOT               = YES
+DOT_NUM_THREADS        = 0
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+GROUP_GRAPHS           = YES
+UML_LOOK               = YES
+UML_LIMIT_NUM_FIELDS   = 10
+TEMPLATE_RELATIONS     = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+
+# Diagrams (Graphviz should be installed)
+HAVE_DOT               = YES
+CLASS_DIAGRAMS         = YES
+COLLABORATION_GRAPH    = YES
+UML_LOOK               = YES
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = YES
+CLASS_GRAPH            = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+GRAPHICAL_HIERARCHY    = YES
+DIRECTORY_GRAPH        = YES
+DOT_GRAPH_MAX_NODES    = 100
+MAX_DOT_GRAPH_DEPTH    = 0

@@ -1,4 +1,4 @@
-# ImageProcessing
+# ImageProcessing {#mainpage}
 
 An advanced image processing application with a variety of filters and real-time processing capabilities.
 
@@ -29,6 +29,37 @@ The project follows a layered architecture:
 - **Frontend**: Angular 19 web application
 - **Backend**: .NET 8 API with SignalR for real-time updates
 - **Processing Engine**: C++ library with OpenMP optimization for parallel processing
+
+## Class Hierarchy {#class_hierarchy}
+
+The C++ image processing library features the following class hierarchy:
+
+### Filter Architecture
+- **IFilter**: Base interface for all image filters
+  - **Transform Filters**:
+    - FlipHorizontalFilter: Horizontally flips the image
+    - FlipVerticalFilter: Vertically flips the image
+    - KaleidoscopeFilter: Creates a kaleidoscope effect
+    - MosaicFilter: Creates a mosaic/pixelated effect
+  - **Color/Effect Filters**:
+    - BlurFilter: Applies Gaussian blur
+    - CannyFilter: Implements the Canny edge detection
+    - GlitchFilter: Creates a digital glitch effect
+    - GrayscaleFilter: Converts to grayscale
+    - InvertFilter: Inverts image colors
+    - OilPaintFilter: Simulates oil painting effect
+    - SepiaFilter: Applies sepia tone
+    - SobelFilter: Implements Sobel edge detection
+
+### Core Classes
+- **ImageData**: Handles image loading, processing, and saving
+- **FilterFactory**: Instantiates appropriate filters based on filter type
+- **Logger**: Singleton class for application logging
+
+### C# API Classes
+- **ImagesController**: Main API controller for image operations
+- **ImageProcessor**: C# wrapper around the C++ library
+- **ProgressTrackerService**: Real-time progress monitoring
 
 ## Getting Started
 
