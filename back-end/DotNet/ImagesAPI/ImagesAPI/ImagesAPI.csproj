@@ -5,6 +5,10 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<AssemblyVersion>1.0.0.1</AssemblyVersion>
+		<FileVersion>1.0.0.1</FileVersion>
+		<Version>1.0.1</Version>
+		<Copyright>Copyright © 2025. All rights reserved.</Copyright>
 	</PropertyGroup>
 	
 	<!-- Define preprocessor symbols based on OS -->

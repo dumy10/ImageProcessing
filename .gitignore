@@ -405,3 +405,5 @@ ImagesProcessorLogs/
 
 /front-end/image-processing/src/environments/*
 /front-end/image-processing/src/environments/*.ts
+
+doxygen/

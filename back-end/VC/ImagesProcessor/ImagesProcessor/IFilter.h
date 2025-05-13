@@ -1,11 +1,6 @@
 #pragma once
 #include "pch.h"
 
-// Platform-agnostic PI definition
-#ifndef M_PI
-    constexpr float M_PI = 3.14159265358979323846f; /// < Value of Pi
-#endif
-
 /**
  * @brief Interface for image filters.
  *

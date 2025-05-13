@@ -31,6 +31,11 @@ endif()
 file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/ImagesProcessor/*.cpp")
 file(GLOB_RECURSE TEST_SOURCES "${CMAKE_SOURCE_DIR}/ImagesProcessorTests/*.cpp")
 
+# Include Windows resource file if on Windows
+if(PLATFORM_WINDOWS)
+    list(APPEND SOURCES "${CMAKE_SOURCE_DIR}/ImagesProcessor/ImagesProcessor/ImagesProcessor.rc")
+endif()
+
 # Define the target library
 add_library(ImagesProcessor SHARED ${SOURCES})
 
