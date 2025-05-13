@@ -15,7 +15,7 @@ void KaleidoscopeFilter::Apply(const unsigned char* inputImage, unsigned char* o
 	const int centerY = height / 2;
 
 #pragma omp parallel for schedule(dynamic) // Use dynamic scheduling for better load balancing
-	for (int y = 0; y < height; ++y)
+	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
 		{
@@ -39,7 +39,7 @@ void KaleidoscopeFilter::Apply(const unsigned char* inputImage, unsigned char* o
 			int srcIndex = (mirroredY * width + mirroredX) * channels;
 			int dstIndex = (y * width + x) * channels;
 
-			// Use SIMD-friendly copy
+			// Copy pixel data from the mirrored position to the output image
 			memcpy(&outputImage[dstIndex], &inputImage[srcIndex], channels);
 		}
 	}

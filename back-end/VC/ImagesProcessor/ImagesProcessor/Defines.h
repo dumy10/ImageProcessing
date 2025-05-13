@@ -54,5 +54,5 @@ static const std::unordered_map<std::string, EDefinedFilters> g_kDefinedFilters 
 	{"glitch", EDefinedFilters::GLITCH},
 };
 
-static const size_t kImageQuality = 100; ///< Quality of the jpg image.
-constexpr size_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length allowed. 10 MB
+static constexpr uint8_t kImageQuality = 100; ///< Quality of the jpg image.
+static constexpr uint32_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length allowed. 10 MB
