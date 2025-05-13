@@ -397,13 +397,25 @@ FodyWeavers.xsd
 
 # Sensitive files
 */Credentials/*.json
-/back-end/DotNet/ImagesAPI/ImagesAPI/Credentials/imageprocessing-drive-api-c7e0d4e4ca93.json
-
-build/
-ImagesProcessorLogs/
 .env
 
+# Ignore build output folders
+build/
+
+# Ignore log files
+ImagesProcessorLogs/
+*.log
+
+# Ignore generated environment files 
 /front-end/image-processing/src/environments/*
 /front-end/image-processing/src/environments/*.ts
 
+# Ignore generated documentation by Doxygen
 doxygen/
+
+# Ignore archive files
+*.rar
+*.zip
+*.tar
+*.tar.gz
+*.gz
