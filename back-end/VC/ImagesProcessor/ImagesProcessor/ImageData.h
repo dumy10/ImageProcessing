@@ -19,6 +19,7 @@ static stbi_write_func* kWriteCallback = [](void* context, void* data, int size)
 	std::memcpy(buffer->data() + currentSize, data, size);
 	};
 
+/**
  * @brief Class for handling image data and applying filters.
  */
 class ImageData
