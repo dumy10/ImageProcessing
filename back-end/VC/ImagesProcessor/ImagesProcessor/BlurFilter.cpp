@@ -80,7 +80,7 @@ void BlurFilter::Apply(const unsigned char* inputImage, unsigned char* outputIma
             outputImage[outIdx] = static_cast<unsigned char>(sum / area);
         }
     }
-	ReportProgressIfNeeded(progressCallback, 100);
+	ReportProgressIfNeeded(progressCallback, 70);
 
 	Logger::GetInstance().LogMessage("Blur filter applied successfully");
 }
