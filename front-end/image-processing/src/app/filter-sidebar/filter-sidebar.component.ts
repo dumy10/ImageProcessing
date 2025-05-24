@@ -107,7 +107,7 @@ export class FilterSidebarComponent implements OnInit {
   private populateFilterCategories(): void {
     // Define category groups
     this.filterCategories = {
-      adjustments: [Filters.GrayScale, Filters.Invert, Filters.Blur],
+      adjustments: [Filters.GrayScale, Filters.Invert, Filters.Blur, Filters.Sharpen],
       effects: [
         Filters.OilPaint,
         Filters.Kaleidoscope,

@@ -71,7 +71,6 @@ namespace ImagesAPI.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You can only view your own user data unless you are an administrator" });
                 }
 
-
                 var user = await _userService.Get(id);
                 if (user == null)
                 {

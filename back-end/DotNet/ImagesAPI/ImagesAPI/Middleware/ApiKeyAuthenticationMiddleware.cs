@@ -15,7 +15,6 @@ namespace ImagesAPI.Middleware
     /// </remarks>
     /// <param name="next">The next delegate in the pipeline</param>
     /// <param name="userSettings">User settings</param>
-    /// <param name="cache">Memory cache</param>
     public class ApiKeyAuthenticationMiddleware(RequestDelegate next, IUserSettings userSettings)
     {
         private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));

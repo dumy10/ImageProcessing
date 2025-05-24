@@ -38,38 +38,20 @@ try
         logMessage.AppendLine($"Checking for {libraryPath}: {File.Exists(libraryPath)}");
     }
 
-    // List all files in the application directory
-    logMessage.AppendLine("Files in application directory:");
-    try
-    {
-        var files = Directory.GetFiles(appDirectory);
-        foreach (var file in files)
-        {
-            var fileInfo = new FileInfo(file);
-            logMessage.AppendLine($"- {fileInfo.Name} ({fileInfo.Length} bytes)");
-        }
-    }
-    catch (Exception ex)
-    {
-        logMessage.AppendLine($"Error listing files: {ex.Message}");
-    }
-
     // Test loading the library programmatically
     try
     {
         if (OperatingSystem.IsWindows())
         {
             logMessage.AppendLine("Attempting to load ImagesProcessor.dll");
-            var handle = System.Runtime.InteropServices.NativeLibrary.Load(
-                Path.Combine(appDirectory, "ImagesProcessor.dll"));
+            var handle = System.Runtime.InteropServices.NativeLibrary.Load(Path.Combine(appDirectory, "ImagesProcessor.dll"));
             logMessage.AppendLine("Successfully loaded ImagesProcessor.dll");
             System.Runtime.InteropServices.NativeLibrary.Free(handle);
         }
         else
         {
             logMessage.AppendLine("Attempting to load libImagesProcessor.so");
-            var handle = System.Runtime.InteropServices.NativeLibrary.Load(
-                Path.Combine(appDirectory, "libImagesProcessor.so"));
+            var handle = System.Runtime.InteropServices.NativeLibrary.Load(Path.Combine(appDirectory, "libImagesProcessor.so"));
             logMessage.AppendLine("Successfully loaded libImagesProcessor.so");
             System.Runtime.InteropServices.NativeLibrary.Free(handle);
         }
@@ -87,8 +69,7 @@ try
     Console.WriteLine(logMessage.ToString());
 
     // Also write to a file that will persist in the container
-    File.WriteAllText(Path.Combine(appDirectory, "native_library_diagnostic.log"),
-        logMessage.ToString());
+    File.WriteAllText(Path.Combine(appDirectory, "native_library_diagnostic.log"), logMessage.ToString());
 }
 catch (Exception ex)
 {
@@ -100,15 +81,15 @@ Env.Load();
 
 // Skip environment variable validation in Docker test environment
 bool skipValidation = Environment.GetEnvironmentVariable("RUNNING_IN_DOCKER") == "true" &&
-                     Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" ||
-                     Environment.GetEnvironmentVariable("SKIP_VALIDATION") == "true";
+                      Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" ||
+                      Environment.GetEnvironmentVariable("SKIP_VALIDATION") == "true";
 
 if (!skipValidation)
 {
     string[] variables = [
         "MONGODB_CONNECTION_STRING", "MONGODB_DATABASE_NAME", "MONGODB_COLLECTION_NAME", "MONGODB_USERS_COLLECTION_NAME",
         "DROPBOX_APP_KEY", "DROPBOX_APP_SECRET", "DROPBOX_REFRESH_TOKEN", "FRONTEND_ORIGIN"
-        ];
+    ];
 
     foreach (var variable in variables)
     {
@@ -128,7 +109,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    // Reuse settings from JsonOptions.DefaultOptions
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = JsonOptions.DefaultOptions.PropertyNameCaseInsensitive;
     options.JsonSerializerOptions.PropertyNamingPolicy = JsonOptions.DefaultOptions.PropertyNamingPolicy;
     options.JsonSerializerOptions.WriteIndented = JsonOptions.DefaultOptions.WriteIndented;

@@ -10,7 +10,7 @@ ImagesProcessor is a native C++ library that implements various image filters an
 
 - **High Performance**: Utilizes OpenMP for parallel processing and optimized algorithms
 - **Multiple Filter Types**: 
-  - Basic: Grayscale, Invert, Blur
+  - Basic: Grayscale, Invert, Blur, Sharpen
   - Edge Detection: Sobel, Canny
   - Artistic: Sepia, Oil Paint, Kaleidoscope, Mosaic, Glitch
   - Geometric: Flip Horizontal, Flip Vertical
@@ -82,6 +82,7 @@ To integrate the library into your project:
 - `grayscale` - Converts image to grayscale
 - `invert` - Inverts all colors in the image
 - `blur` - Applies a Gaussian blur effect
+- `sharpen` - Applies Unsharp Mask sharpening filter
 - `sobel` - Applies Sobel edge detection
 - `canny` - Applies Canny edge detection
 - `fliphorizontal` - Flips the image horizontally

@@ -53,5 +53,9 @@
         /// Glitch filter
         /// </summary>
         GLITCH,
+        /// <summary>
+        /// Sharpen filter
+        /// </summary>
+        SHARPEN,
     }
 }

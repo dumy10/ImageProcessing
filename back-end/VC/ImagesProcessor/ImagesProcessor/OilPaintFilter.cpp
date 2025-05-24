@@ -48,17 +48,25 @@ void OilPaintFilter::Apply(const unsigned char* inputImage, unsigned char* outpu
 				{
 					int sampleY = y + offsetY;
 					if (sampleY < 0)
+					{
 						sampleY = 0;
+					}
 					else if (sampleY >= height)
+					{
 						sampleY = height - 1;
+					}
 
 					for (int offsetX = -filterRadius; offsetX <= filterRadius; offsetX++)
 					{
 						int sampleX = x + offsetX;
 						if (sampleX < 0)
+						{
 							sampleX = 0;
+						}
 						else if (sampleX >= width)
+						{
 							sampleX = width - 1;
+						}
 
 						int sampleIdx = sampleY * width + sampleX;
 						int intensity = intensityMap[sampleIdx];

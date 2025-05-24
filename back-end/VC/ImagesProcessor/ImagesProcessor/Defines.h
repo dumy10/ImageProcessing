@@ -37,6 +37,7 @@ static const std::unordered_map<std::string, EAllowedExtensions> g_kAllowedExten
  * - kaleidoscope
  * - mosaic
  * - glitch
+ * - sharpen
  */
 static const std::unordered_map<std::string, EDefinedFilters> g_kDefinedFilters =
 {
@@ -52,7 +53,8 @@ static const std::unordered_map<std::string, EDefinedFilters> g_kDefinedFilters 
 	{"kaleidoscope", EDefinedFilters::KALEIDOSCOPE},
 	{"mosaic", EDefinedFilters::MOSAIC},
 	{"glitch", EDefinedFilters::GLITCH},
+	{"sharpen", EDefinedFilters::SHARPEN}
 };
 
-static const size_t kImageQuality = 100; ///< Quality of the jpg image.
-constexpr size_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length allowed. 10 MB
+static constexpr uint8_t kImageQuality = 100; ///< Quality of the jpg image.
+static constexpr uint32_t kMaxImageLength = 1024 * 1024 * 10; /// < Maximum image length allowed. 10 MB

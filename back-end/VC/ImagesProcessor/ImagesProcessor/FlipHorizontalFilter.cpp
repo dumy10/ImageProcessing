@@ -21,11 +21,8 @@ void FlipHorizontalFilter::Apply(const unsigned char* inputImage, unsigned char*
 
 		for (int x = 0; x < width; x++)
 		{
-			const int offset = x * channels;
-			const int flippedOffset = (width - x - 1) * channels;
-
-			// Copy all channels
-			std::copy_n(inputRow + offset, channels, outputRow + flippedOffset);
+			int flippedX = width - x - 1;
+			std::copy_n(inputRow + x * channels, channels, outputRow + flippedX * channels);
 		}
 	}
 
