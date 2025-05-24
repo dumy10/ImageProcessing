@@ -11,6 +11,8 @@ void SharpenFilter::Apply(const unsigned char* inputImage, unsigned char* output
 
     const int size = width * height * channels;
 
+    ReportProgressIfNeeded(progressCallback, 55);
+    
     // Step 1: Create a blurred version of the input image
     std::vector<unsigned char> blurredImage(size);
     BlurFilter blurFilter;
@@ -32,7 +34,7 @@ void SharpenFilter::Apply(const unsigned char* inputImage, unsigned char* output
         outputImage[i] = static_cast<unsigned char>(std::min<int>(255, std::max<int>(0, sharpened)));
     }
 
-    ReportProgressIfNeeded(progressCallback, 100);
+    ReportProgressIfNeeded(progressCallback, 70);
     Logger::GetInstance().LogMessage("Sharpen filter applied successfully");
 }
 
