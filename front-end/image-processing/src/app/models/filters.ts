@@ -73,4 +73,10 @@ export enum Filters {
    * Applies a glitch effect to the image.
    */
   Glitch = 'glitch',
+
+  /**
+   * Sharpen filter.
+   * Sharpens the image.
+   */
+  Sharpen = 'sharpen',
 }

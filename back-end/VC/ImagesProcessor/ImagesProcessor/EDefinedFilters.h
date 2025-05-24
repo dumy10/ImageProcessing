@@ -21,4 +21,5 @@ enum class EDefinedFilters : uint8_t
 	KALEIDOSCOPE,				///< Kaleidoscope filter.
 	MOSAIC,						///< Mosaic filter.
 	GLITCH,						///< Glitch filter.
+	SHARPEN,					///< Sharpen filter.
 };

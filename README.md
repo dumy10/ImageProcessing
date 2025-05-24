@@ -14,7 +14,7 @@ ImageProcessing is a comprehensive solution for applying various image filters a
 
 - Support for multiple image formats (PNG, JPG, JPEG)
 - Variety of filters including:
-  - Basic transformations (Grayscale, Invert, Blur)
+  - Basic transformations (Grayscale, Invert, Blur, Sharpen)
   - Edge detection (Sobel, Canny)
   - Artistic effects (Sepia, Oil Paint, Mosaic, Glitch, Kaleidoscope)
   - Geometric transformations (Horizontal/Vertical Flip)
@@ -49,6 +49,7 @@ The C++ image processing library features the following class hierarchy:
     - InvertFilter: Inverts image colors
     - OilPaintFilter: Simulates oil painting effect
     - SepiaFilter: Applies sepia tone
+    - SharpenFilter: Applies Unsharp Mask sharpening filter
     - SobelFilter: Implements Sobel edge detection
 
 ### Core Classes
