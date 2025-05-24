@@ -5,6 +5,7 @@ using ImagesAPI.Settings.Interfaces;
 using MongoDB.Driver;
 using System.Security.Authentication;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace ImagesAPI.Services.Concretes
 {
@@ -19,6 +20,7 @@ namespace ImagesAPI.Services.Concretes
         #region Constants
         private const int DefaultCacheDuration = 30; // Default cache duration in minutes
         private const string CacheKeyPrefix = "user_apikey_";
+        private const int MaxApiKeyGenerationAttempts = 10; // Maximum attempts to generate a unique API key
         #endregion
 
         /// <summary>
@@ -155,9 +157,30 @@ namespace ImagesAPI.Services.Concretes
         public string GenerateApiKey()
         {
             using var cryptoProvider = RandomNumberGenerator.Create();
-            byte[] bytes = new byte[32]; // 256 bits
-            cryptoProvider.GetBytes(bytes);
-            return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
+            for (int attempt = 0; attempt < MaxApiKeyGenerationAttempts; attempt++)
+            {
+                byte[] bytes = new byte[32]; // 256 bits
+                cryptoProvider.GetBytes(bytes);
+                string apiKey = Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
+
+                // Ensure the API key is unique
+                if (!_users.Find(u => u.ApiKey == apiKey).Limit(1).Any())
+                {
+                    return apiKey;
+                }
+            }
+
+            // Fallback: use a hash of a new GUID
+            byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()));
+            string fallbackApiKey = Convert.ToBase64String(hash).Replace("+", "-").Replace("/", "_").Replace("=", "");
+
+            if (_users.Find(u => u.ApiKey == fallbackApiKey).Limit(1).Any())
+            {
+                Logging.Instance.LogError("Failed to generate a unique API key after multiple attempts.");
+                throw new InvalidOperationException("Failed to generate a unique API key after multiple attempts.");
+            }
+
+            return fallbackApiKey;
         }
     }
 }

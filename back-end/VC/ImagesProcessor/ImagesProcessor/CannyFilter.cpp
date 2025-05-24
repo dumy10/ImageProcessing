@@ -228,7 +228,6 @@ void CannyFilter::DoubleThresholdAndHysteresis(const unsigned char* inputImage, 
 			{
 				// Check 8-connected neighborhood for strong edges
 				bool hasStrongNeighbor = false;
-				// Replace std::any_of with a direct loop
 				for (int ky = -1; ky <= 1 && !hasStrongNeighbor; ky++)
 				{
 					for (int kx = -1; kx <= 1 && !hasStrongNeighbor; kx++)

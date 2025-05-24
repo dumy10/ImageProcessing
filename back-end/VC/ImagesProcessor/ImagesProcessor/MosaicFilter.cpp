@@ -41,7 +41,8 @@ void MosaicFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 				}
 			}
 
-			if (validPixelCount > 0) {
+			if (validPixelCount > 0) 
+			{
 				avgR /= validPixelCount;
 				avgG /= validPixelCount;
 				avgB /= validPixelCount;

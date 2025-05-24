@@ -102,6 +102,9 @@
     <ClInclude Include="Defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SharpenFilter.h">
+      <Filter>Filters\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -163,6 +166,9 @@
     </ClCompile>
     <ClCompile Include="Helpers.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SharpenFilter.cpp">
+      <Filter>Filters\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

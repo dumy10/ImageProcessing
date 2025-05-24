@@ -451,6 +451,11 @@ export class ImageHierarchyComponent implements OnInit {
         description: 'Applies a gaussian blur effect',
         icon: 'blur_on',
       },
+      Sharpen: {
+        name: 'Sharpen',
+        description: 'Enhances edges in the image',
+        icon: 'filter_sharp',
+      },
       Invert: {
         name: 'Invert',
         description: 'Inverts all colors in the image',

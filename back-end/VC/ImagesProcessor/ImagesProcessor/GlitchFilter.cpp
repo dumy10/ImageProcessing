@@ -23,13 +23,14 @@ void GlitchFilter::Apply(const unsigned char* inputImage, unsigned char* outputI
 
 	// Randomly shift pixel columns
 	const int numColumnsToShift = width / 20; // Number of columns to shift 
+	constexpr int shiftAmount = 10; // Maximum shift amount
 
 #pragma omp parallel
 	{
 		// Each thread gets its own random number generator
 		std::mt19937 gen(seed + omp_get_thread_num());
 		std::uniform_int_distribution<> columnDist(0, width - 1);
-		std::uniform_int_distribution<> shiftDist(-10, 10); // Shift by up to 10 pixels
+		std::uniform_int_distribution<> shiftDist(-shiftAmount, shiftAmount); // Shift by up to shiftAmount pixels
 
 #pragma omp for
 		for (int i = 0; i < numColumnsToShift; i++)

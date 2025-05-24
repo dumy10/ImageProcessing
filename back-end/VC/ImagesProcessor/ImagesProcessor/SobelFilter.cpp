@@ -57,7 +57,10 @@ void SobelFilter::Apply(const unsigned char* inputImage, unsigned char* outputIm
 			for (int c = 0; c < channels; c++)
 			{
 				float magnitude = std::sqrt(sumX[c] * sumX[c] + sumY[c] * sumY[c]);
-				if (magnitude > 255.0f) magnitude = 255.0f;
+				if (magnitude > 255.0f) 
+				{ 
+					magnitude = 255.0f; 
+				}
 				outputImage[index + c] = static_cast<unsigned char>(magnitude);
 			}
 		}

@@ -17,3 +17,4 @@ Further includes can be added here as needed.
 #include "OilPaintFilter.h"
 #include "SepiaFilter.h"
 #include "SobelFilter.h"
+#include "SharpenFilter.h"
