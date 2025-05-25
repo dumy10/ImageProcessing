@@ -22,13 +22,14 @@ namespace ImagesAPI.Services.Concretes
         /// <param name="imageId">ID of the image being processed</param>
         /// <param name="filter">Filter being applied</param>
         /// <param name="progress">Progress percentage (0-100)</param>
+        /// <param name="message">Optional message describing the current operation</param>
         /// <returns>Task representing the async operation</returns>
-        public async Task ReportProgressAsync(string imageId, string filter, int progress)
+        public async Task ReportProgressAsync(string imageId, string filter, int progress, string message = "")
         {
             try
             {
-                Logging.Instance.LogMessage($"Progress update for image {imageId}, filter {filter}: {progress}%");
-                await _hubContext.Clients.All.SendAsync("ReceiveProgressUpdate", imageId, filter, progress);
+                Logging.Instance.LogMessage($"Progress update for image {imageId}, filter {filter}: {progress}% - {message}");
+                await _hubContext.Clients.All.SendAsync("ReceiveProgressUpdate", imageId, filter, progress, message);
             }
             catch (Exception ex)
             {

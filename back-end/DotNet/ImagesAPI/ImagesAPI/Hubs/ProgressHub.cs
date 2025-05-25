@@ -18,9 +18,10 @@ namespace ImagesAPI.Hubs
         /// <param name="imageId">ID of the image being processed</param>
         /// <param name="filter">Filter being applied</param>
         /// <param name="progress">Progress percentage (0-100)</param>
-        public async Task SendProgressUpdate(string imageId, string filter, int progress)
+        /// <param name="message">Optional message describing the current operation</param>
+        public async Task SendProgressUpdate(string imageId, string filter, int progress, string message = "")
         {
-            await Clients.All.SendAsync(MethodName, imageId, filter, progress);
+            await Clients.All.SendAsync(MethodName, imageId, filter, progress, message);
         }
     }
 }

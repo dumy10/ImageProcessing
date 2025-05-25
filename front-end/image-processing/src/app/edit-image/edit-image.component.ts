@@ -154,8 +154,8 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.normalizeFilterName(update.filter) ===
               this.normalizeFilterName(this.lastAppliedFilter.toString())
           ) {
-            // Handle the progress update
-            this.handleProgressUpdate(update.progress);
+            // Handle the progress update with both progress and message
+            this.handleProgressUpdate(update.progress, update.message);
           }
         });
 
@@ -170,9 +170,8 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error('Error connecting to progress hub:', error);
     }
   }
-
   // Handle progress updates
-  private handleProgressUpdate(progress: number): void {
+  private handleProgressUpdate(progress: number, message?: string): void {
     // Handle error case (-1) separately
     if (progress === -1) {
       // Error state will be handled by the error pipeline
@@ -183,6 +182,11 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
     // Update the progress bar
     this.progressPercentage = progress;
     this.showProgress = true;
+
+    // Update the loading message if provided
+    if (message) {
+      this.loadingMessage = message;
+    }
 
     // If we reach 100%, hide the progress bar after a delay
     if (progress >= 100) {
