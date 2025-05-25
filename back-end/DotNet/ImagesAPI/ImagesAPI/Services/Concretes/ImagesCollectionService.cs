@@ -296,7 +296,7 @@ namespace ImagesAPI.Services.Concretes
             {
                 try
                 {
-                    await progressTracker.ReportProgressAsync(imageId, filter, progress);
+                    await progressTracker.ReportProgressAsync(imageId, filter, progress, message);
                     Logging.Instance.LogMessage($"Progress update for image {imageId}, filter {filter}: {progress}% - {message}");
                 }
                 catch (Exception ex)

@@ -7,6 +7,7 @@ export interface ProgressUpdate {
   imageId: string;
   filter: string;
   progress: number;
+  message?: string;
 }
 
 @Injectable({
@@ -79,9 +80,18 @@ export class ProgressTrackerService {
     if (this.hubConnection) {
       this.hubConnection.on(
         'ReceiveProgressUpdate',
-        (imageId: string, filter: string, progress: number) => {
-          console.debug(`Progress update: ${imageId}, ${filter}, ${progress}%`);
-          this.progressSubject.next({ imageId, filter, progress });
+        (
+          imageId: string,
+          filter: string,
+          progress: number,
+          message?: string
+        ) => {
+          console.debug(
+            `Progress update: ${imageId}, ${filter}, ${progress}% - ${
+              message || ''
+            }`
+          );
+          this.progressSubject.next({ imageId, filter, progress, message });
         }
       );
     }
