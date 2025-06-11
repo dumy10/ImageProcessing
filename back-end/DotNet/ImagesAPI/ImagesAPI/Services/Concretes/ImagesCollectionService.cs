@@ -192,7 +192,7 @@ namespace ImagesAPI.Services.Concretes
                         if (mappedProgress > highestReportedProgress.Value)
                         {
                             highestReportedProgress.Value = mappedProgress;
-                            await ReportProgressAsync(progressTracker, id, filter, mappedProgress, $"Applying filter: {progress}% complete");
+                            await ReportProgressAsync(progressTracker, id, filter, mappedProgress, $"Applying filter {filter}: {progress}% complete");
                         }
                     };
                 }
