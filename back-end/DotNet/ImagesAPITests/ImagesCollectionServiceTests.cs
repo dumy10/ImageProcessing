@@ -30,7 +30,7 @@ namespace ImagesAPITests
         public async Task Create_ShouldAssignNewGuid_WhenIdIsNullOrWhitespace()
         {
             // Arrange
-            var model = new ImageModel { Id = null };
+            var model = new ImageModel();
 
             // Act
             var result = await _service.Create(model);

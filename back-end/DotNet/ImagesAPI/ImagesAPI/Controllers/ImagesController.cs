@@ -1,38 +1,35 @@
-﻿using ImagesAPI.Logger;
+﻿using ImagesAPI.Helpers;
+using ImagesAPI.Logger;
 using ImagesAPI.Models;
 using ImagesAPI.Services.Interfaces;
+using ImagesAPI.Validators;
 using Microsoft.AspNetCore.Mvc;
 using SkiaSharp;
 
 namespace ImagesAPI.Controllers
-{
+{    
     /// <summary>
     /// Controller for managing image-related actions.
     /// </summary>
-    /// <remarks>
-    /// Constructor for the ImagesController
-    /// </remarks>
     /// <param name="imagesCollectionService">Service for image collection operations</param>
     /// <param name="dropboxService">Service for Dropbox operations</param>
-    /// <param name="cacheService">Service for caching operations</param>
+    /// <param name="cacheManager">Service for advanced caching operations</param>
+    /// <param name="progressTracker">Service for progress tracking</param>
     [ApiController]
     [Route("[controller]")]
     [ResponseCache(VaryByHeader = "Accept, Accept-Encoding", Location = ResponseCacheLocation.Any)]
-    public class ImagesController(IImagesCollectionService imagesCollectionService, IDropboxService dropboxService, ICacheService cacheService) : ControllerBase
+    public class ImagesController(
+        IImagesCollectionService imagesCollectionService, 
+        IDropboxService dropboxService, 
+        IImageCacheManager cacheManager,
+        IImageProgressTracker progressTracker) : ControllerBase
     {
         private readonly IImagesCollectionService _imagesCollectionService = imagesCollectionService ?? throw new ArgumentNullException(nameof(imagesCollectionService));
         private readonly IDropboxService _dropboxService = dropboxService ?? throw new ArgumentNullException(nameof(dropboxService));
-        private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-
-        private static readonly SemaphoreSlim _cacheSemaphore = new(1, 1);
-
-        #region Constants
-        private const int CACHE_DURATION_SHORT = 5; // minutes
-        private const int CACHE_DURATION_MEDIUM = 60; // minutes
-
-        private const int MAX_IMAGE_SIZE = 1024 * 1024 * 10; // 10 MB
-        #endregion
-
+        private readonly IImageCacheManager _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
+        private readonly IImageProgressTracker _progressTracker = progressTracker ?? throw new ArgumentNullException(nameof(progressTracker));
+        private readonly ImageUploadValidator _validator = new();
+        
         /// <summary>
         /// Retrieves all images.
         /// </summary>
@@ -47,31 +44,25 @@ namespace ImagesAPI.Controllers
             Logging.Instance.LogMessage("Retrieving all images...");
             try
             {
-                // Try to get images from cache first using a more cache-friendly approach
-                string cacheKey = "all_images";
-
-                // Use GetOrCreateAsync to match test expectations
-                List<ImageModel>? images = await _cacheService.GetOrCreateAsync<List<ImageModel>>(cacheKey, async () => await _imagesCollectionService.GetAll(), CACHE_DURATION_SHORT);
+                var images = await _cacheManager.GetOrCreateAllImagesAsync(() => _imagesCollectionService.GetAll());
 
                 if (images == null || images.Count == 0)
                 {
                     Logging.Instance.LogWarning("No images found.");
-                    return NotFound("No images found.");
+                    return ResponseHelper.NotFound(this, "No images found.");
                 }
 
-                // Add cache control headers 
-                Response.Headers.Append("Cache-Control", "public, max-age=300");
-
+                ResponseHelper.AddCacheHeaders(this, maxAge: 300);
                 Logging.Instance.LogMessage("Images retrieved successfully.");
                 return Ok(images);
             }
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return ResponseHelper.InternalServerError(this);
             }
-        }
-
+        }        
+        
         /// <summary>
         /// Retrieves an image by its identifier.
         /// </summary>
@@ -88,30 +79,22 @@ namespace ImagesAPI.Controllers
             Logging.Instance.LogMessage($"Retrieving image with ID {id}...");
             try
             {
-                // Use the id value as the ETag for fine-grained cache validation
                 var etagValue = $"\"{id}\"";
 
-                // Check if the client already has this version using ETag - avoid unnecessary processing
-                var clientETag = Request.Headers.IfNoneMatch.FirstOrDefault();
-                if (clientETag != null && clientETag == etagValue)
+                if (ResponseHelper.HasCachedVersion(this, etagValue))
                 {
-                    return StatusCode(StatusCodes.Status304NotModified);
+                    return ResponseHelper.NotModified(this);
                 }
 
-                // Use GetOrCreateAsync to match test expectations
-                string cacheKey = $"image_{id}";
-                var image = await _cacheService.GetOrCreateAsync<ImageModel?>(cacheKey, async () => await _imagesCollectionService.Get(id), CACHE_DURATION_MEDIUM);
+                var image = await _cacheManager.GetOrCreateImageAsync(id, () => _imagesCollectionService.Get(id));
 
                 if (image == null)
                 {
                     Logging.Instance.LogWarning($"Image with ID {id} not found.");
-                    return NotFound($"Image with ID {id} not found.");
+                    return ResponseHelper.NotFound(this, $"Image with ID {id} not found.");
                 }
 
-                // Add cache control headers
-                Response.Headers.Append("Cache-Control", "public, max-age=3600");
-                Response.Headers.Append("ETag", etagValue);
-
+                ResponseHelper.AddCacheHeaders(this, maxAge: 3600, etagValue);
                 Logging.Instance.LogMessage($"Image with ID {id} retrieved successfully.");
 
                 return Ok(image);
@@ -119,7 +102,7 @@ namespace ImagesAPI.Controllers
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return ResponseHelper.InternalServerError(this);
             }
         }
 
@@ -129,7 +112,7 @@ namespace ImagesAPI.Controllers
         /// <param name="image">The image file to upload.</param>
         /// <param name="trackProgress">Optional query parameter to enable progress tracking (default: false)</param>
         /// <param name="tempId">Optional query parameter with temporary ID for progress tracking</param>
-        /// <param name="progressTracker">The SignalR progress tracker service (injected when needed)</param>
+        /// <param name="progressTrackerService">The SignalR progress tracker service (injected when needed)</param>
         /// <returns>The uploaded image model.</returns>
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
@@ -138,128 +121,37 @@ namespace ImagesAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [DisableRequestSizeLimit]
         [ResponseCache(NoStore = true)]
-        public async Task<IActionResult> UploadImage(IFormFile? image, [FromQuery] bool trackProgress = false, [FromQuery] string? tempId = null, [FromServices] IProgressTrackerService? progressTracker = null)
+        public async Task<IActionResult> UploadImage(IFormFile? image, [FromQuery] bool trackProgress = false, [FromQuery] string? tempId = null, [FromServices] IProgressTrackerService? progressTrackerService = null)
         {
-            bool useProgressTracking = trackProgress && progressTracker != null;
-            string progressId = string.IsNullOrEmpty(tempId) ? Guid.NewGuid().ToString() : tempId;
+            var useProgressTracking = _progressTracker.IsProgressTrackingEnabled(trackProgress, progressTrackerService);
+            var progressId = _progressTracker.GetProgressId(tempId);
 
             Logging.Instance.LogMessage("Uploading image..." + (useProgressTracking ? $" with progress tracking (ID: {progressId})" : ""));
 
-            if (image == null || image.Length == 0)
+            // Validate file
+            var fileValidation = _validator.ValidateFile(image);
+            if (!fileValidation.IsValid)
             {
-                Logging.Instance.LogWarning("No file uploaded.");
-                return BadRequest("No file uploaded.");
-            }
-
-            if (image.Length > MAX_IMAGE_SIZE)
-            {
-                Logging.Instance.LogWarning("File size exceeds the limit.");
-                return BadRequest("File size exceeds the limit.");
+                Logging.Instance.LogWarning(fileValidation.ErrorMessage);
+                return ResponseHelper.BadRequest(this, fileValidation.ErrorMessage);
             }
 
             try
             {
-                // Report initial progress
-                if (useProgressTracking && progressTracker != null)
+                await _progressTracker.ReportProgressAsync(progressId, "upload", 0, progressTrackerService);                
+                var (memoryStream, contentValidation) = await ProcessImageContentAsync(image!, progressId, progressTrackerService);
+                if (!contentValidation.IsValid)
                 {
-                    await progressTracker.ReportProgressAsync(progressId, "upload", 0);
+                    memoryStream?.Dispose();
+                    return ResponseHelper.BadRequest(this, contentValidation.ErrorMessage);
                 }
 
-                // Use a memory stream to avoid file locking and improve performance
-                using var memoryStream = new MemoryStream();
-                await image.CopyToAsync(memoryStream);
-                memoryStream.Position = 0;
+                await _progressTracker.ReportProgressAsync(progressId, "upload", 60, progressTrackerService);
 
-                // Report progress after initial copy
-                if (useProgressTracking && progressTracker != null)
-                {
-                    await progressTracker.ReportProgressAsync(progressId, "upload", 20);
-                }
+                var imageModel = await UploadAndCreateImageModelAsync(image!, contentValidation, progressId, progressTrackerService);
 
-                // Validate the image format
-                using var skData = SKData.Create(memoryStream);
-                using var skCodec = SKCodec.Create(skData);
-                if (skCodec == null)
-                {
-                    Logging.Instance.LogWarning("Invalid or corrupted image file.");
-                    return BadRequest("Invalid or corrupted image file.");
-                }
-
-                // Report progress after validation
-                if (useProgressTracking && progressTracker != null)
-                {
-                    await progressTracker.ReportProgressAsync(progressId, "upload", 40);
-                }
-
-                // Get the image format and check if it's allowed
-                var imageFormat = skCodec.EncodedFormat.ToString().ToUpper();
-                if (!Enum.TryParse<EAllowedExtensions>(imageFormat, out _))
-                {
-                    Logging.Instance.LogWarning($"Invalid file type: {imageFormat}");
-                    return BadRequest("Invalid file type. Please make sure the image was not altered. Allowed types: JPEG, JPG, PNG.");
-                }
-
-                memoryStream.Position = 0;
-                using var skImage = SKImage.FromEncodedData(skData);
-                if (skImage == null)
-                {
-                    Logging.Instance.LogWarning("Invalid image file.");
-                    return BadRequest("Invalid image file.");
-                }
-
-                // Reset position for upload and get image dimensions once
-                memoryStream.Position = 0;
-                int width = skImage.Width;
-                int height = skImage.Height;
-
-                // Report progress before upload
-                if (useProgressTracking && progressTracker != null)
-                {
-                    await progressTracker.ReportProgressAsync(progressId, "upload", 60);
-                }
-
-                // Upload the image to the drive using a stream directly
-                string imageId = await _dropboxService.UploadImage(image);
-
-                if (string.IsNullOrWhiteSpace(imageId))
-                {
-                    Logging.Instance.LogError("Error uploading the image.");
-                    return BadRequest("Error uploading the image.");
-                }
-
-                // Report progress after upload
-                if (useProgressTracking && progressTracker != null)
-                {
-                    await progressTracker.ReportProgressAsync(progressId, "upload", 80);
-                }
-
-                // Create the model with the data we've already extracted
-                var imageModel = new ImageModel
-                {
-                    Id = imageId,
-                    Name = image.FileName,
-                    Width = width,
-                    Height = height,
-                    ContentType = image.ContentType,
-                    Url = await _dropboxService.GetImageURL(imageId)
-                };
-
-                // Insert the model into the database
-                await _imagesCollectionService.Create(imageModel);
-
-                // Clear only necessary cache to ensure fresh data is returned
-                await ExecuteCacheOperationSafelyAsync(() =>
-                {
-                    _cacheService.Remove("all_images");
-                    _cacheService.Set($"image_{imageId}", imageModel, CACHE_DURATION_MEDIUM);
-                    return Task.CompletedTask;
-                });
-
-                // Report completion
-                if (useProgressTracking && progressTracker != null)
-                {
-                    await progressTracker.ReportProgressAsync(progressId, "upload", 100);
-                }
+                memoryStream?.Dispose();
+                await _progressTracker.ReportProgressAsync(progressId, "upload", 100, progressTrackerService);
 
                 Logging.Instance.LogMessage("Image uploaded successfully.");
                 return Ok(imageModel);
@@ -267,10 +159,57 @@ namespace ImagesAPI.Controllers
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return ResponseHelper.InternalServerError(this);
             }
-        }
+        }       
+        
+        /// <summary>
+        /// Processes and validates image content
+        /// </summary>
+        private async Task<(MemoryStream, ImageValidationResult)> ProcessImageContentAsync(IFormFile image, string progressId, IProgressTrackerService? progressTrackerService)
+        {
+            var memoryStream = new MemoryStream();
+            await image.CopyToAsync(memoryStream);
 
+            await _progressTracker.ReportProgressAsync(progressId, "upload", 20, progressTrackerService);
+
+            var contentValidation = _validator.ValidateImageContent(memoryStream);
+            
+            await _progressTracker.ReportProgressAsync(progressId, "upload", 40, progressTrackerService);
+
+            return (memoryStream, contentValidation);
+        }        
+        
+        /// <summary>
+        /// Uploads image and creates the image model
+        /// </summary>
+        private async Task<ImageModel> UploadAndCreateImageModelAsync(IFormFile image, ImageValidationResult validation, string progressId, IProgressTrackerService? progressTrackerService)
+        {
+            var imageId = await _dropboxService.UploadImage(image);
+
+            if (string.IsNullOrWhiteSpace(imageId))
+            {
+                throw new InvalidOperationException("Error uploading the image.");
+            }
+
+            await _progressTracker.ReportProgressAsync(progressId, "upload", 80, progressTrackerService);
+
+            var imageModel = new ImageModel
+            {
+                Id = imageId,
+                Name = image.FileName,
+                Width = validation.Width,
+                Height = validation.Height,
+                ContentType = image.ContentType,
+                Url = await _dropboxService.GetImageURL(imageId)
+            };
+
+            await _imagesCollectionService.Create(imageModel);
+            await _cacheManager.ClearCacheAfterUploadAsync(imageId, imageModel);
+
+            return imageModel;
+        }        
+        
         /// <summary>
         /// Applies a filter to an existing image with optional real-time progress tracking via SignalR.
         /// </summary>
@@ -287,95 +226,94 @@ namespace ImagesAPI.Controllers
         [ResponseCache(NoStore = true)]
         public async Task<IActionResult> EditImage(string id, [FromBody] string filter, [FromQuery] bool trackProgress = false, [FromServices] IProgressTrackerService? progressTracker = null)
         {
-            bool useProgressTracking = trackProgress && progressTracker != null;
+            var useProgressTracking = _progressTracker.IsProgressTrackingEnabled(trackProgress, progressTracker);
 
             Logging.Instance.LogMessage($"Applying filter {filter} to image with ID {id}..." + (useProgressTracking ? " with progress tracking" : ""));
 
-            // Remove spaces and whitespace from the filter
-            filter = filter.Replace(" ", string.Empty).ToLower();
-
             // Validate filter
-            if (!Enum.TryParse<EAllowedFilters>(filter.ToUpper(), out _))
+            var filterValidation = _validator.ValidateFilter(filter);
+            if (!filterValidation.IsValid)
             {
-                Logging.Instance.LogWarning($"Invalid filter: {filter}");
-                return BadRequest($"The filter {filter} is not accepted. Please try again.");
+                Logging.Instance.LogWarning(filterValidation.ErrorMessage);
+                return ResponseHelper.BadRequest(this, filterValidation.ErrorMessage);
             }
-
-            // Use a compound cache key for this specific filter application
-            string filterCacheKey = $"image_{id}_filter_{filter}";
 
             try
             {
-                // Check if this filtered version already exists in cache
-                if (_cacheService.TryGetValue<ImageModel>(filterCacheKey, out var cachedResult) && cachedResult != null)
+                // Check cache first
+                if (_cacheManager.TryGetFilteredImage(id, filterValidation.NormalizedFilter, out var cachedResult) && cachedResult != null)
                 {
-                    // If progress tracking is enabled, report immediate 100% completion
-                    if (useProgressTracking && progressTracker != null)
-                    {
-                        Logging.Instance.LogMessage($"Reporting immediate completion for cached result of {id} with filter {filter}");
-                        await progressTracker.ReportProgressAsync(id, filter, 0);  // Initial notification
-                        await progressTracker.ReportProgressAsync(id, filter, 100); // Immediate completion
-                    }
-
-                    Logging.Instance.LogMessage($"Returning cached filtered image for ID {id} with filter {filter}");
+                    await HandleCachedFilterResult(id, filterValidation.NormalizedFilter, useProgressTracking, progressTracker);
                     return Ok(cachedResult);
                 }
 
-                // Apply the filter with optional progress tracking
-                var newImage = await _imagesCollectionService.ApplyFilterToImage(id, filter, _dropboxService, useProgressTracking ? progressTracker : null);
+                var newImage = await ApplyFilterToImageAsync(id, filterValidation.NormalizedFilter, useProgressTracking, progressTracker);
 
                 if (newImage == null)
                 {
                     Logging.Instance.LogWarning($"Image with ID {id} not found or filter could not be applied.");
-                    return NotFound($"Image with ID {id} not found.");
+                    return ResponseHelper.NotFound(this, $"Image with ID {id} not found.");
                 }
 
-                // Cache the result for this specific filter/image combination
-                _cacheService.Set(filterCacheKey, newImage, CACHE_DURATION_MEDIUM);
+                await CacheFilterResultAsync(id, filterValidation.NormalizedFilter, newImage);
 
-                // Use SemaphoreSlim to safely update cache in a concurrent environment
-                await ExecuteCacheOperationSafelyAsync(() =>
-                {
-                    // Clear exactly the keys the tests expect to be cleared
-                    _cacheService.Remove("all_images");
-                    _cacheService.Remove($"image_{id}");
-
-                    // Also remove the new image's cache key to ensure fresh data
-                    if (newImage.Id != id) // Only if it's different from original
-                    {
-                        _cacheService.Remove($"image_{newImage.Id}");
-                    }
-
-                    // Add the new filtered image to cache
-                    _cacheService.Set($"image_{newImage.Id}", newImage, CACHE_DURATION_MEDIUM);
-                    return Task.CompletedTask;
-                });
-
-                Logging.Instance.LogMessage($"Filter {filter} applied successfully to image with ID {id}.");
+                Logging.Instance.LogMessage($"Filter {filterValidation.NormalizedFilter} applied successfully to image with ID {id}.");
                 return Ok(newImage);
             }
             catch (ArgumentNullException error)
             {
                 Logging.Instance.LogError(error.Message);
-                return BadRequest(error.Message);
+                return ResponseHelper.BadRequest(this, error.Message);
             }
             catch (ArgumentException error)
             {
                 Logging.Instance.LogWarning(error.Message);
-                return NotFound(error.Message);
+                return ResponseHelper.NotFound(this, error.Message);
             }
             catch (InvalidOperationException error)
             {
                 Logging.Instance.LogError(error.Message);
-                return BadRequest(error.Message);
+                return ResponseHelper.BadRequest(this, error.Message);
             }
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return ResponseHelper.InternalServerError(this);
             }
         }
 
+        /// <summary>
+        /// Handles cached filter result with progress reporting
+        /// </summary>
+        private async Task HandleCachedFilterResult(string id, string filter, bool useProgressTracking, IProgressTrackerService? progressTracker)
+        {
+            if (useProgressTracking && progressTracker != null)
+            {
+                Logging.Instance.LogMessage($"Reporting immediate completion for cached result of {id} with filter {filter}");
+                await _progressTracker.ReportProgressAsync(id, filter, 0, progressTracker);
+                await _progressTracker.ReportProgressAsync(id, filter, 100, progressTracker);
+            }
+
+            Logging.Instance.LogMessage($"Returning cached filtered image for ID {id} with filter {filter}");
+        }
+
+        /// <summary>
+        /// Applies filter to image
+        /// </summary>
+        private async Task<ImageModel?> ApplyFilterToImageAsync(string id, string filter, bool useProgressTracking, IProgressTrackerService? progressTracker)
+        {
+            return await _imagesCollectionService.ApplyFilterToImage(id, filter, _dropboxService, useProgressTracking ? progressTracker : null);
+        }
+
+        /// <summary>
+        /// Caches filter result and clears related cache entries
+        /// </summary>
+        private async Task CacheFilterResultAsync(string originalId, string filter, ImageModel newImage)
+        {
+            _cacheManager.CacheFilteredImage(originalId, filter, newImage);
+            await _cacheManager.ClearCacheAfterEditAsync(originalId, newImage);
+        }        
+        
         /// <summary>
         /// Deletes an image by its identifier, removing it from both the database and the drive.
         /// </summary>
@@ -391,36 +329,27 @@ namespace ImagesAPI.Controllers
             Logging.Instance.LogMessage($"Deleting image with ID {id}...");
             try
             {
-                // Get the image from database 
                 var image = await _imagesCollectionService.Get(id);
 
                 if (image == null)
                 {
                     Logging.Instance.LogWarning($"Image with ID {id} not found.");
-                    return NotFound($"Image with ID {id} not found.");
+                    return ResponseHelper.NotFound(this, $"Image with ID {id} not found.");
                 }
 
-                // Try to delete from storage first
-                if (!(await _dropboxService.DeleteImage(id)))
+                if (!await _dropboxService.DeleteImage(id))
                 {
                     Logging.Instance.LogError("Error deleting the image from drive.");
-                    return BadRequest("Error deleting the image from storage.");
+                    return ResponseHelper.BadRequest(this, "Error deleting the image from storage.");
                 }
 
-                // Then delete from database
-                if (!(await _imagesCollectionService.Delete(id)))
+                if (!await _imagesCollectionService.Delete(id))
                 {
                     Logging.Instance.LogError("Error deleting the image from the database.");
-                    return BadRequest("Image was deleted from storage but could not be removed from the database.");
+                    return ResponseHelper.BadRequest(this, "Image was deleted from storage but could not be removed from the database.");
                 }
 
-                // Clear necessary cache
-                await ExecuteCacheOperationSafelyAsync(() =>
-                {
-                    _cacheService.Remove("all_images");
-                    _cacheService.Remove($"image_{id}");
-                    return Task.CompletedTask;
-                });
+                await _cacheManager.ClearCacheAfterDeleteAsync(id);
 
                 Logging.Instance.LogMessage($"Image with ID {id} deleted successfully.");
                 return Ok();
@@ -428,10 +357,10 @@ namespace ImagesAPI.Controllers
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return ResponseHelper.InternalServerError(this);
             }
-        }
-
+        }        
+        
         /// <summary>
         /// Downloads an image by its identifier.
         /// </summary>
@@ -448,26 +377,21 @@ namespace ImagesAPI.Controllers
         {
             Logging.Instance.LogMessage($"Downloading image with ID {id}...");
 
-            // Use the id as a strong ETag identifier 
             var etagValue = $"\"{id}\"";
 
-            // Check if the client already has this version using ETag - this avoids unnecessary processing
-            var clientETag = Request.Headers.IfNoneMatch.FirstOrDefault();
-            if (clientETag != null && clientETag == etagValue)
+            if (ResponseHelper.HasCachedVersion(this, etagValue))
             {
-                return StatusCode(StatusCodes.Status304NotModified);
+                return ResponseHelper.NotModified(this);
             }
 
             try
             {
-                // Attempt to get the image model from cache first to get the name
-                string cacheKey = $"image_{id}";
-                var imageModel = await _cacheService.GetOrCreateAsync<ImageModel?>(cacheKey, async () => await _imagesCollectionService.Get(id), CACHE_DURATION_MEDIUM);
+                var imageModel = await _cacheManager.GetOrCreateImageAsync(id, () => _imagesCollectionService.Get(id));
 
                 if (imageModel == null)
                 {
                     Logging.Instance.LogWarning($"Image with ID {id} not found.");
-                    return NotFound($"Image with ID {id} not found.");
+                    return ResponseHelper.NotFound(this, $"Image with ID {id} not found.");
                 }
 
                 var memoryStream = await _dropboxService.GetStreamForImage(id);
@@ -475,45 +399,26 @@ namespace ImagesAPI.Controllers
                 if (memoryStream == null)
                 {
                     Logging.Instance.LogWarning($"Image with ID {id} not found on storage.");
-                    return NotFound($"Image with ID {id} not found on storage.");
+                    return ResponseHelper.NotFound(this, $"Image with ID {id} not found on storage.");
                 }
 
                 using var skImage = SKImage.FromEncodedData(memoryStream);
                 if (skImage == null)
                 {
                     Logging.Instance.LogWarning("Invalid image file.");
-                    return BadRequest("Invalid image file.");
+                    return ResponseHelper.BadRequest(this, "Invalid image file.");
                 }
 
                 memoryStream.Position = 0;
 
-                // Add strong caching for images with ETag support
-                Response.Headers.Append("Cache-Control", "public, max-age=86400"); // Cache for 24 hours
-                Response.Headers.Append("ETag", etagValue);
+                ResponseHelper.AddCacheHeaders(this, maxAge: 86400, etagValue);
 
                 return File(memoryStream, "application/octet-stream", imageModel.Name);
-            }
+            }            
             catch (Exception error)
             {
                 Logging.Instance.LogError(error.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
-
-        /// <summary>
-        /// Executes a cache operation safely with semaphore protection to prevent concurrent access issues.
-        /// </summary>
-        /// <param name="action">The cache operation to execute.</param>
-        private static async Task ExecuteCacheOperationSafelyAsync(Func<Task> action)
-        {
-            await _cacheSemaphore.WaitAsync();
-            try
-            {
-                await action();
-            }
-            finally
-            {
-                _cacheSemaphore.Release();
+                return ResponseHelper.InternalServerError(this);
             }
         }
     }
