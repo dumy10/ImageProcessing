@@ -1,7 +1,6 @@
 ﻿using ImagesAPI.Models;
 using ImagesAPI.Services.Concretes;
 using ImagesAPI.Services.Interfaces;
-using ImagesAPI.Settings.Interfaces;
 using MongoDB.Driver;
 using Moq;
 using SkiaSharp;
@@ -12,25 +11,23 @@ namespace ImagesAPITests
     {
         private readonly Mock<IMongoCollection<ImageModel>> _mockCollection;
         private readonly Mock<IDriveService> _mockDriveService;
+        private readonly Mock<IImageFilterProgressTracker> _mockProgressTracker;        
         private readonly ImagesCollectionService _service;
 
         public ImagesCollectionServiceTests()
         {
             _mockCollection = new Mock<IMongoCollection<ImageModel>>();
             _mockDriveService = new Mock<IDriveService>();
-            var mockSettings = new Mock<IMongoDBSettings>();
-            mockSettings.SetupGet(s => s.ConnectionString).Returns("mongodb://localhost:27017");
-            mockSettings.SetupGet(s => s.DatabaseName).Returns("ImagesDB");
-            mockSettings.SetupGet(s => s.ImagesCollectionName).Returns("Images");
+            _mockProgressTracker = new Mock<IImageFilterProgressTracker>();
 
-            _service = new ImagesCollectionService(mockSettings.Object, _mockCollection.Object);
+            _service = new ImagesCollectionService(_mockProgressTracker.Object, _mockCollection.Object);
         }
 
         [Fact]
         public async Task Create_ShouldAssignNewGuid_WhenIdIsNullOrWhitespace()
         {
             // Arrange
-            var model = new ImageModel { Id = null };
+            var model = new ImageModel();
 
             // Act
             var result = await _service.Create(model);
