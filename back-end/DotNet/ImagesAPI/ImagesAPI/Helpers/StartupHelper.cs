@@ -296,6 +296,7 @@ namespace ImagesAPI.Helpers
             builder.Services.AddSingleton<IProgressTrackerService, ProgressTrackerService>();
             builder.Services.AddSingleton<IImageCacheManager, ImageCacheManager>();
             builder.Services.AddSingleton<IImageProgressTracker, ImageProgressTracker>();
+            builder.Services.AddSingleton<IImageFilterProgressTracker, ImageFilterProgressTracker>();
         }
 
         /// <summary>
