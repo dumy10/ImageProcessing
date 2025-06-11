@@ -286,14 +286,17 @@ namespace ImagesAPI.Helpers
             {
                 options.MaximumBodySize = 10 * 1024 * 1024; // 10 MB response size limit
                 options.UseCaseSensitivePaths = false;
-            });
-
+            });            
+            
             // Add application services to the container.
             builder.Services.AddSingleton<IImagesCollectionService, ImagesCollectionService>();
             builder.Services.AddSingleton<IDropboxService, DropboxService>();
             builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
             builder.Services.AddSingleton<IUserService, UserService>();
             builder.Services.AddSingleton<IProgressTrackerService, ProgressTrackerService>();
+            builder.Services.AddSingleton<IImageCacheManager, ImageCacheManager>();
+            builder.Services.AddSingleton<IImageProgressTracker, ImageProgressTracker>();
+            builder.Services.AddSingleton<IImageFilterProgressTracker, ImageFilterProgressTracker>();
         }
 
         /// <summary>
