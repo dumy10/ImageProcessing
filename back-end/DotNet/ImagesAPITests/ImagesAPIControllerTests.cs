@@ -9,35 +9,31 @@ using SkiaSharp;
 namespace ImagesAPITests
 {
     public class ImagesAPIControllerTests
-    {
+    {        
         private readonly Mock<IImagesCollectionService> _mockImagesCollectionService;
         private readonly Mock<IDropboxService> _mockDropboxService;
-        private readonly Mock<ICacheService> _mockCacheService;
+        private readonly Mock<IImageCacheManager> _mockImageCacheManager;
+        private readonly Mock<IImageProgressTracker> _mockImageProgressTracker;
         private readonly ImagesController _controller;
         private readonly Mock<HttpContext> _mockHttpContext;
         private readonly Mock<HttpRequest> _mockHttpRequest;
         private readonly Mock<HttpResponse> _mockHttpResponse;
         private readonly HeaderDictionary _requestHeaders;
-        private readonly HeaderDictionary _responseHeaders;
-
+        private readonly HeaderDictionary _responseHeaders; 
+        
         public ImagesAPIControllerTests()
         {
             _mockImagesCollectionService = new Mock<IImagesCollectionService>();
             _mockDropboxService = new Mock<IDropboxService>();
-            _mockCacheService = new Mock<ICacheService>();
+            _mockImageCacheManager = new Mock<IImageCacheManager>();
+            _mockImageProgressTracker = new Mock<IImageProgressTracker>();
 
-            // Setup the most common cache service behaviors
-            _mockCacheService.Setup(s => s.GetOrCreateAsync<List<ImageModel>?>(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<List<ImageModel>?>>>(),
-                It.IsAny<int>()))
-                .Returns((string key, Func<Task<List<ImageModel>?>> factory, int expiry) => factory());
+            // Setup the new cache manager to use the cache service
+            _mockImageCacheManager.Setup(s => s.GetOrCreateAllImagesAsync(It.IsAny<Func<Task<List<ImageModel>>>>()))
+                .Returns((Func<Task<List<ImageModel>?>> factory) => factory());
 
-            _mockCacheService.Setup(s => s.GetOrCreateAsync<ImageModel?>(
-                It.IsAny<string>(),
-                It.IsAny<Func<Task<ImageModel?>>>(),
-                It.IsAny<int>()))
-                .Returns((string key, Func<Task<ImageModel?>> factory, int expiry) => factory());
+            _mockImageCacheManager.Setup(s => s.GetOrCreateImageAsync(It.IsAny<string>(), It.IsAny<Func<Task<ImageModel?>>>()))
+                .Returns((string id, Func<Task<ImageModel?>> factory) => factory());
 
             // Setup mock HTTP context for header handling
             _mockHttpContext = new Mock<HttpContext>();
@@ -53,8 +49,12 @@ namespace ImagesAPITests
             _mockHttpContext.Setup(c => c.Request).Returns(_mockHttpRequest.Object);
             _mockHttpContext.Setup(c => c.Response).Returns(_mockHttpResponse.Object);
 
-            _controller = new ImagesController(_mockImagesCollectionService.Object, _mockDropboxService.Object, _mockCacheService.Object)
-            {
+            _controller = new ImagesController(
+                _mockImagesCollectionService.Object, 
+                _mockDropboxService.Object, 
+                _mockImageCacheManager.Object,
+                _mockImageProgressTracker.Object)
+            {                
                 ControllerContext = new ControllerContext
                 {
                     HttpContext = _mockHttpContext.Object
@@ -94,19 +94,16 @@ namespace ImagesAPITests
 
             // Assert
             Assert.IsType<NotFoundObjectResult>(result);
-        }
-
+        }        
+        
         [Fact]
         public async Task GetImages_UsesCache_WhenAvailable()
         {
             // Arrange
             var images = new List<ImageModel> { new() { Id = "1", Name = "TestImage" } };
 
-            // Setup cache to return the images directly
-            _mockCacheService.Setup(s => s.GetOrCreateAsync<List<ImageModel>?>(
-                "all_images",
-                It.IsAny<Func<Task<List<ImageModel>?>>>(),
-                It.IsAny<int>()))
+            // Setup cache manager to return the images directly
+            _mockImageCacheManager.Setup(s => s.GetOrCreateAllImagesAsync(It.IsAny<Func<Task<List<ImageModel>>>>()))
                 .ReturnsAsync(images);
 
             // Clear any If-None-Match headers to ensure we don't get a 304
@@ -158,19 +155,16 @@ namespace ImagesAPITests
 
             // Assert
             Assert.IsType<NotFoundObjectResult>(result);
-        }
-
+        }        
+        
         [Fact]
         public async Task GetImage_UsesCache_WhenAvailable()
         {
             // Arrange
             var image = new ImageModel { Id = "1", Name = "TestImage" };
 
-            // Setup cache to return the image directly
-            _mockCacheService.Setup(s => s.GetOrCreateAsync<ImageModel?>(
-                "image_1",
-                It.IsAny<Func<Task<ImageModel?>>>(),
-                It.IsAny<int>()))
+            // Setup cache manager to return the image directly
+            _mockImageCacheManager.Setup(s => s.GetOrCreateImageAsync("1", It.IsAny<Func<Task<ImageModel?>>>()))
                 .ReturnsAsync(image);
 
             // Clear any If-None-Match headers to ensure we don't get a 304
@@ -405,8 +399,8 @@ namespace ImagesAPITests
 
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
-        }
-
+        }        
+        
         [Fact]
         public async Task EditImage_InvalidatesCache_WhenSuccessful()
         {
@@ -422,10 +416,9 @@ namespace ImagesAPITests
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnValue = Assert.IsType<ImageModel>(okResult.Value);
 
-            // Verify that the cache was cleared for both the original and new image, and for all images
-            _mockCacheService.Verify(s => s.Remove("all_images"), Times.Once);
-            _mockCacheService.Verify(s => s.Remove("image_1"), Times.Once);
-            _mockCacheService.Verify(s => s.Remove("image_2"), Times.Once);
+            // Verify that the cache manager was called to clear cache after edit
+            _mockImageCacheManager.Verify(s => s.ClearCacheAfterEditAsync("1", image), Times.Once);
+            _mockImageCacheManager.Verify(s => s.CacheFilteredImage("1", filter, image), Times.Once);
         }
 
         #endregion
@@ -490,8 +483,8 @@ namespace ImagesAPITests
 
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
-        }
-
+        }        
+        
         [Fact]
         public async Task DeleteImage_ReturnsInternalServerError_WhenExceptionThrown()
         {
@@ -505,10 +498,10 @@ namespace ImagesAPITests
             var result = await _controller.DeleteImage("1");
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
-
+        
         [Fact]
         public async Task DeleteImage_InvalidatesCache_WhenSuccessful()
         {
@@ -524,9 +517,8 @@ namespace ImagesAPITests
             // Assert
             Assert.IsType<OkResult>(result);
 
-            // Verify that the cache was cleared for both the image and for all images
-            _mockCacheService.Verify(s => s.Remove("all_images"), Times.Once);
-            _mockCacheService.Verify(s => s.Remove("image_1"), Times.Once);
+            // Verify that the cache manager was called to clear cache after delete
+            _mockImageCacheManager.Verify(s => s.ClearCacheAfterDeleteAsync("1"), Times.Once);
         }
 
         #endregion
