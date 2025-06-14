@@ -22,7 +22,7 @@ INPUT                  = ./README.md \
 RECURSIVE              = YES
                          
 # Exclude patterns for files and directories
-EXCLUDE_PATTERNS       = */external/* \
+EXCLUDE_PATTERNS       = */back-end/VC/ImagesProcessor/external/* \
                          */packages/* \
                          */environments/* \
                          */bin/* \
