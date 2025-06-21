@@ -19,7 +19,6 @@ import {
   ErrorAction,
   ErrorBannerComponent,
 } from '../shared/error-banner/error-banner.component';
-import { environment } from '../../environments/environment';
 
 /**
  * GalleryComponent is a component that displays a gallery of images with pagination.
