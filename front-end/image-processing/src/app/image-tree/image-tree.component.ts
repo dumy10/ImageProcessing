@@ -8,6 +8,7 @@ import {
   HostListener,
   Input,
   OnChanges,
+  OnDestroy,
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
@@ -39,6 +40,34 @@ interface D3TreeNodeData {
 }
 
 /**
+ * Type definitions for D3 elements used
+ */
+type D3SVGSelection = d3.Selection<SVGSVGElement, unknown, null, undefined>;
+type D3GroupSelection = d3.Selection<SVGGElement, unknown, null, undefined>;
+type D3TreeLayout = d3.TreeLayout<D3TreeNodeData>;
+type D3HierarchyNode = d3.HierarchyNode<D3TreeNodeData>;
+type D3ZoomBehavior = d3.ZoomBehavior<any, unknown>;
+type D3TooltipSelection = d3.Selection<
+  HTMLDivElement,
+  unknown,
+  HTMLElement,
+  unknown
+>;
+
+/**
+ * Interface for D3 node data with positioning information
+ */
+interface D3NodeDatum {
+  x: number;
+  y: number;
+  data: D3TreeNodeData;
+  parent?: D3NodeDatum;
+  depth: number;
+  height: number;
+  children?: D3NodeDatum[];
+}
+
+/**
  * ImageTreeComponent is a component that displays a tree structure of images using D3.js.
  * It allows users to view and interact with a hierarchy of images and their filtered versions.
  *
@@ -61,7 +90,7 @@ interface D3TreeNodeData {
   templateUrl: './image-tree.component.html',
   styleUrl: './image-tree.component.scss',
 })
-export class ImageTreeComponent implements OnChanges, AfterViewInit {
+export class ImageTreeComponent implements OnChanges, AfterViewInit, OnDestroy {
   /**
    * The root node of the image tree.
    * @type {TreeNode<ImageModel> | null}
@@ -101,17 +130,17 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
   @ViewChild('treeContainer', { static: false }) treeContainer!: ElementRef;
 
   // D3 related properties
-  private svg: any;
-  private g: any;
+  private svg: D3SVGSelection | null = null;
+  private g: D3GroupSelection | null = null;
   private width: number = 1200;
   private height: number = 800;
   private nodeRadius: number = 80;
   private nodeWidth: number = 180;
   private nodeHeight: number = 180;
-  private d3Tree: any;
-  private d3Data: any;
-  private zoom: any;
-  private tooltip: any;
+  private d3Tree: D3TreeLayout | null = null;
+  private d3Data: D3HierarchyNode | null = null;
+  private zoom: D3ZoomBehavior | null = null;
+  private tooltip: D3TooltipSelection | null = null;
 
   /**
    * Loading state for downloading or other operations
@@ -167,6 +196,12 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
    */
   ngOnDestroy(): void {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
+
+    // Remove the tooltip if it exists
+    if (this.tooltip) {
+      this.tooltip.remove();
+      this.tooltip = null;
+    }
   }
 
   /**
@@ -201,15 +236,17 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       }, 300);
     }
   }
-
   /**
    * Zoom out to fit the entire tree in view
    */
   private zoomToFit() {
-    if (!this.svg || !this.g) return;
+    if (!this.svg || !this.g || !this.zoom) return;
 
     // Get the bounds of the entire tree
-    const bounds = this.g.node().getBBox();
+    const gNode = this.g.node();
+    if (!gNode) return;
+
+    const bounds = gNode.getBBox();
 
     // Add padding to ensure we see a bit more than just the tree
     const padding = 50;
@@ -316,14 +353,14 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       .attr('width', '100%')
       .attr('height', '100%')
       .attr('viewBox', `0 0 ${this.width} ${this.height}`)
-      .attr('preserveAspectRatio', 'xMidYMid meet');
-
-    // Add zoom behavior
+      .attr('preserveAspectRatio', 'xMidYMid meet'); // Add zoom behavior
     this.zoom = d3
       .zoom()
       .scaleExtent([0.1, 5]) // Allow more zoom range
       .on('zoom', (event) => {
-        this.g.attr('transform', event.transform);
+        if (this.g) {
+          this.g.attr('transform', event.transform);
+        }
       });
 
     this.svg.call(this.zoom);
@@ -354,11 +391,9 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
     }
 
     // Convert our tree data to D3 hierarchical data
-    this.transformData();
-
-    // Create the tree layout with more space between nodes
+    this.transformData(); // Create the tree layout with more space between nodes
     this.d3Tree = d3
-      .tree()
+      .tree<D3TreeNodeData>()
       .size([this.width - 100, this.height - 160])
       .nodeSize([this.nodeWidth + 60, this.nodeHeight + 120]); // Increased spacing between nodes
 
@@ -429,12 +464,12 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
    * Update the D3 visualization with the current data
    */
   private updateVisualization(): void {
-    if (!this.d3Data || !this.d3Tree) return;
+    if (!this.d3Data || !this.d3Tree || !this.g || !this.svg) return;
 
     // Compute the new tree layout
     const treeData = this.d3Tree(this.d3Data);
-    const nodes = treeData.descendants();
-    const links = treeData.descendants().slice(1);
+    const nodes = treeData.descendants() as D3NodeDatum[];
+    const links = treeData.descendants().slice(1) as D3NodeDatum[];
 
     // Create a link group for each link that will contain both the line and arrowhead
     const linkGroups = this.g
@@ -447,10 +482,10 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
     linkGroups
       .append('line')
       .attr('class', 'link')
-      .attr('x1', (d: any) => d.x)
-      .attr('y1', (d: any) => d.y)
-      .attr('x2', (d: any) => d.parent.x)
-      .attr('y2', (d: any) => d.parent.y)
+      .attr('x1', (d: D3NodeDatum) => d.x)
+      .attr('y1', (d: D3NodeDatum) => d.y)
+      .attr('x2', (d: D3NodeDatum) => d.parent?.x || 0)
+      .attr('y2', (d: D3NodeDatum) => d.parent?.y || 0)
       .style('stroke', 'var(--primary-color)')
       .style('stroke-width', '3px')
       .style('stroke-opacity', '0.85')
@@ -460,7 +495,7 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       );
 
     // Add filter labels to the middle of each link
-    linkGroups.each((d: any, i: number, groups: any) => {
+    linkGroups.each(function (d: D3NodeDatum, i: number) {
       // Get the filter text from the child node's appliedFilters
       let filterText = '';
       if (
@@ -473,7 +508,7 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
           d.data.image.appliedFilters[d.data.image.appliedFilters.length - 1];
       }
 
-      if (filterText) {
+      if (filterText && d.parent) {
         // Calculate the midpoint of the line
         const midX = (d.x + d.parent.x) / 2;
         const midY = (d.y + d.parent.y) / 2;
@@ -495,7 +530,7 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
         const textAnchor = isLeftChild ? 'end' : 'start';
 
         // Add text element for the filter label with proper positioning
-        d3.select(groups[i])
+        d3.select(this)
           .append('text')
           .attr('class', 'filter-label')
           .attr('x', midX + (isLeftChild ? -offsetX : offsetX))
@@ -507,7 +542,10 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
     });
 
     // Add arrowheads as polygons
-    linkGroups.each((d: any, i: number, groups: any) => {
+    const nodeRadius = this.nodeRadius;
+    linkGroups.each(function (d: D3NodeDatum) {
+      if (!d.parent) return;
+
       const sourceX = d.x;
       const sourceY = d.y;
       const targetX = d.parent.x;
@@ -518,7 +556,7 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
 
       // Calculate arrowhead position at the child node instead of parent
       const arrowSize = 10; // Size of arrowhead
-      const nodeOffset = this.nodeRadius; // Distance from the child node's center
+      const nodeOffset = nodeRadius; // Distance from the child node's center
 
       // Position the arrowhead at the border of the child node circle
       const arrowX = sourceX - Math.cos(angle) * nodeOffset;
@@ -541,7 +579,7 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       const pointsStr = arrowPoints.map((p) => `${p[0]},${p[1]}`).join(' ');
 
       // Add the polygon element for the arrowhead
-      d3.select(groups[i])
+      d3.select(this)
         .append('polygon')
         .attr('points', pointsStr)
         .attr('class', 'arrow')
@@ -556,20 +594,22 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       .data(nodes)
       .join('g')
       .attr('class', 'node')
-      .attr('transform', (d: any) => `translate(${d.x},${d.y})`)
-      .on('click', (event: any, d: any) => {
+      .attr('transform', (d: D3NodeDatum) => `translate(${d.x},${d.y})`)
+      .on('click', (event: MouseEvent, d: D3NodeDatum) => {
         // Only trigger click if not clicking on a button
         if (!event.defaultPrevented && d.data.image) {
           this.openDialog(d.data.image);
         }
       })
-      .on('mouseover', (event: any, d: any) => {
+      .on('mouseover', (event: MouseEvent, d: D3NodeDatum) => {
         // Don't show tooltip when hovering buttons
         if (
-          event.target.tagName === 'button' ||
-          event.target.closest('.action-buttons')
+          (event.target as Element).tagName === 'button' ||
+          (event.target as Element).closest('.action-buttons')
         )
           return;
+
+        if (!this.tooltip) return;
 
         this.tooltip.transition().duration(200).style('opacity', 0.9);
 
@@ -592,7 +632,9 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
           .style('top', event.pageY - 28 + 'px');
       })
       .on('mouseout', () => {
-        this.tooltip.transition().duration(500).style('opacity', 0);
+        if (this.tooltip) {
+          this.tooltip.transition().duration(500).style('opacity', 0);
+        }
       });
 
     // Draw node image backgrounds (circle with theme-aware styling)
@@ -605,11 +647,11 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       .attr('stroke-width', 3);
 
     // Add hidden children count if applicable
-    nodeGroups.each((d: any, i: number, nodes: any) => {
-      if (d.data.hidden > 0) {
-        d3.select(nodes[i])
+    nodeGroups.each(function (d: D3NodeDatum, i: number) {
+      if (d.data.hidden && d.data.hidden > 0) {
+        d3.select(this)
           .append('text')
-          .attr('dy', -this.nodeRadius - 15)
+          .attr('dy', -nodeRadius - 15)
           .attr('text-anchor', 'middle')
           .attr('class', 'hidden-count')
           .attr('fill', 'var(--text-color)')
@@ -618,31 +660,31 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
     });
 
     // Create image clipPath
-    this.svg
-      .append('defs')
-      .selectAll('clipPath')
-      .data(nodes)
-      .join('clipPath')
-      .attr('id', (d: any, i: number) => `clip-${i}`)
-      .append('circle')
-      .attr('r', this.nodeRadius - 2);
+    if (this.svg) {
+      this.svg
+        .append('defs')
+        .selectAll('clipPath')
+        .data(nodes)
+        .join('clipPath')
+        .attr('id', (d: D3NodeDatum, i: number) => `clip-${i}`)
+        .append('circle')
+        .attr('r', this.nodeRadius - 2);
+    }
 
     // Add image to nodes with proper loading handling
     nodeGroups
       .append('image')
-      .attr('xlink:href', (d: any) => d.data.image.url)
+      .attr('xlink:href', (d: D3NodeDatum) => d.data.image.url)
       .attr('x', -this.nodeRadius)
       .attr('y', -this.nodeRadius)
       .attr('width', this.nodeRadius * 2)
       .attr('height', this.nodeRadius * 2)
-      .attr('clip-path', (d: any, i: number) => `url(#clip-${i})`)
-      .on('error', (event: any, d: any) => {
+      .attr('clip-path', (d: D3NodeDatum, i: number) => `url(#clip-${i})`)
+      .on('error', (event: Event, d: D3NodeDatum) => {
         // Handle image load error
-        const currentNode = d3.select(event.currentTarget.parentNode);
-        d3.select(event.currentTarget).attr(
-          'xlink:href',
-          'assets/images/notfound.jpg'
-        );
+        const target = event.currentTarget as SVGImageElement;
+        const currentNode = d3.select(target.parentNode as SVGGElement);
+        d3.select(target).attr('xlink:href', 'assets/images/notfound.jpg');
 
         // Mark as loaded and remove loading indicators
         d.data.image.loaded = true;
@@ -654,12 +696,13 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
         // Add action buttons now that the image is loaded
         this.addActionButtonsToNode(currentNode, d);
       })
-      .on('load', (event: any, d: any) => {
+      .on('load', (event: Event, d: D3NodeDatum) => {
         // Mark as loaded and remove loading indicators
         d.data.image.loaded = true;
 
         // Remove loading spinner or text from this node
-        const currentNode = d3.select(event.currentTarget.parentNode);
+        const target = event.currentTarget as SVGImageElement;
+        const currentNode = d3.select(target.parentNode as SVGGElement);
         currentNode.select('.spinner-group').remove();
 
         // Add action buttons now that the image is loaded
@@ -667,20 +710,21 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       });
 
     // Add action buttons for already loaded images
-    nodeGroups.each((d: any, i: number, nodes: any) => {
+    const self = this; // Capture component reference
+    nodeGroups.each(function (d: D3NodeDatum) {
       if (d.data.image && d.data.image.loaded) {
         // Add action buttons to already loaded images
-        this.addActionButtonsToNode(d3.select(nodes[i]), d);
+        self.addActionButtonsToNode(d3.select(this as SVGGElement), d);
       }
     });
 
     // Add loading spinners only for unloaded images
-    nodeGroups.each((d: any, i: number, nodes: any) => {
+    nodeGroups.each(function (d: D3NodeDatum) {
       // Only add loading indicators for images that haven't loaded yet
       // For previously loaded images, skip adding the loading indicator
       if (d.data.image && !d.data.image.loaded) {
         const spinner = d3
-          .select(nodes[i])
+          .select(this)
           .append('g')
           .attr('class', 'spinner-group');
 
@@ -700,7 +744,12 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
    * Center the view on the tree
    */
   private centerView(): void {
-    const bounds = this.g.node().getBBox();
+    if (!this.g || !this.svg || !this.zoom) return;
+
+    const gNode = this.g.node();
+    if (!gNode) return;
+
+    const bounds = gNode.getBBox();
     const dx = bounds.width;
     const dy = bounds.height;
     const x = bounds.x + bounds.width / 2;
@@ -863,13 +912,15 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
     });
     this.subscriptions.push(downloadSub);
   }
-
   /**
    * Add action buttons to a node using foreignObject to enable HTML/Material icons
    * @param nodeSelection The D3 selection for the node
    * @param d The node data
    */
-  private addActionButtonsToNode(nodeSelection: any, d: any): void {
+  private addActionButtonsToNode(
+    nodeSelection: d3.Selection<SVGGElement, unknown, null, undefined>,
+    d: D3NodeDatum
+  ): void {
     // Remove any existing action buttons to avoid duplicates
     nodeSelection.select('.action-buttons').remove();
 
@@ -904,16 +955,16 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       .style('cursor', 'pointer')
       .style('transition', 'transform 0.3s ease')
       .attr('aria-label', 'Download image')
-      .on('click', (event: any) => {
+      .on('click', (event: MouseEvent) => {
         event.preventDefault();
         event.stopPropagation();
         this.downloadImage(d.data.image);
       })
-      .on('mouseover', function (this: any): void {
+      .on('mouseover', function (): void {
         d3.select(this).style('transform', 'scale(1.2)');
         d3.select(this).select('i').style('color', accentColor);
       })
-      .on('mouseout', function (this: any): void {
+      .on('mouseout', function (): void {
         d3.select(this).style('transform', 'scale(1.0)');
         d3.select(this).select('i').style('color', primaryColor);
       });
@@ -937,16 +988,16 @@ export class ImageTreeComponent implements OnChanges, AfterViewInit {
       .style('cursor', 'pointer')
       .style('transition', 'transform 0.3s ease')
       .attr('aria-label', 'Edit image')
-      .on('click', (event: any) => {
+      .on('click', (event: MouseEvent) => {
         event.preventDefault();
         event.stopPropagation();
         this.editImage(d.data.image);
       })
-      .on('mouseover', function (this: any): void {
+      .on('mouseover', function (): void {
         d3.select(this).style('transform', 'scale(1.2)');
         d3.select(this).select('i').style('color', accentColor);
       })
-      .on('mouseout', function (this: any): void {
+      .on('mouseout', function (): void {
         d3.select(this).style('transform', 'scale(1.0)');
         d3.select(this).select('i').style('color', primaryColor);
       });

@@ -1,3 +1,4 @@
+using ImagesAPI.Logger;
 using ImagesAPI.Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
@@ -77,7 +78,17 @@ namespace ImagesAPI.Services.Concretes
         /// <inheritdoc/>
         public void Set<T>(string key, T? value, int absoluteExpirationMinutes = 60)
         {
-            var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(absoluteExpirationMinutes));
+            var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(absoluteExpirationMinutes))
+                .SetSlidingExpiration(TimeSpan.FromMinutes(absoluteExpirationMinutes / 2));
+
+            // Add eviction callback
+            cacheEntryOptions.RegisterPostEvictionCallback((evictedKey, evictedValue, reason, state) =>
+            {
+                if (reason == EvictionReason.Capacity)
+                {
+                    Logging.Instance.LogWarning($"Cache item '{evictedKey}' evicted due to capacity limits.");
+                }
+            });
 
             // Set size based on content type
             if (value is byte[] byteArray)
@@ -107,7 +118,7 @@ namespace ImagesAPI.Services.Concretes
                 // Null objects still need a size
                 cacheEntryOptions.SetSize(8); // Small placeholder size for null values
             }
-
+            Logging.Instance.LogMessage($"Setting cache for key '{key}' with size {cacheEntryOptions.Size} bytes and expiration of {absoluteExpirationMinutes} minutes.");
             _memoryCache.Set(key, value, cacheEntryOptions);
         }
 

@@ -5,7 +5,7 @@ PROJECT_NUMBER         = "1.0"
 
 # Language support
 FILE_PATTERNS          = *.cpp *.h *.hpp *.cs *.ts *.tsx *.js *.jsx
-EXTENSION_MAPPING      = cs=csharp ts=typescript tsx=typescript js=javascript jsx=javascript
+EXTENSION_MAPPING      = cs=csharp ts=javascript tsx=javascript
 
 # Improved documentation for C# and TypeScript
 OPTIMIZE_OUTPUT_JAVA   = YES  # Helps with C# parsing
@@ -22,7 +22,7 @@ INPUT                  = ./README.md \
 RECURSIVE              = YES
                          
 # Exclude patterns for files and directories
-EXCLUDE_PATTERNS       = */external/* \
+EXCLUDE_PATTERNS       = */back-end/VC/ImagesProcessor/external/* \
                          */packages/* \
                          */environments/* \
                          */bin/* \
@@ -65,17 +65,11 @@ SHOW_USED_FILES        = YES
 SHOW_NAMESPACES        = YES
 
 # TypeScript specific settings
-OPTIMIZE_FOR_JAVASCRIPT = YES
-JAVASCRIPT_SCOPE        = YES  
-JSC_ROOT_DIR           = ./front-end/image-processing/src
 SOURCE_BROWSER         = YES
 STRIP_CODE_COMMENTS    = NO
 CASE_SENSE_NAMES       = YES
 MARKDOWN_SUPPORT       = YES
 AUTOLINK_SUPPORT       = YES
-
-# Process TypeScript classes as C++ to better handle class documentation
-EXTENSION_MAPPING     += ts=c++
 
 # Disable INPUT_FILTER which requires sed on Windows
 INPUT_FILTER           = 
@@ -88,7 +82,6 @@ HTML_OUTPUT            = html
 GENERATE_TREEVIEW      = YES
 HTML_HEADER           =
 HTML_FOOTER           =
-HTML_TIMESTAMP        = YES
 
 # Improve class documentation
 INHERIT_DOCS           = YES

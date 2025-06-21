@@ -105,6 +105,10 @@ namespace ImagesAPI.External
             return outputImageData;
         }
 
+        #endregion
+
+        #region Private classes
+
         /// <summary>
         /// Manages native progress callbacks and their associated GC handles.
         /// </summary>

@@ -20,7 +20,7 @@
         <button
           mat-button
           class="btn btn-secondary"
-          (click)="showLessHorizontalImages()"
+          (click)="showLessHorizontalImages($event)"
           [disabled]="horizontalDisplayCount <= 1"
           aria-label="Show fewer images horizontally"
         >
@@ -30,7 +30,7 @@
         <button
           mat-button
           class="btn btn-secondary"
-          (click)="showMoreHorizontalImages()"
+          (click)="showMoreHorizontalImages($event)"
           [disabled]="horizontalDisplayCount >= maxHorizontalCount"
           aria-label="Show more images horizontally"
         >
@@ -42,7 +42,7 @@
         <button
           mat-button
           class="btn btn-secondary"
-          (click)="showLessLevels()"
+          (click)="showLessLevels($event)"
           [disabled]="displayLevel <= 1"
           aria-label="Show fewer levels vertically"
         >
@@ -52,7 +52,7 @@
         <button
           mat-button
           class="btn btn-secondary"
-          (click)="showMoreLevels()"
+          (click)="showMoreLevels($event)"
           [disabled]="displayLevel >= maxLevel || !hasMoreNodesToShow"
           aria-label="Show more levels vertically"
         >
