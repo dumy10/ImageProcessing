@@ -10,9 +10,11 @@ if (result.error) {
   console.error("Error loading .env file:", result.error);
 }
 
+const environment = process.env.ENVIRONMENT || "development";
+
 // Create development environment.ts file with values
 const developmentEnvironmentContent = `export const environment = {
-  production: false,
+  production: ${environment === "production" ? true : false},
   apiUrl: '${process.env.API_URL || "https://api.yourdevelopment.com/Images"}',
   apiKey: '${process.env.API_KEY || "YOUR_API_KEY_HERE"}'
 };
@@ -20,7 +22,7 @@ const developmentEnvironmentContent = `export const environment = {
 
 // Create production environment.prod.ts file with values
 const productionEnvironmentContent = `export const environment = {
-  production: true,
+  production: ${environment === "production" ? true : false},
   apiUrl: '${
     process.env.PROD_API_URL || "https://api.yourproduction.com/Images"
   }',
