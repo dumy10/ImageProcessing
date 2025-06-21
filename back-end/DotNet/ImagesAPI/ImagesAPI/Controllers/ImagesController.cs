@@ -402,6 +402,8 @@ namespace ImagesAPI.Controllers
                     return ResponseHelper.NotFound(this, $"Image with ID {id} not found on storage.");
                 }
 
+                Response.RegisterForDispose(memoryStream);
+
                 using var skImage = SKImage.FromEncodedData(memoryStream);
                 if (skImage == null)
                 {

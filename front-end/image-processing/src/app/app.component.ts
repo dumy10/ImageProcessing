@@ -5,6 +5,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ThemeMode, ThemeService } from './services/theme.service';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -29,6 +30,14 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     // The theme service will handle setting the initial theme
+
+    // If we are running in production, we are removing the ng-version from the body tag
+    if (environment.production) {
+      const el = document.querySelector('app-root');
+      if (el?.hasAttribute('ng-version')) {
+        el.removeAttribute('ng-version');
+      }
+    }
   }
 
   toggleTheme(): void {

@@ -476,10 +476,14 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
 
   /**
    * Increases the vertical depth of the tree display
+   * @param event - Mouse event to check for Shift key
    */
-  showMoreLevels(): void {
+  showMoreLevels(event?: MouseEvent): void {
     if (this.displayLevel < this.maxLevel) {
-      this.displayLevel++;
+      // If Shift key is pressed, go to max level, otherwise increment by 1
+      this.displayLevel = event?.shiftKey
+        ? this.maxLevel
+        : this.displayLevel + 1;
 
       // Check if there are any more levels with actual nodes to display
       this.hasMoreNodesToShow = this.checkForNodesAtNextLevel();
@@ -488,10 +492,13 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
 
   /**
    * Decreases the vertical depth of the tree display
+   * @param event - Mouse event to check for Shift key
    */
-  showLessLevels(): void {
+  showLessLevels(event?: MouseEvent): void {
     if (this.displayLevel > 1) {
-      this.displayLevel--;
+      // If Shift key is pressed, go to 1, otherwise decrement by 1
+      this.displayLevel = event?.shiftKey ? 1 : this.displayLevel - 1;
+
       // When decreasing levels, there will always be more nodes to show if we haven't reached max depth
       this.hasMoreNodesToShow =
         this.displayLevel < this.maxLevel && this.checkForNodesAtNextLevel();
@@ -500,13 +507,14 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
 
   /**
    * Increases the number of horizontally displayed children per node
+   * @param event - Mouse event to check for Shift key
    */
-  showMoreHorizontalImages(): void {
+  showMoreHorizontalImages(event?: MouseEvent): void {
     if (this.horizontalDisplayCount < this.maxHorizontalCount) {
-      this.horizontalDisplayCount = Math.min(
-        this.horizontalDisplayCount + 2,
-        this.maxHorizontalCount
-      );
+      // If Shift key is pressed, go to maximum width, otherwise increment by 2
+      this.horizontalDisplayCount = event?.shiftKey
+        ? this.maxHorizontalCount
+        : Math.min(this.horizontalDisplayCount + 2, this.maxHorizontalCount);
 
       // Recalculate the maximum visible level with the new horizontal display count
       // This might reveal additional levels that were previously hidden
@@ -522,13 +530,14 @@ export class ImageTreeViewComponent implements OnInit, OnDestroy {
 
   /**
    * Decreases the number of horizontally displayed children per node
+   * @param event - Mouse event to check for Shift key
    */
-  showLessHorizontalImages(): void {
+  showLessHorizontalImages(event?: MouseEvent): void {
     if (this.horizontalDisplayCount > 1) {
-      this.horizontalDisplayCount = Math.max(
-        this.horizontalDisplayCount - 2,
-        1
-      );
+      // If Shift key is pressed, go to minimum width, otherwise decrement by 2
+      this.horizontalDisplayCount = event?.shiftKey
+        ? 1
+        : Math.max(this.horizontalDisplayCount - 2, 1);
 
       // After changing horizontal display count, check if there are more nodes at next level
       // This is necessary because hiding nodes horizontally might hide nodes that had children

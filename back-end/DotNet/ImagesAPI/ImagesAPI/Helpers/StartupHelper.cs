@@ -6,6 +6,7 @@ using ImagesAPI.Services.Interfaces;
 using ImagesAPI.Settings.Concretes;
 using ImagesAPI.Settings.Interfaces;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
@@ -42,7 +43,7 @@ namespace ImagesAPI.Helpers
             // Add health checks
             ConfigureHealthChecks(builder, skipValidation);
         }
-        
+
         /// <summary>
         /// Configures the application with necessary middleware and endpoints.
         /// </summary>
@@ -279,15 +280,20 @@ namespace ImagesAPI.Helpers
             builder.Services.AddSignalR();
 
             // Add memory cache with a size limit
-            builder.Services.AddMemoryCache(options => options.SizeLimit = 50 * 1024 * 1024); // Set a size limit to prevent cache from consuming too much memory - 50 MB limit
+            builder.Services.AddMemoryCache(options =>
+            {
+                options.SizeLimit = 500 * 1024 * 1024; // 500 MB total cache size limit
+                options.CompactionPercentage = 0.25; // Remove 25% of entries when limit is reached
+                options.ExpirationScanFrequency = TimeSpan.FromMinutes(5); // Check for expired entries every 5 minutes
+            }); // Set a size limit to prevent cache from consuming too much memory - 500 MB limit
 
             // Add response caching
             builder.Services.AddResponseCaching(options =>
             {
                 options.MaximumBodySize = 10 * 1024 * 1024; // 10 MB response size limit
                 options.UseCaseSensitivePaths = false;
-            });            
-            
+            });
+
             // Add application services to the container.
             builder.Services.AddSingleton<IImagesCollectionService, ImagesCollectionService>();
             builder.Services.AddSingleton<IDropboxService, DropboxService>();
