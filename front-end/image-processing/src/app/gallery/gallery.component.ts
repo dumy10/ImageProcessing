@@ -12,7 +12,6 @@ import { Subscription } from 'rxjs';
 import { ImageHierarchyComponent } from '../image-hierarchy/image-hierarchy.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { ImageModel } from '../models/ImageModel';
-import { CacheService } from '../services/cache.service';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { ImageService } from '../services/image.service';
 import {
@@ -106,12 +105,6 @@ export class GalleryComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   /**
-   * Flag to track if initial preloading has been performed
-   * @type {boolean}
-   */
-  private initialPreloadDone: boolean = false;
-
-  /**
    * Error state flag
    * @type {boolean}
    */
@@ -133,7 +126,6 @@ export class GalleryComponent implements OnInit, OnDestroy {
    * Constructor for GalleryComponent.
    * @param {MatDialog} dialog - The dialog service for opening dialogs.
    * @param {ImageService} imageService - Service for handling image operations.
-   * @param {CacheService} cacheService - Service for caching images.
    * @param {Router} router - Router for navigating between pages.
    * @param {ActivatedRoute} route - The activated route for accessing URL parameters.
    * @param {ErrorHandlingService} errorHandling - Service for handling errors.
@@ -141,7 +133,6 @@ export class GalleryComponent implements OnInit, OnDestroy {
   constructor(
     private dialog: MatDialog,
     private imageService: ImageService,
-    private cacheService: CacheService,
     private router: Router,
     private route: ActivatedRoute,
     private errorHandling: ErrorHandlingService
@@ -218,9 +209,6 @@ export class GalleryComponent implements OnInit, OnDestroy {
 
         this.updatePagination();
         this.loading = false;
-
-        // Perform smart preloading
-        this.performSmartPreloading();
       },
       error: (error: HttpErrorResponse) => {
         console.error('Failed to fetch images', error);
@@ -258,95 +246,6 @@ export class GalleryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Implements a smart preloading strategy based on user behavior and current page
-   */
-  performSmartPreloading(): void {
-    if (!this.initialPreloadDone) {
-      // First-time preloading strategy - preload current page plus some from next page
-      this.preloadImagesForCurrentAndNextPage();
-
-      // Mark initial preload as done
-      this.initialPreloadDone = true;
-
-      // Schedule additional preloading after a delay to not block initial render
-      setTimeout(() => {
-        // Preload additional pages based on navigation direction (default: forward)
-        this.preloadAdditionalImages();
-      }, 3000); // Wait 3 seconds before preloading more
-    } else {
-      // For subsequent navigation, just preload current and next page
-      this.preloadImagesForCurrentAndNextPage();
-    }
-
-    // Log cache statistics for debugging
-    console.debug('Cache stats:', this.cacheService.getCacheStats());
-  }
-
-  /**
-   * Preloads images for the current page and next page to improve browsing experience
-   */
-  preloadImagesForCurrentAndNextPage(): void {
-    // Preload all images on the current page
-    this.paginatedImagePairs.forEach((pair) => {
-      this.imageService.preloadImage(pair.originalImage.id);
-      this.imageService.preloadImage(pair.filteredImage.id);
-    });
-
-    // Preload images for the next page if it exists
-    if (this.currentPage < this.totalPages - 1) {
-      const nextPageStartIndex = (this.currentPage + 1) * this.itemsPerPage;
-      const nextPageEndIndex = nextPageStartIndex + this.itemsPerPage;
-      const nextPageItems = this.imagePairs.slice(
-        nextPageStartIndex,
-        nextPageEndIndex
-      );
-
-      // Preload the first few images from the next page (limit to avoid too many requests)
-      const preloadLimit = Math.min(nextPageItems.length, 3);
-      nextPageItems.slice(0, preloadLimit).forEach((pair) => {
-        this.imageService.preloadImage(pair.originalImage.id);
-        this.imageService.preloadImage(pair.filteredImage.id);
-      });
-    }
-  }
-
-  /**
-   * Preloads additional images for improved user experience beyond the current/next page
-   */
-  preloadAdditionalImages(): void {
-    // Only preload additional images if there are multiple pages
-    if (this.totalPages <= 2) return;
-
-    // Determine how many additional pages to preload based on available bandwidth/cache
-    const additionalPagesToPreload = Math.min(
-      2,
-      this.totalPages - this.currentPage - 2
-    );
-    if (additionalPagesToPreload <= 0) return;
-
-    for (let i = 2; i <= additionalPagesToPreload + 1; i++) {
-      const pageIndex = this.currentPage + i;
-      if (pageIndex >= this.totalPages) break;
-
-      const pageStartIndex = pageIndex * this.itemsPerPage;
-      const pageEndIndex = pageStartIndex + this.itemsPerPage;
-      const pageItems = this.imagePairs.slice(pageStartIndex, pageEndIndex);
-
-      // For distant pages, only preload the first image or two
-      const distantPreloadLimit = Math.min(pageItems.length, 2);
-      for (let j = 0; j < distantPreloadLimit; j++) {
-        // Use lower priority (setTimeout) to prevent blocking more important loads
-        setTimeout(() => {
-          if (pageItems[j]) {
-            this.imageService.preloadImage(pageItems[j].originalImage.id);
-            this.imageService.preloadImage(pageItems[j].filteredImage.id);
-          }
-        }, i * 1000); // Stagger the preloading
-      }
-    }
-  }
-
-  /**
    * Paginates the images based on the current page and items per page.
    */
   updatePagination(): void {
@@ -370,9 +269,6 @@ export class GalleryComponent implements OnInit, OnDestroy {
       queryParamsHandling: 'merge',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Preload images when page changes
-    this.performSmartPreloading();
   }
 
   /**
@@ -389,9 +285,6 @@ export class GalleryComponent implements OnInit, OnDestroy {
    * @param {ImageModel} image - The image for which to display details.
    */
   openDialog(image: ImageModel): void {
-    // Preload related images before opening the dialog
-    this.preloadRelatedImages(image);
-
     // Open a dialog showing the vertical hierarchy (history) of this image
     const dialogRef = this.dialog.open(ImageHierarchyComponent, {
       data: this.getImageHierarchy(image),
@@ -413,22 +306,6 @@ export class GalleryComponent implements OnInit, OnDestroy {
         pageSize: this.itemsPerPage,
       },
     });
-  }
-
-  /**
-   * Preloads related images for a specific image
-   * @param {ImageModel} image - The image whose related images should be preloaded
-   */
-  preloadRelatedImages(image: ImageModel): void {
-    // Find all images related to this one in the image hierarchy
-    const originalImage = this.getOriginalImage(image);
-
-    // Find all filtered versions of the original image
-    this.imagePairs
-      .filter((pair) => pair.originalImage.id === originalImage.id)
-      .forEach((pair) => {
-        this.imageService.preloadImage(pair.filteredImage.id);
-      });
   }
 
   /**
