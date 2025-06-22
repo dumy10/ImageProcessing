@@ -258,25 +258,4 @@ export class ImageService {
         })
       );
   }
-
-  /**
-   * Preloads an image to improve user experience.
-   * @param {string} id - The ID of the image to preload.
-   */
-  preloadImage(id: string): void {
-    // If we already have the image in cache, don't reload it
-    if (this.cacheService.hasBlobCache(id)) {
-      return;
-    }
-
-    // Load the image in the background
-    this.downloadImage(id).subscribe({
-      // No need to do anything with the result, just cache it
-      next: () => {},
-      error: () => {
-        // If preloading fails, remove from cache to allow retry
-        this.cacheService.invalidateImage(id);
-      },
-    });
-  }
 }
