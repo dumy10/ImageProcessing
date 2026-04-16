@@ -145,6 +145,13 @@ export class ImageHierarchyComponent implements OnInit {
 
   private resizeTimeout: any = null;
 
+  getImageSource(imageModel: ImageModel): string {
+    if (imageModel.base64Data) {
+      return `data:${imageModel.contentType || 'image/jpeg'};base64,${imageModel.base64Data}`;
+    }
+    return imageModel.url;
+  }
+
   constructor(
     public dialogRef: MatDialogRef<ImageHierarchyComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ImageModel[],

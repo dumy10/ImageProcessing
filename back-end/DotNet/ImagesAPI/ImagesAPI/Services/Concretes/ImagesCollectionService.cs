@@ -299,6 +299,7 @@ namespace ImagesAPI.Services.Concretes
                 ContentType = preparedData.ContentType,
                 ParentId = originalModel.Id,
                 ParentUrl = originalModel.Url,
+                ParentBase64Data = originalModel.Base64Data,
                 Width = preparedData.Width,
                 Height = preparedData.Height,
                 AppliedFilters = [..originalModel.AppliedFilters ?? [], filter]
@@ -311,6 +312,7 @@ namespace ImagesAPI.Services.Concretes
             string modifiedImageId = await driveService.UploadImage(uploadStream, newImageModel.Name, newImageModel.ContentType);
             newImageModel.Id = modifiedImageId;
             newImageModel.Url = await driveService.GetImageURL(modifiedImageId);
+            newImageModel.Base64Data = await driveService.GetBase64EncodedData(modifiedImageId);
 
             return newImageModel;
         }

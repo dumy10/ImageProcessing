@@ -21,16 +21,28 @@ export interface ImageModel {
   url: string;
 
   /**
+   * The base64 encoded image data, if available.
+   * @type {string | undefined}
+   */
+  base64Data?: string;
+
+  /**
    * Identifier of the parent image, if any.
    * @type {string | undefined}
    */
-  parentId: string | undefined;
+  parentId?: string;
 
   /**
    * URL of the parent image, if any.
    * @type {string | undefined}
    */
-  parentUrl: string | undefined;
+  parentUrl?: string;
+
+  /**
+   * The base64 encoded data of the parent image, if any.
+   * @type {string | undefined}
+   */
+  parentBase64Data?: string;
 
   /**
    * Width of the image in pixels.
@@ -43,6 +55,12 @@ export interface ImageModel {
    * @type {number}
    */
   height: number;
+
+  /**
+   * The MIME type of the image.
+   * @type {string | undefined}
+   */
+  contentType?: string;
 
   /**
    * List of filters applied to the image.
