@@ -26,7 +26,7 @@
       </div>
 
       <img
-        [src]="image.url"
+        [src]="getImageSource(image)"
         [alt]="image.name || 'Image'"
         [class.loaded]="image.loaded"
         (click)="openDialog(image)"

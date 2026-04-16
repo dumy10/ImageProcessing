@@ -36,6 +36,13 @@
         Task<MemoryStream?> GetStreamForImage(string imageId);
 
         /// <summary>
+        /// Retrieves the image data as a base64-encoded string from the Drive.
+        /// </summary>
+        /// <param name="imageId"></param>
+        /// <returns></returns>
+        Task<string> GetBase64EncodedData(string imageId);
+
+        /// <summary>
         /// Generates a public URL for the image stored on the Drive.
         /// </summary>
         /// <param name="imageId">The ID of the image file.</param>

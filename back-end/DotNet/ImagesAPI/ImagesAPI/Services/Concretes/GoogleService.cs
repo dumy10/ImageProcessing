@@ -148,6 +148,19 @@ namespace ImagesAPI.Services.Concretes
             return memoryStream;
         }
 
+        public async Task<string> GetBase64EncodedData(string imageId)
+        {
+            var stream = await GetStreamForImage(imageId);
+            if (stream == null)
+            {
+                return string.Empty;
+            }
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            var byteArray = memoryStream.ToArray();
+            return Convert.ToBase64String(byteArray);
+        }
+
         /// <summary>
         /// Generates a public URL for the image stored on Google Drive.
         /// </summary>

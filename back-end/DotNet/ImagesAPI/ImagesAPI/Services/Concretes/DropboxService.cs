@@ -111,6 +111,25 @@ namespace ImagesAPI.Services.Concretes
         }
 
         /// <summary>
+        /// Retrieves the image data as a base64-encoded string from Dropbox.
+        /// </summary>
+        /// <param name="imageId">The ID of the image file</param>
+        /// <returns>A string containing the base64 image.</returns>
+        public async Task<string> GetBase64EncodedData(string imageId)
+        {
+            using var stream = await GetStreamForImage(imageId);
+            if (stream is null)
+            {
+                return string.Empty;
+            }
+
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            byte[] imageBytes = memoryStream.ToArray();
+            return Convert.ToBase64String(imageBytes);
+        }
+
+        /// <summary>
         /// Generates a public URL for the image stored on Dropbox.
         /// </summary>
         /// <param name="imageId">The ID of the image file.</param>
