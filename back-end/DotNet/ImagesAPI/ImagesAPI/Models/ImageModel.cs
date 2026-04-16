@@ -27,6 +27,12 @@ namespace ImagesAPI.Models
         public string Url { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the base64-encoded string representation of the image data.
+        /// </summary>
+        [BsonElement("Base64Data")]
+        public string Base64Data { get; set; } = string.Empty;
+
+        /// <summary>
         /// Gets or sets the identifier of the parent image, if any.
         /// </summary>
         [BsonElement("ParentId")]
@@ -37,6 +43,12 @@ namespace ImagesAPI.Models
         /// </summary>
         [BsonElement("ParentUrl")]
         public string ParentUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the base64-encoded string representation of the parent image data, if any.
+        /// </summary>
+        [BsonElement("ParentBase64Data")]
+        public string ParentBase64Data { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the MIME type of the image.

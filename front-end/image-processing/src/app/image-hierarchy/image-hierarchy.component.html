@@ -140,7 +140,7 @@
               </div>
 
               <img
-                [src]="imageModel.url"
+                [src]="getImageSource(imageModel)"
                 alt="Image step {{ i + 1 }}"
                 class="image"
                 [class.loaded]="imageModel.loaded"
@@ -235,7 +235,7 @@
         </div>
 
         <img
-          [src]="imageModel.url"
+          [src]="getImageSource(imageModel)"
           alt="Image"
           class="image"
           [class.loaded]="imageModel.loaded"

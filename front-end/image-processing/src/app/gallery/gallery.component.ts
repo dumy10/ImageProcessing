@@ -164,6 +164,16 @@ export class GalleryComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Gets the image source url or base64 fallback.
+   */
+  getImageSource(image: ImageModel): string {
+    if (image.base64Data) {
+      return `data:${image.contentType || 'image/jpeg'};base64,${image.base64Data}`;
+    }
+    return image.url;
+  }
+
+  /**
    * Loads the images from the server and sets up pagination.
    */
   loadImages(): void {

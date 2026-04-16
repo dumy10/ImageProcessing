@@ -201,7 +201,8 @@ namespace ImagesAPI.Controllers
                 Width = validation.Width,
                 Height = validation.Height,
                 ContentType = image.ContentType,
-                Url = await _dropboxService.GetImageURL(imageId)
+                Url = await _dropboxService.GetImageURL(imageId),
+                Base64Data = await _dropboxService.GetBase64EncodedData(imageId)
             };
 
             await _imagesCollectionService.Create(imageModel);

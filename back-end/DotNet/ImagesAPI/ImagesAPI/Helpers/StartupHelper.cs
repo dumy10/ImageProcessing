@@ -268,6 +268,8 @@ namespace ImagesAPI.Helpers
         /// <param name="builder"></param>
         private static void RegisterServices(WebApplicationBuilder builder)
         {
+            builder.Services.AddHostedService<Base64DataMigrationService>();
+
             // Add controllers with JSON options
             builder.Services.AddControllers().AddJsonOptions(options =>
             {

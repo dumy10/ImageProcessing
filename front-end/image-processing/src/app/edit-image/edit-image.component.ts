@@ -139,6 +139,13 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.progressTracker.stopConnection();
   }
 
+  getImageSource(image: ImageModel): string {
+    if (image.base64Data) {
+      return `data:${image.contentType || 'image/jpeg'};base64,${image.base64Data}`;
+    }
+    return image.url;
+  }
+
   // Connect to the SignalR hub for progress updates
   private async connectToProgressHub(): Promise<void> {
     try {
@@ -280,7 +287,7 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
         next: (response) => {
           this.image = response as ImageModel;
           this.lastSuccessfulOperation = this.cloneImageModel(this.image);
-          this.imagePath = this.image.url;
+          this.imagePath = this.getImageSource(this.image);
 
           // Explicitly set loaded state for both component and model
           this.imageLoaded = true;
@@ -389,7 +396,7 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
             this.image.loaded = true; // Set loaded to true immediately for filtered images
             this.imageLoaded = true; // Also set component-level flag
             this.lastSuccessfulOperation = this.cloneImageModel(this.image);
-            this.imagePath = this.image.url;
+            this.imagePath = this.getImageSource(this.image);
             this.router.navigate(['/edit', response.id], { replaceUrl: true });
 
             // In case we don't get a 100% progress update from SignalR
@@ -439,7 +446,7 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
   restoreLastSuccessfulState(): void {
     if (this.lastSuccessfulOperation) {
       this.image = this.cloneImageModel(this.lastSuccessfulOperation);
-      this.imagePath = this.image.url;
+      this.imagePath = this.getImageSource(this.image);
       this.errorState = false;
       this.errorMessage = '';
       this.errorActions = [];
@@ -592,7 +599,7 @@ export class EditImageComponent implements OnInit, AfterViewInit, OnDestroy {
         next: (response) => {
           this.image = response as ImageModel;
           this.lastSuccessfulOperation = this.cloneImageModel(this.image);
-          this.imagePath = this.image.url;
+          this.imagePath = this.getImageSource(this.image);
 
           // Explicitly set loaded state for both component and model
           this.imageLoaded = true;
